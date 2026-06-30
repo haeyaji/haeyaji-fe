@@ -1,0 +1,112 @@
+// 백엔드(be) DTO 대응 타입. nlp는 snake_case로 내보내지만 be가 camelCase로
+// 정규화해 내려주는 것을 전제로 한다. (be 구현 시 확정)
+
+export type Intent = 'recommend' | 'info' | 'chat'
+
+export type Category = '야외' | '실내' | '휴식' | '생산성' | '사람만나기' | '맛집/카페'
+
+/** nlp TodoItem (be 경유). 지도 마커용 좌표/거리 포함. */
+export interface RecommendedTodo {
+  title: string
+  reason: string
+  category: Category
+  estimatedMinutes: number
+  placeName: string | null
+  placeUrl: string | null
+  x: number | null // 경도(lng)
+  y: number | null // 위도(lat)
+  distanceM: number | null
+}
+
+export interface MessageResponse {
+  intent: Intent
+  reply: string
+  todos: RecommendedTodo[]
+}
+
+// ── 클라이언트 도메인 모델 (프로토타입 상태) ───────────────────────────
+
+export type TaskGroup = 'routine' | 'personal'
+
+export interface Task {
+  id: string
+  title: string
+  time?: string
+  meta?: string
+  group: TaskGroup
+  done: boolean
+  ai?: boolean
+}
+
+/** 날짜 id('20'~'26') → 할 일 목록 */
+export type TasksByDate = Record<string, Task[]>
+
+export type WeatherCond = 'sunny' | 'cloudy' | 'rainy'
+
+export interface WeekDay {
+  id: string
+  dow: string
+  date: number
+  cond: WeatherCond
+  hi: number
+  lo: number
+}
+
+export type PlaceCat = 'cafe' | 'park' | 'food' | 'culture'
+
+export interface Place {
+  id: string
+  name: string
+  type: string
+  dist: string
+  cat: PlaceCat
+  why: string
+  left: string
+  top: string
+}
+
+export type RoutineCat = 'yoga' | 'shop' | 'code'
+
+export interface Routine {
+  id: string
+  title: string
+  cat: RoutineCat
+  time: string
+  days: boolean[] // 월~일 (7)
+  active: boolean
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  text: string
+  places?: string[] // place id 목록
+}
+
+export interface HourlyForecast {
+  label: string
+  temp: number
+  pop: number
+}
+
+/** 날씨 시각 토큰 + 수치 (dayWeather 결과) */
+export interface DayWeather {
+  cond: WeatherCond
+  temp: number
+  hi: number
+  lo: number
+  condKo: string
+  pop: number
+  humid: number
+  wind: number
+  feels: number
+  uvLv: string
+  uvIdx: number
+  dustLv: string
+  dustVal: number
+  sky: string
+  glow: string
+  ink: string
+  sub: string
+  iconC: string
+  hourly: HourlyForecast[]
+}
