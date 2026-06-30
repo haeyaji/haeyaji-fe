@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+  }
+  html,
+  body {
+    margin: 0;
+    min-height: 100%;
+    background: #eeebe3;
+    font-family: 'Pretendard', -apple-system, system-ui, sans-serif;
+    color: #17150f;
+  }
+  #root {
+    min-height: 100vh;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(24, 21, 15, 0.16);
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer components {
+  .tile {
+    background: #ffffff;
+    border: 1px solid rgba(24, 21, 15, 0.06);
+    border-radius: 24px;
+  }
+  .lift {
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+  }
+  .lift:hover {
+    transform: translateY(-2px);
+  }
+  .hbtn {
+    transition: background 0.14s ease, color 0.14s ease;
+  }
+}
+
+@keyframes rb-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes rb-drawer {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes rb-modal {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes rb-pop {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes rb-toast {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
