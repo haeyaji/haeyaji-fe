@@ -63,7 +63,7 @@ export function WeatherDrawer() {
           <div style={{ fontSize: 13, fontWeight: 800, color: '#A39C8E', marginBottom: 12 }}>시간별 예보</div>
           <div style={{ display: 'flex', gap: 8 }}>
             {w.hourly.map((h, i) => (
-              <div key={i} style={{ flex: 1, background: '#fff', border: '1px solid #EAE6DD', borderRadius: 16, padding: '14px 0', textAlign: 'center' }}>
+              <div key={i} style={{ flex: 1, background: '#fff', border: '1px solid #E1E5EC', borderRadius: 16, padding: '14px 0', textAlign: 'center' }}>
                 <div style={{ fontSize: 11.5, fontWeight: 700, color: '#A39C8E' }}>{h.label}</div>
                 <div style={{ width: 22, height: 22, margin: '9px auto' }}>
                   <WeatherIcon cond={w.cond} c={hourIconC} />
@@ -77,7 +77,7 @@ export function WeatherDrawer() {
           <div style={{ fontSize: 13, fontWeight: 800, color: '#A39C8E', margin: '22px 0 12px' }}>상세 정보</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             {details.map((d) => (
-              <div key={d.key} style={{ background: '#fff', border: '1px solid #EAE6DD', borderRadius: 16, padding: '15px 16px' }}>
+              <div key={d.key} style={{ background: '#fff', border: '1px solid #E1E5EC', borderRadius: 16, padding: '15px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: '#A39C8E' }}>
                   <div style={{ width: 16, height: 16 }}>
                     <DetailIcon name={d.key} c={d.c} />

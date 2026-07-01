@@ -10,8 +10,8 @@ import type { Task, WeatherCond } from '@/types'
 
 function evColor(t: Task): { bg: string; color: string } {
   if (t.ai) return { bg: '#E4F2EC', color: '#15795A' }
-  if (t.done) return { bg: '#F4F2EC', color: '#B3ADA0' }
-  return { bg: '#F1EEE7', color: '#5A554B' }
+  if (t.done) return { bg: '#ECEFF3', color: '#B3ADA0' }
+  return { bg: '#E9EDF3', color: '#5A554B' }
 }
 
 export function CalendarPage() {
@@ -57,7 +57,7 @@ export function CalendarPage() {
             <div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 9 }}>
                 <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: '-.8px' }}>5월</div>
-                <div style={{ fontSize: 18, fontWeight: 600, color: '#BFB9AC' }}>2024</div>
+                <div style={{ fontSize: 18, fontWeight: 600, color: '#B6BCC7' }}>2024</div>
               </div>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#8B8579', marginTop: 2 }}>{calSummary}</div>
             </div>
@@ -67,7 +67,7 @@ export function CalendarPage() {
               <div className="hbtn" style={{ padding: '11px 14px', cursor: 'pointer', color: '#A39C8E' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
               </div>
-              <div className="hbtn" style={{ padding: '11px 14px', cursor: 'pointer', color: '#A39C8E', borderLeft: '1px solid #EFEBE3' }}>
+              <div className="hbtn" style={{ padding: '11px 14px', cursor: 'pointer', color: '#A39C8E', borderLeft: '1px solid #E6E9F0' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
               </div>
             </div>
@@ -93,7 +93,7 @@ export function CalendarPage() {
                 const tl = c.wid ? tasksByDate[c.wid] ?? [] : []
                 const events = tl.slice(0, 2)
                 const more = tl.length > 2 ? tl.length - 2 : 0
-                const numColor = on ? '#15795A' : c.inWeek ? '#17150F' : '#C9C3B6'
+                const numColor = on ? '#15795A' : c.inWeek ? '#17150F' : '#C1C7D2'
                 return (
                   <div
                     key={c.key}
@@ -104,7 +104,7 @@ export function CalendarPage() {
                       cursor: c.inWeek ? 'pointer' : 'default',
                       background: c.day == null ? 'transparent' : on ? '#E4F2EC' : '#fff',
                       boxShadow: on ? 'inset 0 0 0 2px #15795A' : 'none',
-                      border: '1px solid #F2EFE8',
+                      border: '1px solid #ECEFF4',
                       display: 'flex',
                       flexDirection: 'column',
                       overflow: 'hidden',
@@ -166,7 +166,7 @@ export function CalendarPage() {
                 ))}
                 {total === 0 && <EmptyTasks />}
               </div>
-              <div onClick={openAdd} className="hbtn" style={{ borderTop: '1px solid #EDEAE2', paddingTop: 13, marginTop: 4, fontSize: 13.5, fontWeight: 700, color: '#A39C8E', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7 }}>
+              <div onClick={openAdd} className="hbtn" style={{ borderTop: '1px solid #E4E7EE', paddingTop: 13, marginTop: 4, fontSize: 13.5, fontWeight: 700, color: '#A39C8E', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7 }}>
                 <PlusIcon c="currentColor" w={16} />
                 할 일 추가
               </div>

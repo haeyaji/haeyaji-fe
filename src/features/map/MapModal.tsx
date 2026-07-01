@@ -32,12 +32,12 @@ export function MapModal() {
     <div onClick={closeMap} style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(24,21,15,.42)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 30, animation: 'rb-fade .16s ease' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 1040, maxWidth: '100%', height: 660, maxHeight: '92vh', background: '#fff', borderRadius: 24, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 100px rgba(24,21,15,.42)', animation: 'rb-modal .24s ease' }}>
         {/* header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 26px', borderBottom: '1px solid #EFEBE3' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 26px', borderBottom: '1px solid #E6E9F0' }}>
           <div>
             <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-.4px' }}>추천 장소 지도</div>
             <div style={{ fontSize: 12.5, fontWeight: 600, color: '#A39C8E', marginTop: 2 }}>{mapHint}</div>
           </div>
-          <div onClick={closeMap} style={{ width: 34, height: 34, borderRadius: 11, background: '#F1EEE7', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <div onClick={closeMap} style={{ width: 34, height: 34, borderRadius: 11, background: '#E9EDF3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <CloseIcon w={16} />
           </div>
         </div>
@@ -51,22 +51,22 @@ export function MapModal() {
                   <circle cx="11" cy="11" r="7" />
                   <path d="M21 21l-4-4" strokeLinecap="round" />
                 </svg>
-                <input value={mapSearch} onChange={(e) => setMapSearch(e.target.value)} placeholder="장소·주소 검색" style={{ width: '100%', border: '1px solid #EAE6DD', outline: 'none', background: '#F6F4EE', borderRadius: 13, padding: '11px 14px 11px 40px', fontFamily: 'inherit', fontSize: 13.5, fontWeight: 600, color: '#17150F' }} />
+                <input value={mapSearch} onChange={(e) => setMapSearch(e.target.value)} placeholder="장소·주소 검색" style={{ width: '100%', border: '1px solid #E1E5EC', outline: 'none', background: '#F0F2F6', borderRadius: 13, padding: '11px 14px 11px 40px', fontFamily: 'inherit', fontSize: 13.5, fontWeight: 600, color: '#17150F' }} />
               </div>
 
-              <div style={{ marginTop: 12, background: '#F6F4EE', borderRadius: 14, padding: '13px 15px' }}>
+              <div style={{ marginTop: 12, background: '#F0F2F6', borderRadius: 14, padding: '13px 15px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#15795A', flexShrink: 0 }} />
                   <input value={mapOrigin} onChange={(e) => setMapOrigin(e.target.value)} placeholder="출발지" style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontFamily: 'inherit', fontSize: 13.5, fontWeight: 700, color: '#17150F' }} />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, height: 14 }}>
                   <div style={{ width: 10, display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
-                    <div style={{ width: 2, height: 14, background: '#D8D3C8' }} />
+                    <div style={{ width: 2, height: 14, background: '#CCD2DC' }} />
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 10, height: 10, borderRadius: 3, background: '#17150F', flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, color: selP ? '#17150F' : '#BFB9AC', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, color: selP ? '#17150F' : '#B6BCC7', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {selP ? selP.name : '도착지를 선택하세요'}
                   </div>
                 </div>
@@ -94,7 +94,7 @@ export function MapModal() {
               {shown.map((p) => {
                 const active = mapSelId === p.id
                 return (
-                  <div key={p.id} onClick={() => setMapSel(p.id)} className="hbtn" style={{ border: `1px solid ${active ? '#17150F' : '#EAE6DD'}`, background: active ? '#FBFAF7' : '#fff', borderRadius: 14, padding: '12px 13px', cursor: 'pointer' }}>
+                  <div key={p.id} onClick={() => setMapSel(p.id)} className="hbtn" style={{ border: `1px solid ${active ? '#17150F' : '#E1E5EC'}`, background: active ? '#F7F8FB' : '#fff', borderRadius: 14, padding: '12px 13px', cursor: 'pointer' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
                       <div style={{ width: 38, height: 38, borderRadius: 11, background: '#E4F2EC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <span style={{ width: 18, height: 18, display: 'inline-flex' }}><CategoryIcon cat={p.cat} c="#15795A" /></span>
@@ -116,13 +116,13 @@ export function MapModal() {
                   </div>
                 )
               })}
-              {shown.length === 0 && <div style={{ padding: 26, textAlign: 'center', color: '#BFB9AC', fontSize: 13, fontWeight: 600 }}>검색 결과가 없어요</div>}
+              {shown.length === 0 && <div style={{ padding: 26, textAlign: 'center', color: '#B6BCC7', fontSize: 13, fontWeight: 600 }}>검색 결과가 없어요</div>}
             </div>
           </div>
 
           {/* RIGHT: stylized map */}
           <div className="map-canvas">
-            <div style={{ position: 'absolute', inset: 0, background: '#E7E3D8' }} />
+            <div style={{ position: 'absolute', inset: 0, background: '#E3E6EC' }} />
             <div style={{ position: 'absolute', left: '-10%', top: '46%', width: '130%', height: '32%', transform: 'rotate(-9deg)', background: '#C7D6E2' }} />
             <div style={{ position: 'absolute', left: '9%', top: '13%', width: '30%', height: '26%', borderRadius: '46%', background: '#CFDDBE' }} />
             <div style={{ position: 'absolute', right: '13%', top: '54%', width: '24%', height: '22%', borderRadius: '50%', background: '#CFDDBE' }} />
