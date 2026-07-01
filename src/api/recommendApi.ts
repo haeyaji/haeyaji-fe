@@ -1,6 +1,6 @@
-// be의 추천 게이트웨이. 현재는 stub — UI는 lib/weather + store 로직으로 동작하고,
-// be 연동 시 이 함수가 실제 MessageResponse를 반환하도록 교체한다.
-import type { MessageResponse } from '@/types'
+// 추천 게이트웨이. be 완성 전까지는 nlp(:8000/api/message) 직결로 테스트.
+// (원래 흐름은 fe→be→nlp. be 붙으면 VITE_API_BASE만 be 주소로 바꾸면 됨)
+import type { MessageResponse, RecommendedTodo } from '@/types'
 import { http } from './client'
 
 export interface RecommendRequest {
@@ -11,6 +11,28 @@ export interface RecommendRequest {
   mood?: string
 }
 
-export function sendMessage(body: RecommendRequest): Promise<MessageResponse> {
-  return http<MessageResponse>('/recommend/message', { method: 'POST', body: JSON.stringify(body) })
+// nlp 응답이 camelCase(CamelModel) 또는 snake_case 어느 쪽이어도 안전하게 매핑
+function normalizeTodo(t: Record<string, unknown>): RecommendedTodo {
+  const pick = <T>(camel: string, snake: string): T | undefined => (t[camel] ?? t[snake]) as T | undefined
+  return {
+    title: (t.title as string) ?? '',
+    reason: (t.reason as string) ?? '',
+    category: t.category as RecommendedTodo['category'],
+    estimatedMinutes: pick<number>('estimatedMinutes', 'estimated_minutes') ?? 0,
+    placeName: pick<string>('placeName', 'place_name') ?? null,
+    placeUrl: pick<string>('placeUrl', 'place_url') ?? null,
+    x: (t.x as number) ?? null,
+    y: (t.y as number) ?? null,
+    distanceM: pick<number>('distanceM', 'distance_m') ?? null,
+  }
+}
+
+export async function sendMessage(body: RecommendRequest): Promise<MessageResponse> {
+  const res = await http<Record<string, unknown>>('/message', { method: 'POST', body: JSON.stringify(body) })
+  const todos = Array.isArray(res.todos) ? (res.todos as Record<string, unknown>[]).map(normalizeTodo) : []
+  return {
+    intent: res.intent as MessageResponse['intent'],
+    reply: (res.reply as string) ?? '',
+    todos,
+  }
 }
