@@ -14,7 +14,7 @@ export function TaskRow({ task, variant }: { task: Task; variant: 'home' | 'asid
   const home = variant === 'home'
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: home ? 13 : 12, padding: home ? '13px 0' : '11px 0', borderBottom: '1px solid #F2EFE8' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: home ? 13 : 12, padding: home ? '13px 0' : '11px 0', borderBottom: '1px solid #ECEFF4' }}>
       <div
         onClick={() => toggleTask(task.id)}
         style={{
@@ -26,7 +26,7 @@ export function TaskRow({ task, variant }: { task: Task; variant: 'home' | 'asid
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          border: `2px solid ${task.done ? '#15795A' : '#D8D3C8'}`,
+          border: `2px solid ${task.done ? '#15795A' : '#CCD2DC'}`,
           background: task.done ? '#15795A' : '#fff',
         }}
       >
@@ -53,7 +53,7 @@ export function TaskRow({ task, variant }: { task: Task; variant: 'home' | 'asid
 
       {home && <div style={{ fontSize: 12.5, fontWeight: 600, color: metaColor, flexShrink: 0 }}>{meta}</div>}
 
-      <div onClick={() => deleteTask(task.id)} className="hbtn" style={{ display: 'flex', cursor: 'pointer', color: '#D2CCBE', flexShrink: 0 }}>
+      <div onClick={() => deleteTask(task.id)} className="hbtn" style={{ display: 'flex', cursor: 'pointer', color: '#CAD0DA', flexShrink: 0 }}>
         <TrashIcon />
       </div>
     </div>
@@ -62,8 +62,8 @@ export function TaskRow({ task, variant }: { task: Task; variant: 'home' | 'asid
 
 export function EmptyTasks() {
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#BFB9AC', gap: 8, padding: 20 }}>
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D2CCBE" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#B6BCC7', gap: 8, padding: 20 }}>
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CAD0DA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="4.5" width="18" height="16" rx="3" />
         <path d="M8 11h8M8 15h5" />
       </svg>

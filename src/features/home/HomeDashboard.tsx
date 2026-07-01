@@ -121,7 +121,7 @@ export function HomeDashboard() {
               <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-.4px' }}>{taskTitle}</div>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#A39C8E' }}>{frac}</div>
             </div>
-            <div style={{ height: 5, borderRadius: 5, background: '#EDEAE2', marginTop: 14, overflow: 'hidden' }}>
+            <div style={{ height: 5, borderRadius: 5, background: '#E4E7EE', marginTop: 14, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: progPct, borderRadius: 5, background: '#15795A', transition: 'width .3s ease' }} />
             </div>
             <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflowY: 'auto', marginRight: -8, paddingRight: 8 }}>
@@ -130,7 +130,7 @@ export function HomeDashboard() {
               ))}
               {total === 0 && <EmptyTasks />}
             </div>
-            <div onClick={openAdd} className="hbtn" style={{ borderTop: '1px solid #EDEAE2', paddingTop: 14, marginTop: 4, fontSize: 14, fontWeight: 700, color: '#A39C8E', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div onClick={openAdd} className="hbtn" style={{ borderTop: '1px solid #E4E7EE', paddingTop: 14, marginTop: 4, fontSize: 14, fontWeight: 700, color: '#A39C8E', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7 }}>
               <PlusIcon c="currentColor" w={17} />
               할 일 추가
             </div>
@@ -149,7 +149,7 @@ export function HomeDashboard() {
           {/* DUST 1x1 */}
           <div className="tile" style={{ gridColumn: 'span 1', gridRow: 'span 1', padding: '16px 18px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: '#A39C8E' }}>
-              미세먼지 <span style={{ fontWeight: 600, color: '#C9C3B6' }}>㎍/㎥</span>
+              미세먼지 <span style={{ fontWeight: 600, color: '#C1C7D2' }}>㎍/㎥</span>
             </div>
             <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ width: 106, height: 106 }}>
@@ -211,7 +211,7 @@ function WeekStrip({ selId, onPick }: { selId: string; onPick: (id: string) => v
             key={d.id}
             onClick={() => onPick(d.id)}
             className="hbtn"
-            style={{ flex: 1, textAlign: 'center', padding: '9px 0', borderRadius: 13, cursor: 'pointer', background: on ? '#17150F' : '#F6F4EE' }}
+            style={{ flex: 1, textAlign: 'center', padding: '9px 0', borderRadius: 13, cursor: 'pointer', background: on ? '#17150F' : '#F0F2F6' }}
           >
             <div style={{ fontSize: 10.5, fontWeight: 700, color: on ? 'rgba(255,255,255,.7)' : '#A39C8E' }}>{d.dow}</div>
             <div style={{ height: 18, margin: '5px auto 0', width: 18 }}>

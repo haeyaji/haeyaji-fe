@@ -33,15 +33,15 @@ export function AddTaskModal() {
   }
 
   const groupBtn = (active: boolean) =>
-    ({ flex: 1, textAlign: 'center', padding: 11, borderRadius: 12, fontSize: 13.5, fontWeight: 700, cursor: 'pointer', background: active ? '#17150F' : '#F1EEE7', color: active ? '#fff' : '#5A554B' }) as const
-  const inputStyle = { width: '100%', border: '1px solid #EAE6DD', outline: 'none', background: '#F6F4EE', borderRadius: 13, padding: '13px 16px', fontFamily: 'inherit', fontSize: 14.5, fontWeight: 600, color: '#17150F' } as const
+    ({ flex: 1, textAlign: 'center', padding: 11, borderRadius: 12, fontSize: 13.5, fontWeight: 700, cursor: 'pointer', background: active ? '#17150F' : '#E9EDF3', color: active ? '#fff' : '#5A554B' }) as const
+  const inputStyle = { width: '100%', border: '1px solid #E1E5EC', outline: 'none', background: '#F0F2F6', borderRadius: 13, padding: '13px 16px', fontFamily: 'inherit', fontSize: 14.5, fontWeight: 600, color: '#17150F' } as const
 
   return (
     <div onClick={close} style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(24,21,15,.42)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'rb-fade .16s ease' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 420, maxWidth: '100%', background: '#fff', borderRadius: 24, overflow: 'hidden', boxShadow: '0 40px 90px rgba(24,21,15,.4)', animation: 'rb-modal .22s ease' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 24px 0' }}>
           <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-.4px' }}>할 일 추가</div>
-          <div onClick={close} style={{ width: 30, height: 30, borderRadius: 10, background: '#F1EEE7', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <div onClick={close} style={{ width: 30, height: 30, borderRadius: 10, background: '#E9EDF3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <CloseIcon />
           </div>
         </div>
