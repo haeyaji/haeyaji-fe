@@ -10,6 +10,8 @@ export interface MapPoint {
   cat: PlaceCat
   selected: boolean
   onClick: () => void
+  type?: string
+  dist?: string
 }
 
 interface Props {
@@ -24,37 +26,96 @@ const CAT_SVG: Record<PlaceCat, string> = {
   food: '<path d="M5 3v7a2 2 0 0 0 4 0V3M7 10v11M17 3c-1.5 0-2.5 2-2.5 5s1 4 2.5 4v9"/>',
   culture: '<path d="M3 21V8l9-5 9 5v13M3 21h18M9 21v-6h6v6"/>',
 }
+const catSvg = (cat: PlaceCat, c: string, w = 13) =>
+  `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${CAT_SVG[cat]}</svg>`
 
-function pinEl(p: MapPoint): HTMLElement {
+const CLUSTER_PX = 52
+
+// 선택된 핀 = 이름 표시 pill, 그 외 = 아이콘만(겹침 최소화) + hover
+function pinEl(p: MapPoint, hover: { in: (p: MapPoint) => void; out: () => void }): HTMLElement {
   const el = document.createElement('div')
-  el.style.cssText = `display:flex;align-items:center;gap:7px;padding:7px 13px 7px 8px;border-radius:22px;cursor:pointer;white-space:nowrap;transform:translateY(-6px);font-family:'Pretendard',sans-serif;background:${p.selected ? '#17150F' : '#fff'};box-shadow:0 6px 16px rgba(24,21,15,.22)`
-  el.innerHTML = `<div style="width:25px;height:25px;border-radius:50%;background:#15795A;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${CAT_SVG[p.cat]}</svg></div><div style="font-size:12.5px;font-weight:800;color:${p.selected ? '#fff' : '#17150F'}">${p.name}</div>`
+  if (p.selected) {
+    el.style.cssText = `display:flex;align-items:center;gap:7px;padding:7px 13px 7px 8px;border-radius:22px;cursor:pointer;white-space:nowrap;transform:translateY(-6px);font-family:'Pretendard',sans-serif;background:#17150F;box-shadow:0 6px 16px rgba(24,21,15,.28)`
+    el.innerHTML = `<div style="width:25px;height:25px;border-radius:50%;background:#15795A;display:flex;align-items:center;justify-content:center">${catSvg(p.cat, '#fff')}</div><div style="font-size:12.5px;font-weight:800;color:#fff">${p.name}</div>`
+  } else {
+    el.style.cssText = `width:34px;height:34px;border-radius:50%;background:#fff;border:2px solid #15795A;display:flex;align-items:center;justify-content:center;cursor:pointer;transform:translateY(-4px);box-shadow:0 4px 12px rgba(24,21,15,.2)`
+    el.innerHTML = catSvg(p.cat, '#15795A', 16)
+    el.addEventListener('mouseenter', () => hover.in(p))
+    el.addEventListener('mouseleave', () => hover.out())
+  }
   el.addEventListener('click', p.onClick)
+  return el
+}
+
+function hoverCardEl(p: MapPoint): HTMLElement {
+  const el = document.createElement('div')
+  el.style.cssText = `background:#fff;border-radius:12px;box-shadow:0 8px 22px rgba(24,21,15,.2);padding:9px 13px;white-space:nowrap;transform:translateY(-12px);font-family:'Pretendard',sans-serif;pointer-events:none`
+  const meta = [p.type, p.dist].filter(Boolean).join(' · ')
+  el.innerHTML = `<div style="font-size:13px;font-weight:800;color:#17150F">${p.name}</div>${meta ? `<div style="font-size:11.5px;font-weight:600;color:#A39C8E;margin-top:2px">${meta}</div>` : ''}`
+  return el
+}
+
+function clusterEl(members: MapPoint[], onOpen: () => void): HTMLElement {
+  const el = document.createElement('div')
+  el.style.cssText = `display:flex;align-items:center;gap:7px;padding:6px 13px 6px 6px;border-radius:22px;cursor:pointer;transform:translateY(-6px);font-family:'Pretendard',sans-serif;background:#17150F;box-shadow:0 6px 16px rgba(24,21,15,.3)`
+  el.innerHTML = `<div style="width:24px;height:24px;border-radius:50%;background:#15795A;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800">${members.length}</div><div style="font-size:12.5px;font-weight:800;color:#fff">장소 ${members.length}곳</div>`
+  el.addEventListener('click', (e) => {
+    e.stopPropagation()
+    onOpen()
+  })
   return el
 }
 
 function originEl(label: string): HTMLElement {
   const el = document.createElement('div')
-  el.style.cssText = `display:flex;align-items:center;gap:7px;padding:6px 13px 6px 7px;border-radius:22px;white-space:nowrap;font-family:'Pretendard',sans-serif;background:#15795A;box-shadow:0 6px 16px rgba(24,21,15,.24)`
-  el.innerHTML = `<div style="width:23px;height:23px;border-radius:50%;background:rgba(255,255,255,.24);display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="5"/></svg></div><div style="font-size:12px;font-weight:800;color:#fff">${label}</div>`
+  el.style.cssText = `display:flex;align-items:center;gap:7px;padding:6px 13px 6px 6px;border-radius:22px;white-space:nowrap;font-family:'Pretendard',sans-serif;background:#15795A;box-shadow:0 6px 16px rgba(24,21,15,.24)`
+  el.innerHTML = `<div style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.24);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.4A2.4 2.4 0 1 1 12 6.6a2.4 2.4 0 0 1 0 4.8z"/></svg></div><div style="font-size:12px;font-weight:800;color:#fff">${label}</div>`
   return el
+}
+
+function popupEl(members: MapPoint[], onPick: (p: MapPoint) => void): HTMLElement {
+  const box = document.createElement('div')
+  box.style.cssText = `background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(24,21,15,.22);padding:6px;width:216px;max-height:230px;overflow-y:auto;transform:translateY(-14px);font-family:'Pretendard',sans-serif`
+  members.forEach((m) => {
+    const row = document.createElement('div')
+    row.style.cssText = `display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:10px;cursor:pointer`
+    row.addEventListener('mouseenter', () => (row.style.background = '#F0F2F6'))
+    row.addEventListener('mouseleave', () => (row.style.background = 'transparent'))
+    const meta = [m.type, m.dist].filter(Boolean).join(' · ')
+    row.innerHTML = `<div style="width:26px;height:26px;border-radius:8px;background:#E4F2EC;display:flex;align-items:center;justify-content:center;flex-shrink:0">${catSvg(m.cat, '#15795A', 14)}</div><div style="min-width:0"><div style="font-size:13px;font-weight:700;color:#17150F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.name}</div>${meta ? `<div style="font-size:11px;font-weight:600;color:#A39C8E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${meta}</div>` : ''}</div>`
+    row.addEventListener('click', (e) => {
+      e.stopPropagation()
+      onPick(m)
+    })
+    box.appendChild(row)
+  })
+  return box
 }
 
 export function KakaoMap({ center, origin, points }: Props) {
   const boxRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<any>(null)
   const overlaysRef = useRef<any[]>([])
+  const popupRef = useRef<any>(null)
+  const hoverRef = useRef<any>(null)
+  const pointsRef = useRef<MapPoint[]>(points)
+  const originRef = useRef(origin)
   const [failed, setFailed] = useState(false)
 
-  // 초기화 (1회)
+  pointsRef.current = points
+  originRef.current = origin
+
   useEffect(() => {
     let cancelled = false
     loadKakaoMaps()
       .then((maps) => {
         if (cancelled || !boxRef.current) return
-        mapRef.current = new maps.Map(boxRef.current, { center: new maps.LatLng(center.lat, center.lng), level: 5 })
-        requestAnimationFrame(() => mapRef.current?.relayout())
-        draw()
+        const map = new maps.Map(boxRef.current, { center: new maps.LatLng(center.lat, center.lng), level: 3 })
+        mapRef.current = map
+        requestAnimationFrame(() => map.relayout())
+        maps.event.addListener(map, 'idle', recluster)
+        maps.event.addListener(map, 'click', closePopup)
+        recluster()
       })
       .catch(() => setFailed(true))
     return () => {
@@ -63,34 +124,106 @@ export function KakaoMap({ center, origin, points }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // 마커/좌표 변경 시 다시 그림
   useEffect(() => {
-    draw()
+    const maps = window.kakao?.maps
+    if (maps && mapRef.current) mapRef.current.setCenter(new maps.LatLng(center.lat, center.lng))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [points, center.lat, center.lng, origin?.lat, origin?.lng])
+  }, [center.lat, center.lng])
 
-  function draw() {
+  useEffect(() => {
+    recluster()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [points, origin?.lat, origin?.lng])
+
+  function closePopup() {
+    if (popupRef.current) {
+      popupRef.current.setMap(null)
+      popupRef.current = null
+    }
+  }
+  function closeHover() {
+    if (hoverRef.current) {
+      hoverRef.current.setMap(null)
+      hoverRef.current = null
+    }
+  }
+  function openHover(p: MapPoint) {
     const maps = window.kakao?.maps
     const map = mapRef.current
     if (!maps || !map) return
+    closeHover()
+    const ov = new maps.CustomOverlay({ position: new maps.LatLng(p.lat, p.lng), content: hoverCardEl(p), yAnchor: 1.7, zIndex: 30, clickable: false })
+    ov.setMap(map)
+    hoverRef.current = ov
+  }
+
+  function recluster() {
+    const maps = window.kakao?.maps
+    const map = mapRef.current
+    if (!maps || !map) return
+    closePopup()
+    closeHover()
     overlaysRef.current.forEach((o) => o.setMap(null))
     overlaysRef.current = []
-    const add = (lat: number, lng: number, content: HTMLElement, yAnchor: number) => {
-      const ov = new maps.CustomOverlay({ position: new maps.LatLng(lat, lng), content, yAnchor })
+
+    const pts = pointsRef.current
+    const org = originRef.current
+    const hover = { in: openHover, out: closeHover }
+    const add = (lat: number, lng: number, content: HTMLElement, yAnchor: number, zIndex = 1, clickable = true) => {
+      const ov = new maps.CustomOverlay({ position: new maps.LatLng(lat, lng), content, yAnchor, zIndex, clickable })
       ov.setMap(map)
       overlaysRef.current.push(ov)
     }
-    if (origin) add(origin.lat, origin.lng, originEl(origin.label), 0.5)
-    points.forEach((p) => add(p.lat, p.lng, pinEl(p), 1))
 
-    const all = [...(origin ? [origin] : []), ...points]
-    if (all.length > 1) {
-      const bounds = new maps.LatLngBounds()
-      all.forEach((p) => bounds.extend(new maps.LatLng(p.lat, p.lng)))
-      map.setBounds(bounds, 70, 70, 70, 70)
-    } else {
-      map.setCenter(new maps.LatLng(center.lat, center.lng))
+    if (org) add(org.lat, org.lng, originEl(org.label), 0.5, 2, false)
+
+    const selected = pts.filter((p) => p.selected)
+    const rest = pts.filter((p) => !p.selected)
+    const proj = map.getProjection()
+    const screen = rest.map((p) => proj.containerPointFromCoords(new maps.LatLng(p.lat, p.lng)))
+    const used = new Array(rest.length).fill(false)
+
+    for (let i = 0; i < rest.length; i++) {
+      if (used[i]) continue
+      used[i] = true
+      const group = [i]
+      for (let j = i + 1; j < rest.length; j++) {
+        if (used[j]) continue
+        if (Math.hypot(screen[i].x - screen[j].x, screen[i].y - screen[j].y) < CLUSTER_PX) {
+          used[j] = true
+          group.push(j)
+        }
+      }
+      if (group.length === 1) {
+        const p = rest[group[0]]
+        add(p.lat, p.lng, pinEl(p, hover), 1)
+      } else {
+        const members = group.map((g) => rest[g])
+        const cx = members.reduce((s, m) => s + m.lat, 0) / members.length
+        const cy = members.reduce((s, m) => s + m.lng, 0) / members.length
+        add(cx, cy, clusterEl(members, () => openPopup(cx, cy, members)), 1, 3)
+      }
     }
+    selected.forEach((p) => add(p.lat, p.lng, pinEl(p, hover), 1, 4))
+  }
+
+  function openPopup(lat: number, lng: number, members: MapPoint[]) {
+    const maps = window.kakao?.maps
+    const map = mapRef.current
+    if (!maps || !map) return
+    closePopup()
+    const ov = new maps.CustomOverlay({
+      position: new maps.LatLng(lat, lng),
+      content: popupEl(members, (p) => {
+        closePopup()
+        p.onClick()
+      }),
+      yAnchor: 1.1,
+      zIndex: 20,
+      clickable: true,
+    })
+    ov.setMap(map)
+    popupRef.current = ov
   }
 
   if (failed) {
