@@ -44,8 +44,7 @@ export function MapModal() {
   const [results, setResults] = useState<MapPlace[]>([])
   const [searching, setSearching] = useState(false)
   const [originMode, setOriginMode] = useState(false) // true = 검색이 '출발지' 지정용
-  const [detail, setDetail] = useState<MapPlace | null>(null) // 항목 인라인 아코디언
-  const [mapDetail, setMapDetail] = useState<MapPlace | null>(null) // 앱 내 지도 상세 모달
+  const [mapDetail, setMapDetail] = useState<MapPlace | null>(null) // 장소 상세 iframe 모달
 
   // 현재 위치 = 사용자 지정 출발지 우선, 없으면 geolocation(폴백 강남)
   const effOrigin = origin ?? { lat: loc.lat, lng: loc.lng, label: '현위치' }
@@ -125,6 +124,16 @@ export function MapModal() {
       setMapSearch('')
     } else {
       setMapSel(p.id)
+    }
+  }
+  // 지도 마커(말풍선) 클릭: 출발지 모드면 출발지 지정, 아니면 상세 모달(iframe) 열기
+  const onMarkerClick = (p: MapPlace) => {
+    if (originMode) {
+      setOrigin({ lat: p.lat, lng: p.lng, label: p.name })
+      setOriginMode(false)
+      setMapSearch('')
+    } else {
+      setMapDetail(p)
     }
   }
   const startOriginPick = () => {
@@ -241,25 +250,14 @@ export function MapModal() {
                       )}
                     </div>
                     {active && (
-                      <>
-                        <div style={{ display: 'flex', gap: 8, marginTop: 11 }}>
-                          <div onClick={(e) => { e.stopPropagation(); addPlaceTask(p.name) }} className="lift" style={{ flex: 1, textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#fff', background: '#17150F', borderRadius: 11, padding: 10, cursor: 'pointer' }}>
-                            일정에 추가
-                          </div>
-                          <div onClick={(e) => { e.stopPropagation(); setDetail(detail?.id === p.id ? null : p) }} style={{ textAlign: 'center', fontSize: 13, fontWeight: 700, color: detail?.id === p.id ? '#fff' : '#5A554B', background: detail?.id === p.id ? '#17150F' : '#E9EDF3', borderRadius: 11, padding: '10px 14px', cursor: 'pointer' }}>
-                            상세
-                          </div>
+                      <div style={{ display: 'flex', gap: 8, marginTop: 11 }}>
+                        <div onClick={(e) => { e.stopPropagation(); addPlaceTask(p.name) }} className="lift" style={{ flex: 1, textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#fff', background: '#17150F', borderRadius: 11, padding: 10, cursor: 'pointer' }}>
+                          일정에 추가
                         </div>
-                        {detail?.id === p.id && (
-                          <div style={{ marginTop: 11, paddingTop: 11, borderTop: '1px dashed #E1E5EC', animation: 'rb-pop .16s ease' }}>
-                            <div style={{ fontSize: 12.5, fontWeight: 600, color: '#A39C8E' }}>{p.type}{p.dist ? ` · ${p.dist}` : ''}</div>
-                            <div style={{ fontSize: 13, fontWeight: 500, color: '#6B665C', marginTop: 5, lineHeight: 1.5 }}>{p.address || '주소 정보 없음'}</div>
-                            <div onClick={(e) => { e.stopPropagation(); setMapDetail(p) }} className="hbtn" style={{ marginTop: 10, textAlign: 'center', fontSize: 12.5, fontWeight: 700, color: '#15795A', background: '#E4F2EC', borderRadius: 10, padding: '9px', cursor: 'pointer' }}>
-                              지도에서 보기
-                            </div>
-                          </div>
-                        )}
-                      </>
+                        <div onClick={(e) => { e.stopPropagation(); setMapDetail(p) }} style={{ textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#5A554B', background: '#E9EDF3', borderRadius: 11, padding: '10px 14px', cursor: 'pointer' }}>
+                          상세
+                        </div>
+                      </div>
                     )}
                   </div>
                 )
@@ -284,7 +282,7 @@ export function MapModal() {
                 type: p.type,
                 dist: p.dist,
                 selected: !originMode && mapSelId === p.id,
-                onClick: () => pick(p),
+                onClick: () => onMarkerClick(p),
               }))}
             />
             {/* 내 위치 버튼 */}
