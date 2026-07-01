@@ -49,7 +49,7 @@ export function HomeDashboard() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', width: '100%', padding: '30px 34px 44px', color: '#17150F', background: '#EEEBE3' }}>
+    <div className="page-pad" style={{ minHeight: '100vh', width: '100%', color: '#17150F', background: 'var(--canvas)' }}>
       <div style={{ maxWidth: 1180, margin: '0 auto' }}>
         {/* header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, gap: 16, flexWrap: 'wrap' }}>
@@ -83,9 +83,9 @@ export function HomeDashboard() {
         </div>
 
         {/* bento grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gridAutoRows: '168px', gap: 16 }}>
+        <div className="bento">
           {/* WEATHER 2x2 */}
-          <div onClick={openWeather} className="tile lift" style={{ gridColumn: 'span 2', gridRow: 'span 2', padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer', background: w.sky }}>
+          <div onClick={openWeather} className="tile lift" style={{ gridColumn: 'span 2', gridRow: 'span 2', minHeight: 300, padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer', background: w.sky }}>
             <div style={{ position: 'absolute', top: -50, right: -30, width: 200, height: 200, borderRadius: '50%', background: w.glow, filter: 'blur(30px)' }} />
             <div style={{ position: 'relative', padding: '26px 28px', height: '100%', display: 'flex', flexDirection: 'column', color: w.ink }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
@@ -116,7 +116,7 @@ export function HomeDashboard() {
           </div>
 
           {/* TASKS 2x3 */}
-          <div className="tile" style={{ gridColumn: 'span 2', gridRow: 'span 3', padding: '24px 26px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <div className="tile" style={{ gridColumn: 'span 2', gridRow: 'span 3', minHeight: 440, padding: '24px 26px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-.4px' }}>{taskTitle}</div>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#A39C8E' }}>{frac}</div>

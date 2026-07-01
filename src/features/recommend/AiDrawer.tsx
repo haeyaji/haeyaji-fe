@@ -136,7 +136,7 @@ const drawer = {
   zIndex: 41,
   width: 418,
   maxWidth: '100%',
-  background: '#EEEBE3',
+  background: 'var(--canvas)',
   display: 'flex',
   flexDirection: 'column',
   boxShadow: '-26px 0 56px rgba(24,21,15,.2)',

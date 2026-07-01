@@ -42,9 +42,9 @@ export function MapModal() {
           </div>
         </div>
 
-        <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
+        <div className="map-body">
           {/* LEFT */}
-          <div style={{ width: 322, flexShrink: 0, borderRight: '1px solid #EFEBE3', display: 'flex', flexDirection: 'column' }}>
+          <div className="map-aside">
             <div style={{ padding: '16px 18px 12px' }}>
               <div style={{ position: 'relative' }}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#A6A095" strokeWidth="2" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }}>
@@ -121,7 +121,7 @@ export function MapModal() {
           </div>
 
           {/* RIGHT: stylized map */}
-          <div style={{ flex: 1, minWidth: 0, position: 'relative', overflow: 'hidden' }}>
+          <div className="map-canvas">
             <div style={{ position: 'absolute', inset: 0, background: '#E7E3D8' }} />
             <div style={{ position: 'absolute', left: '-10%', top: '46%', width: '130%', height: '32%', transform: 'rotate(-9deg)', background: '#C7D6E2' }} />
             <div style={{ position: 'absolute', left: '9%', top: '13%', width: '30%', height: '26%', borderRadius: '46%', background: '#CFDDBE' }} />

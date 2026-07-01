@@ -14,7 +14,7 @@ export function LoginScreen() {
         justifyContent: 'center',
         padding: 32,
         color: '#17150F',
-        background: '#EEEBE3',
+        background: 'var(--canvas)',
         position: 'relative',
         overflow: 'hidden',
       }}
