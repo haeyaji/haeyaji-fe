@@ -7,6 +7,7 @@ import { useMapStore } from '@/store/useMapStore'
 import { useTodoStore } from '@/store/useTodoStore'
 import { useLocationStore } from '@/store/useLocationStore'
 import { KakaoMap } from './KakaoMap'
+import { PlaceDetailModal } from './PlaceDetailModal'
 import type { PlaceCat } from '@/types'
 
 // 지도/리스트 공통 장소 모델 (추천 mock + 카카오 검색결과 정규화)
@@ -43,7 +44,8 @@ export function MapModal() {
   const [results, setResults] = useState<MapPlace[]>([])
   const [searching, setSearching] = useState(false)
   const [originMode, setOriginMode] = useState(false) // true = 검색이 '출발지' 지정용
-  const [detail, setDetail] = useState<MapPlace | null>(null) // in-app 상세 카드
+  const [detail, setDetail] = useState<MapPlace | null>(null) // 항목 인라인 아코디언
+  const [mapDetail, setMapDetail] = useState<MapPlace | null>(null) // 앱 내 지도 상세 모달
 
   // 현재 위치 = 사용자 지정 출발지 우선, 없으면 geolocation(폴백 강남)
   const effOrigin = origin ?? { lat: loc.lat, lng: loc.lng, label: '현위치' }
@@ -136,6 +138,7 @@ export function MapModal() {
   }
 
   return (
+    <>
     <div onClick={closeMap} style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(24,21,15,.42)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 30, animation: 'rb-fade .16s ease' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 1040, maxWidth: '100%', height: 660, maxHeight: '92vh', background: '#fff', borderRadius: 24, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 100px rgba(24,21,15,.42)', animation: 'rb-modal .24s ease' }}>
         {/* header */}
@@ -251,11 +254,9 @@ export function MapModal() {
                           <div style={{ marginTop: 11, paddingTop: 11, borderTop: '1px dashed #E1E5EC', animation: 'rb-pop .16s ease' }}>
                             <div style={{ fontSize: 12.5, fontWeight: 600, color: '#A39C8E' }}>{p.type}{p.dist ? ` · ${p.dist}` : ''}</div>
                             <div style={{ fontSize: 13, fontWeight: 500, color: '#6B665C', marginTop: 5, lineHeight: 1.5 }}>{p.address || '주소 정보 없음'}</div>
-                            {p.placeUrl && (
-                              <div onClick={(e) => { e.stopPropagation(); window.open(p.placeUrl!, '_blank', 'noopener') }} className="hbtn" style={{ marginTop: 10, textAlign: 'center', fontSize: 12.5, fontWeight: 700, color: '#5A554B', background: '#F0F2F6', borderRadius: 10, padding: '9px', cursor: 'pointer' }}>
-                                카카오맵에서 보기
-                              </div>
-                            )}
+                            <div onClick={(e) => { e.stopPropagation(); setMapDetail(p) }} className="hbtn" style={{ marginTop: 10, textAlign: 'center', fontSize: 12.5, fontWeight: 700, color: '#15795A', background: '#E4F2EC', borderRadius: 10, padding: '9px', cursor: 'pointer' }}>
+                              지도에서 보기
+                            </div>
                           </div>
                         )}
                       </>
@@ -301,5 +302,17 @@ export function MapModal() {
         </div>
       </div>
     </div>
+
+    {mapDetail && (
+      <PlaceDetailModal
+        place={mapDetail}
+        onClose={() => setMapDetail(null)}
+        onAdd={() => {
+          addPlaceTask(mapDetail.name)
+          setMapDetail(null)
+        }}
+      />
+    )}
+    </>
   )
 }
