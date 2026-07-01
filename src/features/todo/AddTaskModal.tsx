@@ -57,7 +57,8 @@ export function AddTaskModal() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {
+              // 한글 IME 조합 중 Enter는 무시 (끝 글자 중복 방지)
+              if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
                 e.preventDefault()
                 submit()
               }
