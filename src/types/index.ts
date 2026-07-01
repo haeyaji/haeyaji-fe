@@ -63,8 +63,8 @@ export interface Place {
   dist: string
   cat: PlaceCat
   why: string
-  left: string
-  top: string
+  lat: number
+  lng: number
 }
 
 export type RoutineCat = 'yoga' | 'shop' | 'code'

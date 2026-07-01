@@ -11,11 +11,12 @@ export const WEEK: WeekDay[] = [
   { id: '26', dow: '일', date: 26, cond: 'sunny', hi: 25, lo: 18 },
 ]
 
+// 좌표는 강남권 실좌표 (기본 위치 강남역 기준 주변). 실지도 마커용.
 export const PLACES: Place[] = [
-  { id: 'p1', name: '블루보틀 커피 (페리 빌딩)', type: '카페 · 테라스', dist: '1.1km', cat: 'cafe', why: '통창과 테라스가 있어 집중 업무에 좋아요. 맑은 날 1순위.', left: '34%', top: '56%' },
-  { id: 'p2', name: '돌로레스 공원', type: '공원 · 산책', dist: '2.3km', cat: 'park', why: '잔디밭에서 햇살 쬐기 좋은 공원. 산책·피크닉 추천.', left: '62%', top: '40%' },
-  { id: 'p3', name: '페리 빌딩 마켓', type: '맛집 · 마켓', dist: '1.4km', cat: 'food', why: '실내 먹거리 마켓이라 날씨와 무관하게 즐기기 좋아요.', left: '70%', top: '66%' },
-  { id: 'p4', name: 'SFMOMA 미술관', type: '문화 · 실내', dist: '0.8km', cat: 'culture', why: '비 오는 날 실내에서 시간 보내기 딱 좋은 코스.', left: '46%', top: '30%' },
+  { id: 'p1', name: '블루보틀 커피 (역삼)', type: '카페 · 테라스', dist: '1.1km', cat: 'cafe', why: '통창과 테라스가 있어 집중 업무에 좋아요. 맑은 날 1순위.', lat: 37.5006, lng: 127.0366 },
+  { id: 'p2', name: '양재천 산책로', type: '공원 · 산책', dist: '2.3km', cat: 'park', why: '물길 따라 걷기 좋은 산책로. 산책·피크닉 추천.', lat: 37.4844, lng: 127.0398 },
+  { id: 'p3', name: '강남역 맛집거리', type: '맛집 · 거리', dist: '1.4km', cat: 'food', why: '실내 먹거리가 몰려 있어 날씨와 무관하게 즐기기 좋아요.', lat: 37.4959, lng: 127.0281 },
+  { id: 'p4', name: '코엑스 아쿠아리움', type: '문화 · 실내', dist: '0.8km', cat: 'culture', why: '비 오는 날 실내에서 시간 보내기 딱 좋은 코스.', lat: 37.5126, lng: 127.0589 },
 ]
 
 export const DOW = ['월', '화', '수', '목', '금', '토', '일']
