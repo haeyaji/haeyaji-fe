@@ -46,7 +46,7 @@ export function CalendarPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', width: '100%', padding: '24px 30px 36px', color: '#17150F', background: '#EEEBE3' }}>
+    <div className="page-pad-cal" style={{ minHeight: '100vh', width: '100%', color: '#17150F', background: 'var(--canvas)' }}>
       <div style={{ maxWidth: 1240, margin: '0 auto' }}>
         {/* header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
@@ -79,7 +79,7 @@ export function CalendarPage() {
         </div>
 
         {/* body */}
-        <div style={{ display: 'flex', gap: 18, alignItems: 'stretch' }}>
+        <div className="cal-body">
           {/* month grid */}
           <div className="tile" style={{ flex: 1, minWidth: 0, padding: '20px 22px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', marginBottom: 10 }}>
@@ -87,7 +87,7 @@ export function CalendarPage() {
                 <div key={h.label} style={{ textAlign: 'left', padding: '0 11px 6px', fontSize: 12.5, fontWeight: 700, color: h.color }}>{h.label}</div>
               ))}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gridAutoRows: '106px', gap: 8 }}>
+            <div className="cal-grid">
               {cells.map((c) => {
                 const on = !!c.inWeek && c.wid === selId
                 const tl = c.wid ? tasksByDate[c.wid] ?? [] : []
@@ -138,7 +138,7 @@ export function CalendarPage() {
           </div>
 
           {/* aside */}
-          <div style={{ width: 344, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="cal-aside" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ borderRadius: 24, overflow: 'hidden', position: 'relative', background: w.sky, color: w.ink, padding: '22px 24px' }}>
               <div style={{ position: 'absolute', top: -40, right: -26, width: 150, height: 150, borderRadius: '50%', background: w.glow, filter: 'blur(26px)' }} />
               <div style={{ position: 'relative' }}>
