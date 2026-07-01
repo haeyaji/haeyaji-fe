@@ -74,6 +74,25 @@
   to { opacity: 1; transform: translate(-50%, 0); }
 }
 
+/* 날씨 오버레이 (WeatherOverlay) */
+@keyframes rb-rain {
+  from { transform: translateY(-40px); opacity: 0; }
+  10% { opacity: 1; }
+  to { transform: translateY(380px); opacity: 1; }
+}
+@keyframes rb-drift {
+  from { transform: translateX(-160px); }
+  to { transform: translateX(780px); }
+}
+@keyframes rb-twinkle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+@keyframes rb-rays {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* ── 반응형 레이아웃 ─────────────────────────────────────────────
    데스크탑은 시안 그대로. 브레이크포인트에서 스택. */
 

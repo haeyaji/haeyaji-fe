@@ -1,6 +1,7 @@
 import { CloseIcon, DetailIcon, WeatherIcon, type DetailKey } from '@/lib/icons'
 import { dayMeta, dayWeather } from '@/lib/weather'
 import { useAppStore } from '@/store/useAppStore'
+import { WeatherOverlay } from './WeatherOverlay'
 
 export function WeatherDrawer() {
   const { weatherOpen, closeWeather, selId } = useAppStore()
@@ -40,14 +41,15 @@ export function WeatherDrawer() {
           overflowY: 'auto',
         }}
       >
-        <div style={{ padding: '24px 24px 30px', background: w.sky, color: w.ink, position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '24px 24px 30px', background: w.sky, color: w.ink, position: 'relative', overflow: 'hidden' }}>
+          <WeatherOverlay cond={w.cond} tod={w.tod} />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ fontSize: 16, fontWeight: 800 }}>{dateShort} · 샌프란시스코</div>
             <div onClick={closeWeather} style={{ width: 30, height: 30, borderRadius: 10, background: 'rgba(255,255,255,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
               <CloseIcon c="currentColor" />
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, marginTop: 18 }}>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-end', gap: 14, marginTop: 18 }}>
             <div style={{ width: 60, height: 60 }}>
               <WeatherIcon cond={w.cond} c={w.iconC} />
             </div>
