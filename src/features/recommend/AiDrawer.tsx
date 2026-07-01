@@ -3,11 +3,8 @@ import { dayMeta, dayWeather } from '@/lib/weather'
 import { useAppStore } from '@/store/useAppStore'
 import { useChatStore, type SendCtx } from '@/store/useChatStore'
 import { useTodoStore } from '@/store/useTodoStore'
-import { useGeolocation } from '@/hooks/useGeolocation'
+import { useLocationStore } from '@/store/useLocationStore'
 import type { Category, PlaceCat, RecommendedTodo } from '@/types'
-
-// Kakao는 한국 좌표만 유효 → geolocation 없으면 기본값(강남)
-const DEFAULT_LOC = { lat: 37.4979, lng: 127.0276 }
 
 const QUICK: { chip: string; text: string }[] = [
   { chip: '오늘 날씨에 맞는 곳', text: '오늘 날씨에 맞는 곳 추천해줘' },
@@ -35,7 +32,7 @@ export function AiDrawer() {
   const { aiOpen, closeAi, selId } = useAppStore()
   const { chat, input, loading, setInput, send, ask } = useChatStore()
   const addPlaceTask = useTodoStore((s) => s.addPlaceTask)
-  const geo = useGeolocation()
+  const loc = useLocationStore()
 
   if (!aiOpen) return null
 
@@ -43,8 +40,8 @@ export function AiDrawer() {
   const w = dayWeather(selId)
   const dateShort = `5월 ${meta.date}일 (${meta.dow})`
   const ctx: SendCtx = {
-    lat: geo.lat ?? DEFAULT_LOC.lat,
-    lng: geo.lng ?? DEFAULT_LOC.lng,
+    lat: loc.lat,
+    lng: loc.lng,
     weather: `${w.condKo}, ${w.temp}도`,
   }
 

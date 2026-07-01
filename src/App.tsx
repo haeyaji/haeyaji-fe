@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { useAppStore } from '@/store/useAppStore'
+import { useLocationStore } from '@/store/useLocationStore'
 import { LoginScreen } from '@/features/auth/LoginScreen'
 import { HomeDashboard } from '@/features/home/HomeDashboard'
 import { CalendarPage } from '@/features/calendar/CalendarPage'
@@ -12,6 +14,11 @@ import { Toast } from '@/components/Toast'
 
 export default function App() {
   const { authed, view } = useAppStore()
+
+  // 위치 1회 획득 (거부/미지원 시 기본값 강남)
+  useEffect(() => {
+    useLocationStore.getState().init()
+  }, [])
 
   if (!authed) {
     return (
