@@ -43,6 +43,8 @@ export type TasksByDate = Record<string, Task[]>
 
 export type WeatherCond = 'sunny' | 'cloudy' | 'rainy'
 
+export type TimeOfDay = 'dawn' | 'day' | 'dusk' | 'night'
+
 export interface WeekDay {
   id: string
   dow: string
@@ -79,7 +81,7 @@ export interface Routine {
 export interface ChatMessage {
   role: 'user' | 'assistant'
   text: string
-  places?: string[] // place id 목록
+  todos?: RecommendedTodo[] // nlp 추천 결과 (assistant 메시지)
 }
 
 export interface HourlyForecast {
@@ -91,6 +93,7 @@ export interface HourlyForecast {
 /** 날씨 시각 토큰 + 수치 (dayWeather 결과) */
 export interface DayWeather {
   cond: WeatherCond
+  tod: TimeOfDay
   temp: number
   hi: number
   lo: number

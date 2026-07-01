@@ -5,6 +5,7 @@ import { useAppStore } from '@/store/useAppStore'
 import { useMapStore } from '@/store/useMapStore'
 import { useDayTasks } from '@/features/todo/useDayTasks'
 import { TaskRow, EmptyTasks } from '@/features/todo/TaskRow'
+import { WeatherOverlay } from '@/features/weather/WeatherOverlay'
 
 const navBtn = {
   display: 'flex',
@@ -87,6 +88,7 @@ export function HomeDashboard() {
           {/* WEATHER 2x2 */}
           <div onClick={openWeather} className="tile lift" style={{ gridColumn: 'span 2', gridRow: 'span 2', minHeight: 300, padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer', background: w.sky }}>
             <div style={{ position: 'absolute', top: -50, right: -30, width: 200, height: 200, borderRadius: '50%', background: w.glow, filter: 'blur(30px)' }} />
+            <WeatherOverlay cond={w.cond} tod={w.tod} />
             <div style={{ position: 'relative', padding: '26px 28px', height: '100%', display: 'flex', flexDirection: 'column', color: w.ink }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div>
