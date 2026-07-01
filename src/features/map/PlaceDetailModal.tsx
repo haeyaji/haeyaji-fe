@@ -16,7 +16,21 @@ export interface DetailPlace {
 
 // 카카오맵 외부 이동 대신 앱 안 모달로 표시.
 // placeUrl 있으면 카카오 place 페이지를 iframe으로 임베드(사진·후기·메뉴 포함), 없으면 지도로.
-export function PlaceDetailModal({ place, onClose, onAdd }: { place: DetailPlace; onClose: () => void; onAdd: () => void }) {
+export function PlaceDetailModal({
+  place,
+  isDest,
+  onClose,
+  onAdd,
+  onSetOrigin,
+  onSetDest,
+}: {
+  place: DetailPlace
+  isDest: boolean
+  onClose: () => void
+  onAdd: () => void
+  onSetOrigin: () => void
+  onSetDest: () => void
+}) {
   const embedUrl = place.placeUrl ? place.placeUrl.replace(/^http:/, 'https:') : null
 
   return (
@@ -52,12 +66,18 @@ export function PlaceDetailModal({ place, onClose, onAdd }: { place: DetailPlace
           )}
         </div>
 
-        {/* footer: 내 앱 액션 */}
-        <div style={{ display: 'flex', gap: 8, padding: '14px 18px', borderTop: '1px solid #E6E9F0', flexShrink: 0 }}>
-          <div onClick={onAdd} className="lift" style={{ flex: 1, textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#fff', background: '#17150F', borderRadius: 12, padding: 13, cursor: 'pointer' }}>일정에 추가</div>
-          {embedUrl && (
-            <div onClick={() => window.open(embedUrl, '_blank', 'noopener')} style={{ textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#5A554B', background: '#E9EDF3', borderRadius: 12, padding: '13px 16px', cursor: 'pointer' }}>새 탭</div>
-          )}
+        {/* footer: 출발지/도착지 지정 + 일정 추가 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '13px 18px 16px', borderTop: '1px solid #E6E9F0', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <div onClick={onSetOrigin} className="hbtn" style={{ flex: 1, textAlign: 'center', fontSize: 13.5, fontWeight: 700, color: '#15795A', background: '#E4F2EC', borderRadius: 12, padding: 12, cursor: 'pointer' }}>출발지로 지정</div>
+            <div onClick={onSetDest} className="hbtn" style={{ flex: 1, textAlign: 'center', fontSize: 13.5, fontWeight: 700, color: isDest ? '#fff' : '#17150F', background: isDest ? '#17150F' : '#EBEDF0', borderRadius: 12, padding: 12, cursor: 'pointer' }}>{isDest ? '도착지 지정됨' : '도착지로 지정'}</div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <div onClick={onAdd} className="lift" style={{ flex: 1, textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#fff', background: '#17150F', borderRadius: 12, padding: 13, cursor: 'pointer' }}>일정에 추가</div>
+            {embedUrl && (
+              <div onClick={() => window.open(embedUrl, '_blank', 'noopener')} style={{ textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#5A554B', background: '#E9EDF3', borderRadius: 12, padding: '13px 16px', cursor: 'pointer' }}>새 탭</div>
+            )}
+          </div>
         </div>
       </div>
     </div>
