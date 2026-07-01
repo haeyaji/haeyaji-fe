@@ -7,6 +7,7 @@ import { useMapStore } from '@/store/useMapStore'
 import { useTodoStore } from '@/store/useTodoStore'
 import { useLocationStore } from '@/store/useLocationStore'
 import { KakaoMap } from './KakaoMap'
+import { StaticMapThumb } from './StaticMapThumb'
 import type { PlaceCat } from '@/types'
 
 // 지도/리스트 공통 장소 모델 (추천 mock + 카카오 검색결과 정규화)
@@ -19,6 +20,7 @@ interface MapPlace {
   lat: number
   lng: number
   placeUrl?: string
+  address?: string
 }
 
 const km = (s: string) => parseFloat(String(s).replace(/[^\d.]/g, '')) || 0
@@ -42,9 +44,10 @@ export function MapModal() {
   const [results, setResults] = useState<MapPlace[]>([])
   const [searching, setSearching] = useState(false)
   const [originMode, setOriginMode] = useState(false) // true = 검색이 '출발지' 지정용
+  const [detail, setDetail] = useState<MapPlace | null>(null) // in-app 상세 카드
 
   // 현재 위치 = 사용자 지정 출발지 우선, 없으면 geolocation(폴백 강남)
-  const effOrigin = origin ?? { lat: loc.lat, lng: loc.lng, label: loc.source === 'geo' ? '현재 위치' : '강남역 · 기본 위치' }
+  const effOrigin = origin ?? { lat: loc.lat, lng: loc.lng, label: '현위치' }
 
   // 지도 열 때마다 현재 위치 재요청
   useEffect(() => {
@@ -82,6 +85,7 @@ export function MapModal() {
                 lat: Number(d.y),
                 lng: Number(d.x),
                 placeUrl: d.place_url,
+                address: d.road_address_name || d.address_name || '',
               })),
             )
           } else {
@@ -239,11 +243,9 @@ export function MapModal() {
                         <div onClick={(e) => { e.stopPropagation(); addPlaceTask(p.name) }} className="lift" style={{ flex: 1, textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#fff', background: '#17150F', borderRadius: 11, padding: 10, cursor: 'pointer' }}>
                           일정에 추가
                         </div>
-                        {p.placeUrl && (
-                          <div onClick={(e) => { e.stopPropagation(); window.open(p.placeUrl!, '_blank', 'noopener') }} style={{ textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#5A554B', background: '#E9EDF3', borderRadius: 11, padding: '10px 14px', cursor: 'pointer' }}>
-                            상세
-                          </div>
-                        )}
+                        <div onClick={(e) => { e.stopPropagation(); setDetail(p) }} style={{ textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#5A554B', background: '#E9EDF3', borderRadius: 11, padding: '10px 14px', cursor: 'pointer' }}>
+                          상세
+                        </div>
                       </div>
                     )}
                   </div>
@@ -258,7 +260,7 @@ export function MapModal() {
           {/* RIGHT: 실제 카카오맵 */}
           <div className="map-canvas">
             <KakaoMap
-              center={{ lat: effOrigin.lat, lng: effOrigin.lng }}
+              center={selP ? { lat: selP.lat, lng: selP.lng } : { lat: effOrigin.lat, lng: effOrigin.lng }}
               origin={{ lat: effOrigin.lat, lng: effOrigin.lng, label: `출발 · ${effOrigin.label}` }}
               points={shown.map((p) => ({
                 id: p.id,
@@ -266,6 +268,8 @@ export function MapModal() {
                 lng: p.lng,
                 name: p.name,
                 cat: p.cat,
+                type: p.type,
+                dist: p.dist,
                 selected: !originMode && mapSelId === p.id,
                 onClick: () => pick(p),
               }))}
@@ -276,11 +280,36 @@ export function MapModal() {
               title="현재 위치로"
               style={{ position: 'absolute', right: 14, bottom: 14, zIndex: 5, width: 42, height: 42, borderRadius: 12, background: '#fff', border: '1px solid #E1E5EC', boxShadow: '0 4px 14px rgba(24,21,15,.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={loc.locating ? '#A39C8E' : '#15795A'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+              <svg width="21" height="21" viewBox="0 0 24 24" fill={loc.locating ? '#A39C8E' : '#15795A'}>
+                <path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.4A2.4 2.4 0 1 1 12 6.6a2.4 2.4 0 0 1 0 4.8z" />
               </svg>
             </div>
+
+            {/* in-app 상세 카드 (카카오맵 대신 앱 안에서 미리보기) */}
+            {detail && (
+              <div style={{ position: 'absolute', left: 12, right: 12, bottom: 12, zIndex: 8, background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 14px 40px rgba(24,21,15,.28)', animation: 'rb-pop .2s ease' }}>
+                <div style={{ height: 118, position: 'relative' }}>
+                  <StaticMapThumb lat={detail.lat} lng={detail.lng} />
+                  <div onClick={() => setDetail(null)} style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: 9, background: 'rgba(255,255,255,.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(24,21,15,.16)' }}>
+                    <CloseIcon w={14} />
+                  </div>
+                </div>
+                <div style={{ padding: '13px 15px 15px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ fontSize: 15.5, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{detail.name}</div>
+                    {detail.dist && <div style={{ flexShrink: 0, fontSize: 11.5, fontWeight: 700, color: '#15795A', background: '#E4F2EC', padding: '3px 8px', borderRadius: 20 }}>{detail.dist}</div>}
+                  </div>
+                  <div style={{ fontSize: 12.5, fontWeight: 600, color: '#A39C8E', marginTop: 3 }}>{detail.type}</div>
+                  {detail.address && <div style={{ fontSize: 12.5, fontWeight: 500, color: '#6B665C', marginTop: 6, lineHeight: 1.5 }}>{detail.address}</div>}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 13 }}>
+                    <div onClick={() => { addPlaceTask(detail.name); setDetail(null) }} className="lift" style={{ flex: 1, textAlign: 'center', fontSize: 13.5, fontWeight: 700, color: '#fff', background: '#17150F', borderRadius: 11, padding: 11, cursor: 'pointer' }}>일정에 추가</div>
+                    {detail.placeUrl && (
+                      <div onClick={() => window.open(detail.placeUrl!, '_blank', 'noopener')} style={{ textAlign: 'center', fontSize: 13.5, fontWeight: 700, color: '#5A554B', background: '#E9EDF3', borderRadius: 11, padding: '11px 15px', cursor: 'pointer' }}>카카오맵</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
