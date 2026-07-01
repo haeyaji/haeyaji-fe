@@ -43,10 +43,9 @@ export function MapModal() {
 
   const [results, setResults] = useState<MapPlace[]>([])
   const [searching, setSearching] = useState(false)
-  const [originMode, setOriginMode] = useState(false) // true = 검색이 '출발지' 지정용
   const [mapDetail, setMapDetail] = useState<MapPlace | null>(null) // 장소 상세 iframe 모달
 
-  // 현재 위치 = 사용자 지정 출발지 우선, 없으면 geolocation(폴백 강남)
+  // 출발지 = 사용자 지정 우선, 없으면 현위치(폴백 강남)
   const effOrigin = origin ?? { lat: loc.lat, lng: loc.lng, label: '현위치' }
 
   // 지도 열 때마다 현재 위치 재요청
@@ -54,7 +53,7 @@ export function MapModal() {
     if (mapOpen) useLocationStore.getState().locate()
   }, [mapOpen])
 
-  // 키워드 검색 (디바운스). 출발지 기준 반경 검색.
+  // 키워드 검색 (디바운스). 출발지 기준 관련성순.
   useEffect(() => {
     const q = mapSearch.trim()
     if (!q) {
@@ -92,7 +91,6 @@ export function MapModal() {
             setResults([])
           }
         },
-        // 관련성순(accuracy) + 출발지 위치 힌트 → 키워드 정확히 매칭, 거리는 참고표시
         { location: new maps.LatLng(effOrigin.lat, effOrigin.lng), sort: 'accuracy' },
       )
     }, 400)
@@ -114,142 +112,118 @@ export function MapModal() {
 
   const shown: MapPlace[] = mq ? results : recPlaces
   const selP = shown.find((p) => p.id === mapSelId) ?? null
-  const listTitle = originMode ? '출발지로 지정할 곳' : mq ? (searching ? '검색 중…' : '검색 결과') : '오늘 추천 장소'
+  const listTitle = mq ? (searching ? '검색 중…' : '검색 결과') : '오늘 추천 장소'
+  const isCustomOrigin = !!origin
 
-  // 검색결과/마커 클릭: 출발지 지정 모드면 출발지 설정, 아니면 도착지 선택
-  const pick = (p: MapPlace) => {
-    if (originMode) {
-      setOrigin({ lat: p.lat, lng: p.lng, label: p.name })
-      setOriginMode(false)
-      setMapSearch('')
-    } else {
-      setMapSel(p.id)
-    }
+  // 출발지로 지정 / 도착지로 지정 (상세 모달에서 호출)
+  const setAsOrigin = (p: MapPlace) => {
+    setOrigin({ lat: p.lat, lng: p.lng, label: p.name })
+    setMapDetail(null)
   }
-  // 지도 마커(말풍선) 클릭: 출발지 모드면 출발지 지정, 아니면 상세 모달(iframe) 열기
-  const onMarkerClick = (p: MapPlace) => {
-    if (originMode) {
-      setOrigin({ lat: p.lat, lng: p.lng, label: p.name })
-      setOriginMode(false)
-      setMapSearch('')
-    } else {
-      setMapDetail(p)
-    }
-  }
-  const startOriginPick = () => {
-    setOriginMode(true)
-    setMapSearch('')
+  const setAsDest = (p: MapPlace) => {
+    setMapSel(p.id)
+    setMapDetail(null)
   }
   const useMyLocation = () => {
     resetOrigin()
-    setOriginMode(false)
     useLocationStore.getState().locate()
   }
 
   return (
     <>
-    <div onClick={closeMap} style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(24,21,15,.42)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 30, animation: 'rb-fade .16s ease' }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: 1040, maxWidth: '100%', height: 660, maxHeight: '92vh', background: '#fff', borderRadius: 24, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 100px rgba(24,21,15,.42)', animation: 'rb-modal .24s ease' }}>
-        {/* header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 26px', borderBottom: '1px solid #E6E9F0' }}>
-          <div>
-            <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-.4px' }}>추천 장소 지도</div>
-            <div style={{ fontSize: 12.5, fontWeight: 600, color: '#A39C8E', marginTop: 2 }}>{mapHint}</div>
-          </div>
-          <div onClick={closeMap} style={{ width: 34, height: 34, borderRadius: 11, background: '#E9EDF3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <CloseIcon w={16} />
-          </div>
-        </div>
-
-        <div className="map-body">
-          {/* LEFT */}
-          <div className="map-aside">
-            <div style={{ padding: '16px 18px 12px' }}>
-              <div style={{ position: 'relative' }}>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#A6A095" strokeWidth="2" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }}>
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="M21 21l-4-4" strokeLinecap="round" />
-                </svg>
-                <input
-                  value={mapSearch}
-                  onChange={(e) => setMapSearch(e.target.value)}
-                  placeholder={originMode ? '출발지로 쓸 장소 검색' : '장소·주소 검색 (예: 스타벅스, 한강공원)'}
-                  autoFocus={originMode}
-                  style={{ width: '100%', border: `1px solid ${originMode ? '#15795A' : '#E1E5EC'}`, outline: 'none', background: originMode ? '#F0F7F3' : '#F0F2F6', borderRadius: 13, padding: '11px 14px 11px 40px', fontFamily: 'inherit', fontSize: 13.5, fontWeight: 600, color: '#17150F' }}
-                />
-              </div>
-
-              <div style={{ marginTop: 12, background: '#F0F2F6', borderRadius: 14, padding: '13px 15px' }}>
-                {/* 출발지 (지정 가능) */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#15795A', flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, color: '#17150F', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{effOrigin.label}</div>
-                  <div onClick={startOriginPick} className="hbtn" style={{ flexShrink: 0, fontSize: 11.5, fontWeight: 800, color: '#15795A', background: '#E4F2EC', borderRadius: 8, padding: '4px 9px', cursor: 'pointer' }}>변경</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, height: 14 }}>
-                  <div style={{ width: 10, display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
-                    <div style={{ width: 2, height: 14, background: '#CCD2DC' }} />
-                  </div>
-                </div>
-                {/* 도착지 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: 3, background: '#17150F', flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, color: selP ? '#17150F' : '#B6BCC7', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {selP ? selP.name : '도착지를 선택하세요'}
-                  </div>
-                </div>
-              </div>
-
-              {originMode && (
-                <div onClick={useMyLocation} className="hbtn" style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: '#fff', border: '1px solid #E1E5EC', borderRadius: 12, padding: '10px', fontSize: 13, fontWeight: 700, color: '#15795A', cursor: 'pointer' }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#15795A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>
-                  현재 위치로
-                </div>
-              )}
-
-              {!originMode && selP && (
-                <div style={{ marginTop: 11, display: 'flex', alignItems: 'center', gap: 13, background: '#E4F2EC', borderRadius: 14, padding: '13px 15px' }}>
-                  <div style={{ width: 24, height: 24, flexShrink: 0 }}>
-                    <svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="#15795A" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 11l1.4-4.2A2 2 0 0 1 8.3 5.4h7.4a2 2 0 0 1 1.9 1.4L19 11M5 11h14v5H5zM7 16v1.6M17 16v1.6" />
-                      <circle cx="8" cy="13.4" r="1" />
-                      <circle cx="16" cy="13.4" r="1" />
-                    </svg>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 16.5, fontWeight: 800, color: '#0F5A42' }}>자동차 {driveOf(selP.dist || '1km')}</div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: '#3E8C6E', marginTop: 1 }}>{selP.dist || '거리 정보 없음'} · 가장 빠른 경로</div>
-                  </div>
-                </div>
-              )}
+      <div onClick={closeMap} style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(24,21,15,.42)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 30, animation: 'rb-fade .16s ease' }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ width: 1040, maxWidth: '100%', height: 660, maxHeight: '92vh', background: '#fff', borderRadius: 24, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 100px rgba(24,21,15,.42)', animation: 'rb-modal .24s ease' }}>
+          {/* header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 26px', borderBottom: '1px solid #E6E9F0' }}>
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-.4px' }}>추천 장소 지도</div>
+              <div style={{ fontSize: 12.5, fontWeight: 600, color: '#A39C8E', marginTop: 2 }}>{mapHint}</div>
             </div>
+            <div onClick={closeMap} style={{ width: 34, height: 34, borderRadius: 11, background: '#E9EDF3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <CloseIcon w={16} />
+            </div>
+          </div>
 
-            <div style={{ fontSize: 12, fontWeight: 800, color: originMode ? '#15795A' : '#A39C8E', padding: '6px 20px 8px' }}>{listTitle}</div>
-            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {shown.map((p) => {
-                const active = !originMode && mapSelId === p.id
-                return (
-                  <div key={p.id} onClick={() => pick(p)} className="hbtn" style={{ border: `1px solid ${active ? '#17150F' : '#E1E5EC'}`, background: active ? '#F7F8FB' : '#fff', borderRadius: 14, padding: '12px 13px', cursor: 'pointer' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-                      <div style={{ width: 38, height: 38, borderRadius: 11, background: '#E4F2EC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <span style={{ width: 18, height: 18, display: 'inline-flex' }}><CategoryIcon cat={p.cat} c="#15795A" /></span>
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
-                        <div style={{ fontSize: 11.5, fontWeight: 600, color: '#A39C8E', marginTop: 1 }}>{p.type}{p.dist ? ` · ${p.dist}` : ''}</div>
-                      </div>
-                      {originMode ? (
-                        <div style={{ flexShrink: 0, fontSize: 11.5, fontWeight: 800, color: '#15795A' }}>출발지 지정 →</div>
-                      ) : (
-                        p.dist && (
+          <div className="map-body">
+            {/* LEFT */}
+            <div className="map-aside">
+              <div style={{ padding: '16px 18px 12px' }}>
+                <div style={{ position: 'relative' }}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#A6A095" strokeWidth="2" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }}>
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="M21 21l-4-4" strokeLinecap="round" />
+                  </svg>
+                  <input
+                    value={mapSearch}
+                    onChange={(e) => setMapSearch(e.target.value)}
+                    placeholder="장소·주소 검색 (예: 스타벅스, 한강공원)"
+                    style={{ width: '100%', border: '1px solid #E1E5EC', outline: 'none', background: '#F0F2F6', borderRadius: 13, padding: '11px 14px 11px 40px', fontFamily: 'inherit', fontSize: 13.5, fontWeight: 600, color: '#17150F' }}
+                  />
+                </div>
+
+                {/* 출발지 → 도착지 */}
+                <div style={{ marginTop: 12, background: '#F0F2F6', borderRadius: 14, padding: '13px 15px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#15795A', flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, color: '#17150F', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{effOrigin.label}</div>
+                    {isCustomOrigin && (
+                      <div onClick={useMyLocation} className="hbtn" style={{ flexShrink: 0, fontSize: 11.5, fontWeight: 800, color: '#15795A', background: '#E4F2EC', borderRadius: 8, padding: '4px 9px', cursor: 'pointer' }}>현위치</div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, height: 14 }}>
+                    <div style={{ width: 10, display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
+                      <div style={{ width: 2, height: 14, background: '#CCD2DC' }} />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 3, background: '#17150F', flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, color: selP ? '#17150F' : '#B6BCC7', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {selP ? selP.name : '도착지를 선택하세요'}
+                    </div>
+                    {selP && (
+                      <div onClick={() => setMapSel(null)} className="hbtn" style={{ flexShrink: 0, fontSize: 11.5, fontWeight: 800, color: '#A39C8E', cursor: 'pointer' }}>해제</div>
+                    )}
+                  </div>
+                </div>
+
+                {selP && (
+                  <div style={{ marginTop: 11, display: 'flex', alignItems: 'center', gap: 13, background: '#E4F2EC', borderRadius: 14, padding: '13px 15px' }}>
+                    <div style={{ width: 24, height: 24, flexShrink: 0 }}>
+                      <svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="#15795A" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 11l1.4-4.2A2 2 0 0 1 8.3 5.4h7.4a2 2 0 0 1 1.9 1.4L19 11M5 11h14v5H5zM7 16v1.6M17 16v1.6" />
+                        <circle cx="8" cy="13.4" r="1" />
+                        <circle cx="16" cy="13.4" r="1" />
+                      </svg>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 16.5, fontWeight: 800, color: '#0F5A42' }}>자동차 {driveOf(selP.dist || '1km')}</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: '#3E8C6E', marginTop: 1 }}>{selP.dist || '거리 정보 없음'} · 가장 빠른 경로</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#A39C8E', padding: '6px 20px 8px' }}>{listTitle}</div>
+              <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {shown.map((p) => {
+                  const active = mapSelId === p.id
+                  return (
+                    <div key={p.id} onClick={() => setMapDetail(p)} className="hbtn" style={{ border: `1px solid ${active ? '#17150F' : '#E1E5EC'}`, background: active ? '#F7F8FB' : '#fff', borderRadius: 14, padding: '12px 13px', cursor: 'pointer' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+                        <div style={{ width: 38, height: 38, borderRadius: 11, background: '#E4F2EC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <span style={{ width: 18, height: 18, display: 'inline-flex' }}><CategoryIcon cat={p.cat} c="#15795A" /></span>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                          <div style={{ fontSize: 11.5, fontWeight: 600, color: '#A39C8E', marginTop: 1 }}>{p.type}{p.dist ? ` · ${p.dist}` : ''}</div>
+                        </div>
+                        {p.dist && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, color: '#8B8579' }}>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" strokeLinecap="round" /></svg>
                             <div style={{ fontSize: 12, fontWeight: 700 }}>{driveOf(p.dist)}</div>
                           </div>
-                        )
-                      )}
-                    </div>
-                    {active && (
+                        )}
+                      </div>
                       <div style={{ display: 'flex', gap: 8, marginTop: 11 }}>
                         <div onClick={(e) => { e.stopPropagation(); addPlaceTask(p.name) }} className="lift" style={{ flex: 1, textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#fff', background: '#17150F', borderRadius: 11, padding: 10, cursor: 'pointer' }}>
                           일정에 추가
@@ -258,59 +232,60 @@ export function MapModal() {
                           상세
                         </div>
                       </div>
-                    )}
-                  </div>
-                )
-              })}
-              {!searching && shown.length === 0 && (
-                <div style={{ padding: 26, textAlign: 'center', color: '#B6BCC7', fontSize: 13, fontWeight: 600 }}>{mq ? '검색 결과가 없어요' : '추천 장소가 없어요'}</div>
-              )}
-            </div>
-          </div>
-
-          {/* RIGHT: 실제 카카오맵 */}
-          <div className="map-canvas">
-            <KakaoMap
-              center={selP ? { lat: selP.lat, lng: selP.lng } : { lat: effOrigin.lat, lng: effOrigin.lng }}
-              origin={{ lat: effOrigin.lat, lng: effOrigin.lng, label: `출발 · ${effOrigin.label}` }}
-              points={shown.map((p) => ({
-                id: p.id,
-                lat: p.lat,
-                lng: p.lng,
-                name: p.name,
-                cat: p.cat,
-                type: p.type,
-                dist: p.dist,
-                selected: !originMode && mapSelId === p.id,
-                onClick: () => onMarkerClick(p),
-              }))}
-            />
-            {/* 내 위치 버튼 */}
-            <div
-              onClick={useMyLocation}
-              title="현재 위치로"
-              style={{ position: 'absolute', right: 14, bottom: 14, zIndex: 5, width: 42, height: 42, borderRadius: 12, background: '#fff', border: '1px solid #E1E5EC', boxShadow: '0 4px 14px rgba(24,21,15,.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-            >
-              <svg width="21" height="21" viewBox="0 0 24 24" fill={loc.locating ? '#A39C8E' : '#15795A'}>
-                <path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.4A2.4 2.4 0 1 1 12 6.6a2.4 2.4 0 0 1 0 4.8z" />
-              </svg>
+                    </div>
+                  )
+                })}
+                {!searching && shown.length === 0 && (
+                  <div style={{ padding: 26, textAlign: 'center', color: '#B6BCC7', fontSize: 13, fontWeight: 600 }}>{mq ? '검색 결과가 없어요' : '추천 장소가 없어요'}</div>
+                )}
+              </div>
             </div>
 
+            {/* RIGHT: 실제 카카오맵 */}
+            <div className="map-canvas">
+              <KakaoMap
+                center={selP ? { lat: selP.lat, lng: selP.lng } : { lat: effOrigin.lat, lng: effOrigin.lng }}
+                origin={{ lat: effOrigin.lat, lng: effOrigin.lng, label: `출발 · ${effOrigin.label}` }}
+                points={shown.map((p) => ({
+                  id: p.id,
+                  lat: p.lat,
+                  lng: p.lng,
+                  name: p.name,
+                  cat: p.cat,
+                  type: p.type,
+                  dist: p.dist,
+                  selected: mapSelId === p.id,
+                  onClick: () => setMapDetail(p),
+                }))}
+              />
+              {/* 내 위치 버튼 */}
+              <div
+                onClick={useMyLocation}
+                title="현재 위치로"
+                style={{ position: 'absolute', right: 14, bottom: 14, zIndex: 5, width: 42, height: 42, borderRadius: 12, background: '#fff', border: '1px solid #E1E5EC', boxShadow: '0 4px 14px rgba(24,21,15,.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                <svg width="21" height="21" viewBox="0 0 24 24" fill={loc.locating ? '#A39C8E' : '#15795A'}>
+                  <path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.4A2.4 2.4 0 1 1 12 6.6a2.4 2.4 0 0 1 0 4.8z" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    {mapDetail && (
-      <PlaceDetailModal
-        place={mapDetail}
-        onClose={() => setMapDetail(null)}
-        onAdd={() => {
-          addPlaceTask(mapDetail.name)
-          setMapDetail(null)
-        }}
-      />
-    )}
+      {mapDetail && (
+        <PlaceDetailModal
+          place={mapDetail}
+          isDest={mapSelId === mapDetail.id}
+          onClose={() => setMapDetail(null)}
+          onAdd={() => {
+            addPlaceTask(mapDetail.name)
+            setMapDetail(null)
+          }}
+          onSetOrigin={() => setAsOrigin(mapDetail)}
+          onSetDest={() => setAsDest(mapDetail)}
+        />
+      )}
     </>
   )
 }
