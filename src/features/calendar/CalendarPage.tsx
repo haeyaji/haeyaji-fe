@@ -1,6 +1,6 @@
 import { CategoryIcon, PlusIcon, WeatherIcon } from '@/lib/icons'
 import { CAL_COND, PLACES } from '@/lib/mockData'
-import { catGrad, dayMeta, dayWeather, recsFor } from '@/lib/weather'
+import { catGrad, dayMeta, useDayWeather, recsFor } from '@/lib/weather'
 import { useAppStore } from '@/store/useAppStore'
 import { useMapStore } from '@/store/useMapStore'
 import { useTodoStore } from '@/store/useTodoStore'
@@ -21,7 +21,7 @@ export function CalendarPage() {
   const { tasks, total, frac } = useDayTasks()
 
   const meta = dayMeta(selId)
-  const w = dayWeather(selId)
+  const w = useDayWeather(selId)
   const dateShort = `5월 ${meta.date}일 (${meta.dow})`
   const recs = recsFor(w.cond)
   const top = PLACES.find((p) => p.id === recs[0].id)!

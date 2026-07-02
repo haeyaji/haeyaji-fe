@@ -1,5 +1,5 @@
 import { CategoryIcon, CloseIcon } from '@/lib/icons'
-import { dayMeta, dayWeather } from '@/lib/weather'
+import { dayMeta, useDayWeather } from '@/lib/weather'
 import { useAppStore } from '@/store/useAppStore'
 import { useChatStore, type SendCtx } from '@/store/useChatStore'
 import { useTodoStore } from '@/store/useTodoStore'
@@ -37,7 +37,7 @@ export function AiDrawer() {
   if (!aiOpen) return null
 
   const meta = dayMeta(selId)
-  const w = dayWeather(selId)
+  const w = useDayWeather(selId)
   const dateShort = `5월 ${meta.date}일 (${meta.dow})`
   const ctx: SendCtx = {
     lat: loc.lat,

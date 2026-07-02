@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useAppStore } from '@/store/useAppStore'
 import { useLocationStore } from '@/store/useLocationStore'
+import { useWeatherStore } from '@/store/useWeatherStore'
 import { LoginScreen } from '@/features/auth/LoginScreen'
 import { HomeDashboard } from '@/features/home/HomeDashboard'
 import { CalendarPage } from '@/features/calendar/CalendarPage'
@@ -14,11 +15,18 @@ import { Toast } from '@/components/Toast'
 
 export default function App() {
   const { authed, view } = useAppStore()
+  const lat = useLocationStore((s) => s.lat)
+  const lng = useLocationStore((s) => s.lng)
 
   // 위치 1회 획득 (거부/미지원 시 기본값 강남)
   useEffect(() => {
     useLocationStore.getState().init()
   }, [])
+
+  // 위치 잡히면 be에서 실날씨 로드 (좌표 바뀌면 재로드)
+  useEffect(() => {
+    useWeatherStore.getState().load(lat, lng)
+  }, [lat, lng])
 
   if (!authed) {
     return (

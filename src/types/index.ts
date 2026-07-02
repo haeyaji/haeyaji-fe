@@ -41,7 +41,7 @@ export interface Task {
 /** 날짜 id('20'~'26') → 할 일 목록 */
 export type TasksByDate = Record<string, Task[]>
 
-export type WeatherCond = 'sunny' | 'cloudy' | 'rainy'
+export type WeatherCond = 'sunny' | 'cloudy' | 'rainy' | 'snowy'
 
 export type TimeOfDay = 'dawn' | 'day' | 'dusk' | 'night'
 
