@@ -2,6 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_BASE?: string
+  readonly VITE_BE_BASE?: string
   readonly VITE_KAKAO_MAP_KEY?: string
 }
 
