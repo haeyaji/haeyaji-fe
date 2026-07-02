@@ -37,9 +37,23 @@ export function RainIcon({ c = '#4E6276', style }: SvgProps) {
   )
 }
 
+export function SnowIcon({ c = '#8FA6BC', style }: SvgProps) {
+  return (
+    <svg viewBox="0 0 24 24" {...full} style={style}>
+      <path d="M7.5 14h9a3.6 3.6 0 0 0 .4-7.18 5 5 0 0 0-9.65-1.2A4 4 0 0 0 7.5 14z" fill={c} />
+      <g fill={c}>
+        <circle cx="8.5" cy="17" r="1.1" />
+        <circle cx="12" cy="19.5" r="1.1" />
+        <circle cx="15.5" cy="17" r="1.1" />
+      </g>
+    </svg>
+  )
+}
+
 export function WeatherIcon({ cond, c, style }: { cond: WeatherCond; c?: string; style?: CSSProperties }) {
   if (cond === 'sunny') return <SunIcon c={c} style={style} />
   if (cond === 'cloudy') return <CloudIcon c={c} style={style} />
+  if (cond === 'snowy') return <SnowIcon c={c} style={style} />
   return <RainIcon c={c} style={style} />
 }
 

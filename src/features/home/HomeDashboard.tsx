@@ -1,11 +1,12 @@
 import { Gauge, PlusIcon, WeatherIcon, CategoryIcon, SparkleIcon } from '@/lib/icons'
 import { PLACES, WEEK } from '@/lib/mockData'
-import { aiHint, catGrad, dayMeta, dayWeather, dustColor, recsFor, uvColor } from '@/lib/weather'
+import { aiHint, catGrad, dayMeta, useDayWeather, dustColor, recsFor, uvColor } from '@/lib/weather'
 import { useAppStore } from '@/store/useAppStore'
 import { useMapStore } from '@/store/useMapStore'
+import { useLocationStore } from '@/store/useLocationStore'
 import { useDayTasks } from '@/features/todo/useDayTasks'
 import { TaskRow, EmptyTasks } from '@/features/todo/TaskRow'
-import { WeatherOverlay } from '@/features/weather/WeatherOverlay'
+import { WeatherScene } from '@/features/weather/WeatherScene'
 
 const navBtn = {
   display: 'flex',
@@ -28,9 +29,10 @@ export function HomeDashboard() {
   const setMapSel = useMapStore((s) => s.setMapSel)
   const { tasks, done, total, progPct, frac } = useDayTasks()
 
-  const w = dayWeather(selId)
+  const region = useLocationStore((s) => s.region) || '현재 위치'
+  const w = useDayWeather(selId)
   const meta = dayMeta(selId)
-  const dateLabel = `5월 ${meta.date}일 ${meta.dow}요일 · 샌프란시스코`
+  const dateLabel = `5월 ${meta.date}일 ${meta.dow}요일 · ${region}`
   const completedText = `${done} / ${total} 완료`
   const taskTitle = selId === '24' ? '오늘 할 일' : '할 일'
   const tileHourly = w.hourly.slice(0, 4)
@@ -86,17 +88,13 @@ export function HomeDashboard() {
         {/* bento grid */}
         <div className="bento">
           {/* WEATHER 2x2 */}
-          <div onClick={openWeather} className="tile lift" style={{ gridColumn: 'span 2', gridRow: 'span 2', minHeight: 300, padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer', background: w.sky }}>
-            <div style={{ position: 'absolute', top: -50, right: -30, width: 200, height: 200, borderRadius: '50%', background: w.glow, filter: 'blur(30px)' }} />
-            <WeatherOverlay cond={w.cond} tod={w.tod} />
+          <div onClick={openWeather} className="tile lift" style={{ gridColumn: 'span 2', gridRow: 'span 2', minHeight: 300, padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer', background: w.sky, backgroundClip: 'padding-box', borderColor: 'rgba(24,21,15,.12)' }}>
+            <WeatherScene cond={w.cond} tod={w.tod} ink={w.ink} />
             <div style={{ position: 'relative', padding: '26px 28px', height: '100%', display: 'flex', flexDirection: 'column', color: w.ink }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', opacity: 0.6 }}>LOCAL FORECAST</div>
-                  <div style={{ fontSize: 19, fontWeight: 800, marginTop: 4 }}>샌프란시스코</div>
-                </div>
-                <div style={{ width: 56, height: 56 }}>
-                  <WeatherIcon cond={w.cond} c={w.iconC} />
+                  <div style={{ fontSize: 19, fontWeight: 800, marginTop: 4 }}>{region}</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, marginTop: 'auto' }}>

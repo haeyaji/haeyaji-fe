@@ -1,14 +1,16 @@
 import { CloseIcon, DetailIcon, WeatherIcon, type DetailKey } from '@/lib/icons'
-import { dayMeta, dayWeather } from '@/lib/weather'
+import { dayMeta, useDayWeather } from '@/lib/weather'
 import { useAppStore } from '@/store/useAppStore'
-import { WeatherOverlay } from './WeatherOverlay'
+import { useLocationStore } from '@/store/useLocationStore'
+import { WeatherScene } from './WeatherScene'
 
 export function WeatherDrawer() {
   const { weatherOpen, closeWeather, selId } = useAppStore()
+  const region = useLocationStore((s) => s.region) || '현재 위치'
   if (!weatherOpen) return null
 
   const meta = dayMeta(selId)
-  const w = dayWeather(selId)
+  const w = useDayWeather(selId)
   const dateShort = `5월 ${meta.date}일 (${meta.dow})`
   const hourIconC = w.cond === 'sunny' ? '#E6A52E' : '#7C8794'
 
@@ -42,17 +44,14 @@ export function WeatherDrawer() {
         }}
       >
         <div style={{ padding: '24px 24px 30px', background: w.sky, color: w.ink, position: 'relative', overflow: 'hidden' }}>
-          <WeatherOverlay cond={w.cond} tod={w.tod} />
+          <WeatherScene cond={w.cond} tod={w.tod} ink={w.ink} />
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ fontSize: 16, fontWeight: 800 }}>{dateShort} · 샌프란시스코</div>
+            <div style={{ fontSize: 16, fontWeight: 800 }}>{dateShort} · {region}</div>
             <div onClick={closeWeather} style={{ width: 30, height: 30, borderRadius: 10, background: 'rgba(255,255,255,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
               <CloseIcon c="currentColor" />
             </div>
           </div>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-end', gap: 14, marginTop: 18 }}>
-            <div style={{ width: 60, height: 60 }}>
-              <WeatherIcon cond={w.cond} c={w.iconC} />
-            </div>
             <div style={{ fontSize: 72, fontWeight: 300, letterSpacing: '-3px', lineHeight: 0.8 }}>{w.temp}°</div>
             <div style={{ paddingBottom: 8 }}>
               <div style={{ fontSize: 15, fontWeight: 700 }}>{w.condKo}</div>
