@@ -22,6 +22,13 @@ export interface MessageResponse {
   intent: Intent
   reply: string
   todos: RecommendedTodo[]
+  options: string[] // 좁히기 칩 후보 (막연한 요청일 때 nlp가 내려줌, 기본 [])
+}
+
+/** nlp history 턴 (멀티턴 좁히기 맥락) */
+export interface ChatTurn {
+  role: 'user' | 'assistant'
+  content: string
 }
 
 // ── 클라이언트 도메인 모델 (프로토타입 상태) ───────────────────────────
@@ -82,6 +89,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant'
   text: string
   todos?: RecommendedTodo[] // nlp 추천 결과 (assistant 메시지)
+  options?: string[] // 좁히기 칩 (assistant 메시지)
 }
 
 export interface HourlyForecast {
