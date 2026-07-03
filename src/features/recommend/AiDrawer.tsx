@@ -33,11 +33,11 @@ export function AiDrawer() {
   const { chat, input, loading, setInput, send, ask } = useChatStore()
   const addPlaceTask = useTodoStore((s) => s.addPlaceTask)
   const loc = useLocationStore()
+  const w = useDayWeather(selId) // 훅은 early return보다 먼저
 
   if (!aiOpen) return null
 
   const meta = dayMeta(selId)
-  const w = useDayWeather(selId)
   const dateShort = `5월 ${meta.date}일 (${meta.dow})`
   const ctx: SendCtx = {
     lat: loc.lat,

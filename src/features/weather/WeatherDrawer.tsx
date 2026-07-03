@@ -7,10 +7,11 @@ import { WeatherScene } from './WeatherScene'
 export function WeatherDrawer() {
   const { weatherOpen, closeWeather, selId } = useAppStore()
   const region = useLocationStore((s) => s.region) || '현재 위치'
+  const w = useDayWeather(selId) // 훅은 early return보다 먼저
+
   if (!weatherOpen) return null
 
   const meta = dayMeta(selId)
-  const w = useDayWeather(selId)
   const dateShort = `5월 ${meta.date}일 (${meta.dow})`
   const hourIconC = w.cond === 'sunny' ? '#E6A52E' : '#7C8794'
 
