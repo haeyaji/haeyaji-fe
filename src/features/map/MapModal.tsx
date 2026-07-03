@@ -97,10 +97,12 @@ export function MapModal() {
     return () => clearTimeout(t)
   }, [mapSearch, effOrigin.lat, effOrigin.lng])
 
+  // 훅은 early return보다 항상 먼저 (훅 순서 위반 방지)
+  const w = useDayWeather(selId)
+
   if (!mapOpen) return null
 
   const meta = dayMeta(selId)
-  const w = useDayWeather(selId)
   const mapHint = `${meta.dow}요일 · ${w.condKo} 기준 · 내 주변`
   const recIds = recsFor(w.cond)
   const mq = mapSearch.trim()
