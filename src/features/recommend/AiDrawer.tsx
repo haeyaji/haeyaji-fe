@@ -64,6 +64,8 @@ export function AiDrawer() {
           {chat.map((m, i) => {
             const isU = m.role === 'user'
             const todos = m.todos ?? []
+            // 좁히기 칩: 마지막 어시스턴트 메시지에서만 (대화 진행되면 자동 숨김)
+            const chips = !isU && i === chat.length - 1 && !loading ? (m.options ?? []) : []
             return (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: isU ? 'flex-end' : 'flex-start', gap: 9, animation: 'rb-pop .2s ease' }}>
                 <div
@@ -85,6 +87,20 @@ export function AiDrawer() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
                     {todos.map((t, j) => (
                       <TodoCard key={j} todo={t} onAdd={() => addPlaceTask(t.placeName || t.title)} />
+                    ))}
+                  </div>
+                )}
+                {chips.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, maxWidth: '92%' }}>
+                    {chips.map((opt) => (
+                      <div
+                        key={opt}
+                        onClick={() => ask(opt, ctx)}
+                        className="hbtn"
+                        style={{ padding: '9px 14px', borderRadius: 20, fontSize: 13, fontWeight: 700, color: '#15795A', background: '#E4F2EC', border: '1px solid #CDE8DC', cursor: 'pointer' }}
+                      >
+                        {opt}
+                      </div>
                     ))}
                   </div>
                 )}
