@@ -72,8 +72,9 @@ export function AiDrawer() {
           {chat.map((m, i) => {
             const isU = m.role === 'user'
             const todos = m.todos ?? []
-            // 좁히기 칩: 마지막 어시스턴트 메시지에서만 (대화 진행되면 자동 숨김)
-            const chips = !isU && i === chat.length - 1 && !loading ? (m.options ?? []) : []
+            // 좁히기 칩: 항상 표시하되, 마지막 어시스턴트 메시지만 활성 (이전 턴은 비활성 — 다단계 좁히기 흐름 유지)
+            const chips = !isU ? (m.options ?? []) : []
+            const chipsActive = i === chat.length - 1 && !loading
             return (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: isU ? 'flex-end' : 'flex-start', gap: 9, animation: 'rb-pop .2s ease' }}>
                 <div
@@ -103,9 +104,13 @@ export function AiDrawer() {
                     {chips.map((opt) => (
                       <div
                         key={opt}
-                        onClick={() => ask(opt, ctx)}
-                        className="hbtn"
-                        style={{ padding: '9px 14px', borderRadius: 20, fontSize: 13, fontWeight: 700, color: '#15795A', background: '#E4F2EC', border: '1px solid #CDE8DC', cursor: 'pointer' }}
+                        onClick={() => chipsActive && ask(opt, ctx)}
+                        className={chipsActive ? 'hbtn' : undefined}
+                        style={
+                          chipsActive
+                            ? { padding: '9px 14px', borderRadius: 20, fontSize: 13, fontWeight: 700, color: '#15795A', background: '#E4F2EC', border: '1px solid #CDE8DC', cursor: 'pointer' }
+                            : { padding: '9px 14px', borderRadius: 20, fontSize: 13, fontWeight: 700, color: '#B6BCC7', background: '#F0F2F6', border: '1px solid #E4E7EE', cursor: 'default' }
+                        }
                       >
                         {opt}
                       </div>
