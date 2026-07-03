@@ -1,6 +1,6 @@
 // 추천 게이트웨이. be 완성 전까지는 nlp(:8000/api/message) 직결로 테스트.
 // (원래 흐름은 fe→be→nlp. be 붙으면 VITE_API_BASE만 be 주소로 바꾸면 됨)
-import type { MessageResponse, RecommendedTodo } from '@/types'
+import type { ChatTurn, MessageResponse, RecommendedTodo } from '@/types'
 import { http } from './client'
 
 export interface RecommendRequest {
@@ -9,6 +9,9 @@ export interface RecommendRequest {
   lng: number
   weather?: string
   mood?: string
+  timeOfDay?: string // 예: "오후 2시"
+  weekday?: string // 예: "토요일"
+  history?: ChatTurn[] // 최근 대화 턴 (멀티턴 좁히기 맥락)
 }
 
 // nlp 응답이 camelCase(CamelModel) 또는 snake_case 어느 쪽이어도 안전하게 매핑
@@ -34,5 +37,6 @@ export async function sendMessage(body: RecommendRequest): Promise<MessageRespon
     intent: res.intent as MessageResponse['intent'],
     reply: (res.reply as string) ?? '',
     todos,
+    options: Array.isArray(res.options) ? (res.options as string[]) : [],
   }
 }
