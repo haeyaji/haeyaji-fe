@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { CategoryIcon, CloseIcon } from '@/lib/icons'
 import { dayMeta, useDayWeather } from '@/lib/weather'
 import { useAppStore } from '@/store/useAppStore'
@@ -34,6 +35,13 @@ export function AiDrawer() {
   const addPlaceTask = useTodoStore((s) => s.addPlaceTask)
   const loc = useLocationStore()
   const w = useDayWeather(selId) // 훅은 early return보다 먼저
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // 새 메시지/로딩 시 맨 아래로 자동 스크롤
+  useEffect(() => {
+    const el = scrollRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [chat.length, loading, aiOpen])
 
   if (!aiOpen) return null
 
@@ -60,7 +68,7 @@ export function AiDrawer() {
           <div onClick={closeAi} style={closeBtn}><CloseIcon /></div>
         </div>
 
-        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
           {chat.map((m, i) => {
             const isU = m.role === 'user'
             const todos = m.todos ?? []
