@@ -9,7 +9,7 @@ function Stat({ icon, label, value, sub }: { icon: React.ReactNode; label: strin
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
       <div style={{ width: 18, height: 18 }}>{icon}</div>
       <div style={{ fontSize: 16, fontWeight: 700, color: '#A39C8E' }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-.4px' }}>
+      <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-.4px' }}>
         {value}
         {sub && <span style={{ fontSize: 15, fontWeight: 700, color: '#A39C8E', marginLeft: 4 }}>{sub}</span>}
       </div>
