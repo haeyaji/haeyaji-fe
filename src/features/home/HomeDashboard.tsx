@@ -93,7 +93,7 @@ export function HomeDashboard() {
                 {tileHourly.map((h, i) => (
                   <div key={i} style={{ flex: 1, background: isLightInk(w.ink) ? 'rgba(10,16,28,.42)' : 'rgba(255,255,255,.5)', borderRadius: 12, padding: '9px 0', textAlign: 'center' }}>
                     <div style={{ fontSize: 16, fontWeight: 700, opacity: 0.7 }}>{h.label}</div>
-                    <div style={{ width: 16, height: 16, margin: '4px auto' }}>
+                    <div style={{ width: 20, height: 20, margin: '4px auto' }}>
                       <WeatherIcon cond={w.cond} c={w.iconC} />
                     </div>
                     <div style={{ fontSize: 20, fontWeight: 700 }}>{h.temp}°</div>
@@ -191,7 +191,7 @@ function WeekStrip({ selId, weekKeys, onPick }: { selId: string; weekKeys: strin
             style={{ flex: 1, textAlign: 'center', padding: '9px 0', borderRadius: 13, cursor: 'pointer', background: on ? '#17150F' : '#F0F2F6' }}
           >
             <div style={{ fontSize: 16, fontWeight: 700, color: on ? 'rgba(255,255,255,.7)' : today ? '#15795A' : '#A39C8E' }}>{today ? '오늘' : dowLabel(k)}</div>
-            <div style={{ height: 18, margin: '5px auto 0', width: 18 }}>
+            <div style={{ height: 24, margin: '5px auto 0', width: 24 }}>
               <WeatherIcon cond={cond} c={iconColor} />
             </div>
             <div style={{ fontSize: 20, fontWeight: 800, marginTop: 5, color: on ? '#fff' : '#17150F' }}>{raw?.hi != null ? `${raw.hi}°` : '–'}</div>
