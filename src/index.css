@@ -125,7 +125,7 @@
 .home-wrap { max-width: 1220px; margin: 0 auto; }
 @media (max-width: 1700px) {
   /* 노트북: 풀폭 + 컴포넌트 비율 유지 10% 확대 */
-  .home-wrap { max-width: none; zoom: 1.1; }
+  .home-wrap { max-width: none; zoom: 1.18; }
 }
 
 /* 홈 벤토 그리드 */
