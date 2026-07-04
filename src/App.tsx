@@ -23,10 +23,12 @@ export default function App() {
     useLocationStore.getState().init()
   }, [])
 
-  // 위치 잡히면 be에서 실날씨 로드 (좌표 바뀌면 재로드)
+  const selId = useAppStore((s) => s.selId)
+
+  // 위치·선택날짜 기준 실날씨 로드 (날짜별 캐시)
   useEffect(() => {
-    useWeatherStore.getState().load(lat, lng)
-  }, [lat, lng])
+    useWeatherStore.getState().loadDay(lat, lng, selId)
+  }, [lat, lng, selId])
 
   if (!authed) {
     return (

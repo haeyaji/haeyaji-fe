@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CloseIcon } from '@/lib/icons'
-import { dayMeta } from '@/lib/weather'
+import { dateShortLabel } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
 import { useTodoStore } from '@/store/useTodoStore'
 import type { TaskGroup } from '@/types'
@@ -13,8 +13,7 @@ export function AddTaskModal() {
   const [group, setGroup] = useState<TaskGroup>('personal')
 
   if (!addOpen) return null
-  const meta = dayMeta(selId)
-  const dateShort = `5월 ${meta.date}일 (${meta.dow})`
+  const dateShort = dateShortLabel(selId)
 
   const reset = () => {
     setTitle('')

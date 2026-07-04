@@ -1,5 +1,6 @@
 import { CloseIcon, DetailIcon, WeatherIcon, type DetailKey } from '@/lib/icons'
-import { dayMeta, useDayWeather } from '@/lib/weather'
+import { useDayWeather } from '@/lib/weather'
+import { dateShortLabel } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
 import { useLocationStore } from '@/store/useLocationStore'
 import { WeatherScene } from './WeatherScene'
@@ -11,8 +12,7 @@ export function WeatherDrawer() {
 
   if (!weatherOpen) return null
 
-  const meta = dayMeta(selId)
-  const dateShort = `5월 ${meta.date}일 (${meta.dow})`
+  const dateShort = dateShortLabel(selId)
   const hourIconC = w.cond === 'sunny' ? '#E6A52E' : '#7C8794'
 
   const details: { key: DetailKey; label: string; value: string; c: string }[] = [
