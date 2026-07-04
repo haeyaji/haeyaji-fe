@@ -27,7 +27,7 @@ export function Sidebar() {
 
   // 노트북 이하 폭에서는 처음부터 접힘 (콘텐츠 1220px 확보)
   useEffect(() => {
-    if (window.innerWidth < 1450 && !useAppStore.getState().sidebarCollapsed) toggleSidebar()
+    if (window.innerWidth < 1700 && !useAppStore.getState().sidebarCollapsed) toggleSidebar()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
