@@ -7,7 +7,7 @@ import { useDayWeather } from '@/lib/weather'
 function Stat({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-      <div style={{ width: 24, height: 24 }}>{icon}</div>
+      <div style={{ width: 22, height: 22 }}>{icon}</div>
       <div style={{ fontSize: 16, fontWeight: 700, color: '#A39C8E' }}>{label}</div>
       <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-.4px' }}>
         {value}
@@ -31,7 +31,7 @@ export function WeatherStatsStrip({ selId }: { selId: string }) {
           <Divider />
           <Stat icon={<DetailIcon name="uv" c="#E0883A" />} label="자외선" value={String(w.uvIdx)} sub={w.uvLv} />
           <Divider />
-          <Stat icon={<DetailIcon name="dust" c="#7C8794" />} label="미세먼지" value={String(w.dustVal)} sub={w.dustLv} />
+          <Stat icon={<DetailIcon name="dust" c="#D89A2A" />} label="미세먼지" value={String(w.dustVal)} sub={w.dustLv} />
           <Divider />
           <Stat icon={<DetailIcon name="humid" c="#3F82C2" />} label="습도" value={`${w.humid}%`} />
         </>
