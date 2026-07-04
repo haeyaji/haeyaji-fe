@@ -68,7 +68,7 @@ export function AiDrawer() {
           <div onClick={closeAi} style={closeBtn}><CloseIcon /></div>
         </div>
 
-        <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 18, display: 'flex', flexDirection: 'column', gap: 14, width: '100%', maxWidth: 840, margin: '0 auto' }}>
           {chat.map((m, i) => {
             const isU = m.role === 'user'
             const todos = m.todos ?? []
@@ -123,7 +123,7 @@ export function AiDrawer() {
           {loading && <TypingBubble />}
         </div>
 
-        <div style={{ display: 'flex', gap: 7, overflowX: 'auto', padding: '8px 18px 4px' }}>
+        <div style={{ display: 'flex', gap: 7, overflowX: 'auto', padding: '8px 18px 4px', width: '100%', maxWidth: 840, margin: '0 auto' }}>
           {QUICK.map((q) => (
             <div key={q.chip} onClick={() => !loading && ask(q.text, ctx)} style={{ whiteSpace: 'nowrap', padding: '8px 13px', borderRadius: 20, fontSize: 12.5, fontWeight: 700, color: '#5A554B', background: '#fff', border: '1px solid #E1E5EC', cursor: loading ? 'default' : 'pointer', flexShrink: 0, opacity: loading ? 0.5 : 1 }}>
               {q.chip}
@@ -131,7 +131,7 @@ export function AiDrawer() {
           ))}
         </div>
 
-        <div style={{ padding: '8px 18px 18px', display: 'flex', alignItems: 'center', gap: 9 }}>
+        <div style={{ padding: '8px 18px 18px', display: 'flex', alignItems: 'center', gap: 9, width: '100%', maxWidth: 840, margin: '0 auto' }}>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -195,18 +195,14 @@ function TypingBubble() {
 }
 
 const overlay = { position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(24,21,15,.3)', animation: 'rb-fade .18s ease' } as const
+// 전체 페이지 (사이드 드로어 아님)
 const drawer = {
   position: 'fixed',
-  top: 0,
-  right: 0,
-  bottom: 0,
+  inset: 0,
   zIndex: 41,
-  width: 418,
-  maxWidth: '100%',
   background: 'var(--canvas)',
   display: 'flex',
   flexDirection: 'column',
-  boxShadow: '-26px 0 56px rgba(24,21,15,.2)',
-  animation: 'rb-drawer .3s cubic-bezier(.22,1,.36,1)',
+  animation: 'rb-fade .2s ease',
 } as const
 const closeBtn = { width: 30, height: 30, borderRadius: 10, background: '#E9EDF3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' } as const

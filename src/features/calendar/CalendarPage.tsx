@@ -84,14 +84,14 @@ export function CalendarPage() {
               <div onClick={() => moveMonth(-1)} className="hbtn" style={{ width: 32, height: 32, borderRadius: 10, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
               </div>
-              <div style={{ fontSize: 20, fontWeight: 800 }}>{ym.y}년 {ym.m + 1}월</div>
+              <div style={{ fontSize: 26, fontWeight: 800 }}>{ym.y}년 {ym.m + 1}월</div>
               <div onClick={() => moveMonth(1)} className="hbtn" style={{ width: 32, height: 32, borderRadius: 10, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', marginBottom: 10 }}>
               {weekHdr.map((h) => (
-                <div key={h.label} style={{ textAlign: 'left', padding: '0 11px 6px', fontSize: 12.5, fontWeight: 700, color: h.color }}>{h.label}</div>
+                <div key={h.label} style={{ textAlign: 'left', padding: '0 11px 8px', fontSize: 16, fontWeight: 700, color: h.color }}>{h.label}</div>
               ))}
             </div>
             <div className="cal-grid">
@@ -121,8 +121,8 @@ export function CalendarPage() {
                       <>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <div style={{ fontSize: 14.5, fontWeight: 800, color: numColor }}>{c.day}</div>
-                            {c.isToday && <div style={{ fontSize: 9, fontWeight: 800, color: '#15795A', background: '#E4F2EC', padding: '2px 6px', borderRadius: 10 }}>오늘</div>}
+                            <div style={{ fontSize: 18, fontWeight: 800, color: numColor }}>{c.day}</div>
+                            {c.isToday && <div style={{ fontSize: 11, fontWeight: 800, color: '#15795A', background: '#E4F2EC', padding: '2px 7px', borderRadius: 10 }}>오늘</div>}
                           </div>
                           <div style={{ width: 16, height: 16 }}>{c.cond && <WeatherIcon cond={c.cond} c={c.cond === 'sunny' ? '#E6A52E' : '#9AA0A8'} />}</div>
                         </div>
@@ -130,12 +130,12 @@ export function CalendarPage() {
                           {events.map((ev, i) => {
                             const cc = evColor(ev)
                             return (
-                              <div key={i} style={{ fontSize: 10.5, fontWeight: 700, color: cc.color, background: cc.bg, borderRadius: 7, padding: '3px 7px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.title}</div>
+                              <div key={i} style={{ fontSize: 13, fontWeight: 700, color: cc.color, background: cc.bg, borderRadius: 7, padding: '3px 7px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.title}</div>
                             )
                           })}
-                          {more > 0 && <div style={{ fontSize: 10, fontWeight: 700, color: '#A39C8E', paddingLeft: 3 }}>+{more}개</div>}
+                          {more > 0 && <div style={{ fontSize: 12.5, fontWeight: 700, color: '#A39C8E', paddingLeft: 3 }}>+{more}개</div>}
                         </div>
-                        <div style={{ fontSize: 10.5, fontWeight: 700, color: '#C2BCB0', textAlign: 'right', marginTop: 2 }}>{20 + ((c.day * 3) % 8)}°</div>
+                        <div style={{ fontSize: 12.5, fontWeight: 700, color: '#C2BCB0', textAlign: 'right', marginTop: 2 }}>{20 + ((c.day * 3) % 8)}°</div>
                       </>
                     )}
                   </div>
