@@ -121,6 +121,12 @@
 .page-pad { padding: 28px 44px; }
 .page-pad-cal { padding: 24px 30px 36px; }
 
+/* 홈 컨테이너: 데스크탑=1220 중앙 고정 / 노트북 이하=풀폭 유동 (노트북 맞춤 화면) */
+.home-wrap { max-width: 1220px; margin: 0 auto; }
+@media (max-width: 1500px) {
+  .home-wrap { max-width: none; }
+}
+
 /* 홈 벤토 그리드 */
 .bento {
   display: grid;
