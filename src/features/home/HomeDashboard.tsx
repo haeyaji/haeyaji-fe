@@ -52,7 +52,7 @@ export function HomeDashboard() {
 
   return (
     <div className="page-pad" style={{ minHeight: '100vh', width: '100%', color: '#17150F', background: 'var(--canvas)' }}>
-      <div style={{ maxWidth: 860, margin: '0 auto' }}>
+      <div style={{ maxWidth: 1560, margin: '0 auto' }}>
         {/* header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, gap: 16, flexWrap: 'wrap' }}>
           <div>
@@ -73,7 +73,7 @@ export function HomeDashboard() {
         {/* bento grid */}
         <div className="bento">
           {/* WEATHER 2x2 */}
-          <div onClick={openWeather} className="tile lift" style={{ gridColumn: '1 / -1', minHeight: 232, padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer', background: w.sky, backgroundClip: 'padding-box', borderColor: 'rgba(24,21,15,.12)' }}>
+          <div onClick={openWeather} className="tile lift" style={{ gridColumn: '1 / 3', gridRow: '1 / 2', padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer', background: w.sky, backgroundClip: 'padding-box', borderColor: 'rgba(24,21,15,.12)' }}>
             <WeatherScene cond={w.cond} tod={w.tod} ink={w.ink} />
             <div style={{ position: 'relative', padding: '18px 22px', height: '100%', display: 'flex', flexDirection: 'column', color: w.ink }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
@@ -104,7 +104,7 @@ export function HomeDashboard() {
           </div>
 
           {/* TASKS 2x3 */}
-          <div className="tile" style={{ gridColumn: '1 / -1', minHeight: 320, padding: '22px 24px', display: 'flex', flexDirection: 'column' }}>
+          <div className="tile" style={{ gridColumn: '3 / 5', gridRow: '1 / 4', padding: '22px 24px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-.4px' }}>{taskTitle}</div>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#A39C8E' }}>{frac}</div>
@@ -127,7 +127,7 @@ export function HomeDashboard() {
           <WeatherStatsStrip selId={selId} />
 
           {/* WEEK selector */}
-          <div className="tile" style={{ gridColumn: '1 / -1', padding: '14px 20px' }}>
+          <div className="tile" style={{ gridColumn: '1 / 3', gridRow: '3 / 4', padding: '14px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <div style={{ fontSize: 14, fontWeight: 800 }}>주간 예보</div>
               <div style={{ fontSize: 11.5, fontWeight: 700, color: '#A39C8E' }}>날짜를 눌러 전환</div>
@@ -138,7 +138,7 @@ export function HomeDashboard() {
           </div>
 
           {/* AI 1x1 */}
-          <div onClick={openAi} className="tile lift" style={{ gridColumn: '1 / 2', minHeight: 150, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', cursor: 'pointer', background: '#17150F', border: '1px solid rgba(255,255,255,.06)', position: 'relative', overflow: 'hidden' }}>
+          <div onClick={openAi} className="tile lift" style={{ gridColumn: '3 / 4', gridRow: '6 / 7', padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', cursor: 'pointer', background: '#17150F', border: '1px solid rgba(255,255,255,.06)', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: -28, right: -22, width: 116, height: 116, borderRadius: '50%', background: 'rgba(21,121,90,.4)', filter: 'blur(28px)' }} />
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8 }}>
               <SparkleIcon c="#5BD6A6" />
@@ -149,7 +149,7 @@ export function HomeDashboard() {
           </div>
 
           {/* RECOMMENDATION 1x1 */}
-          <div onClick={openRecMap} className="tile lift" style={{ gridColumn: '2 / 3', minHeight: 150, padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}>
+          <div onClick={openRecMap} className="tile lift" style={{ gridColumn: '4 / 5', gridRow: '6 / 7', padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}>
             <div style={{ position: 'absolute', inset: 0, background: catGrad(top.cat) }} />
             <div style={{ position: 'relative', padding: 18, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', color: recInk }}>
               <div style={{ position: 'absolute', top: 14, left: 14, fontSize: 10.5, fontWeight: 800, background: 'rgba(255,255,255,.85)', color: '#1E3318', padding: '5px 10px', borderRadius: 20 }}>적합도 {recs[0].fit}%</div>
