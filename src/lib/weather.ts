@@ -3,7 +3,7 @@
 import type { DayWeather, PlaceCat, TimeOfDay, WeatherCond } from '@/types'
 import type { WeatherRaw } from '@/api/weatherApi'
 import { useWeatherStore } from '@/store/useWeatherStore'
-import { dayNum, dayState, parseKey } from './dates'
+import { addDays, dayNum, dayState, parseKey } from './dates'
 
 export const condKo: Record<WeatherCond, string> = {
   sunny: '대체로 맑음',
@@ -111,14 +111,20 @@ export const uvLevel = (i: number): string => (i <= 2 ? '낮음' : i <= 5 ? '보
 export const dustLevel = (v: number): string => (v <= 30 ? '좋음' : v <= 80 ? '보통' : v <= 150 ? '나쁨' : '매우나쁨')
 
 /** be 원시 날씨(WeatherRaw) → DayWeather. 시각 토큰/등급은 fe가 파생. */
-export function deriveWeather(raw: WeatherRaw, tod: TimeOfDay, isToday = true): DayWeather {
+export function deriveWeather(raw: WeatherRaw, tod: TimeOfDay, isToday = true, nextRaw?: WeatherRaw | null): DayWeather {
   const cond: WeatherCond = (['sunny', 'cloudy', 'rainy', 'snowy'].includes(raw.cond) ? raw.cond : 'cloudy') as WeatherCond
   const uvIdx = raw.uvIndex ?? 0
   const dustVal = raw.pm10 ?? 0
-  // 개수 고정: 전체 시간대에서 균등 샘플링으로 항상 5개 (다음날도 동일)
-  const src = raw.hourly
-  const N = Math.min(5, src.length)
-  const picked = N > 0 ? Array.from({ length: N }, (_, i) => src[Math.round((i * (src.length - 1)) / Math.max(N - 1, 1))]) : []
+  // 항상 5개: 오늘은 남은 시간 + 부족하면 다음날 새벽으로 이어붙임 / 미래 날짜는 하루 전체에서 균등 샘플링
+  let picked: typeof raw.hourly
+  if (isToday) {
+    const merged = raw.hourly.length < 5 && nextRaw ? [...raw.hourly, ...nextRaw.hourly.slice(0, 5 - raw.hourly.length)] : raw.hourly
+    picked = merged.slice(0, 5)
+  } else {
+    const src = raw.hourly
+    const N = Math.min(5, src.length)
+    picked = N > 0 ? Array.from({ length: N }, (_, i) => src[Math.round((i * (src.length - 1)) / Math.max(N - 1, 1))]) : []
+  }
   const hourly = picked.map((h, i) => ({ label: isToday && i === 0 ? '지금' : `${parseInt(h.time, 10)}시`, temp: h.temp, pop: h.pop }))
   return {
     ...SKY[cond][tod], // sky, glow, ink, iconC
@@ -144,14 +150,15 @@ export function deriveWeather(raw: WeatherRaw, tod: TimeOfDay, isToday = true): 
 /** 선택 날짜 날씨. 실날씨(be) 로드됐으면 그걸, 아니면 폴백. (컴포넌트 외부용 — 비반응형) */
 export function dayWeather(id: string): DayWeather {
   const raw = useWeatherStore.getState().byDate[id]
-  if (raw) return deriveWeather(raw, timeOfDay(), dayState(id) === 'today')
+  if (raw) return deriveWeather(raw, timeOfDay(), dayState(id) === 'today', useWeatherStore.getState().byDate[addDays(id, 1)])
   return fallbackDayWeather(id)
 }
 
 /** 컴포넌트용 반응형 훅 — 실날씨 로드 시 자동 리렌더 */
 export function useDayWeather(id: string): DayWeather {
   const raw = useWeatherStore((s) => s.byDate[id])
-  return raw ? deriveWeather(raw, timeOfDay(), dayState(id) === 'today') : fallbackDayWeather(id)
+  const nextRaw = useWeatherStore((s) => s.byDate[addDays(id, 1)])
+  return raw ? deriveWeather(raw, timeOfDay(), dayState(id) === 'today', nextRaw) : fallbackDayWeather(id)
 }
 
 /** 밝은 글자색(=어두운 배경)인지 — 칩/스크림 적응용 */
