@@ -124,9 +124,9 @@
 /* 홈 벤토 그리드 */
 .bento {
   display: grid;
+  /* 좌(날씨)/우(할일) 2단, 행 높이는 내용대로 — 폭 1220 고정으로 반폭 비율 유지 (사용자 확정) */
   grid-template-columns: repeat(4, 1fr);
-  /* 1920 스펙 값을 최소치로, 내용이 크면 늘어나게 (노트북 대응) */
-  grid-template-rows: minmax(216px, auto) minmax(110px, auto) minmax(104px, auto) repeat(3, minmax(124px, auto));
+  grid-auto-rows: auto;
   gap: 16px;
 }
 
