@@ -105,20 +105,17 @@ export function HomeDashboard() {
 
           {/* TASKS 2x3 */}
           <div className="tile" style={{ gridColumn: '3 / 5', gridRow: '1 / 4', minHeight: 560, padding: '22px 24px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ fontSize: 23, fontWeight: 800, letterSpacing: '-.4px' }}>{taskTitle}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <div onClick={() => setSelId(addDays(selId, -1))} className="hbtn" title="전날" style={{ width: 28, height: 28, borderRadius: 9, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#8B8579', minWidth: 86, textAlign: 'center' }}>{dateShortLabel(selId)}</div>
-                  <div onClick={() => setSelId(addDays(selId, 1))} className="hbtn" title="다음날" style={{ width: 28, height: 28, borderRadius: 9, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
-                  </div>
-                </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div onClick={() => setSelId(addDays(selId, -1))} className="hbtn" title="전날" style={{ width: 30, height: 30, borderRadius: 9, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
               </div>
-              <div style={{ fontSize: 19, fontWeight: 700, color: '#A39C8E' }}>{frac}</div>
+              <div style={{ textAlign: 'center' }}>
+                <span style={{ fontSize: 23, fontWeight: 800, letterSpacing: '-.4px' }}>{taskTitle}</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: '#A39C8E', marginLeft: 10 }}>{dateShortLabel(selId)} · {frac}</span>
+              </div>
+              <div onClick={() => setSelId(addDays(selId, 1))} className="hbtn" title="다음날" style={{ width: 30, height: 30, borderRadius: 9, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+              </div>
             </div>
             <div style={{ height: 5, borderRadius: 5, background: '#E4E7EE', marginTop: 14, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: progPct, borderRadius: 5, background: '#15795A', transition: 'width .3s ease' }} />
