@@ -140,6 +140,10 @@
 .map-aside { width: 322px; flex-shrink: 0; border-right: 1px solid #E6E9F0; display: flex; flex-direction: column; }
 .map-canvas { flex: 1; min-width: 0; position: relative; overflow: hidden; }
 
+@media (max-width: 1500px) {
+  .page-pad { padding: 24px 28px 36px; }
+}
+
 @media (max-width: 900px) {
   .page-pad { padding: 22px 18px 36px; }
   .bento { grid-template-columns: repeat(2, 1fr); grid-template-rows: none; grid-auto-rows: minmax(150px, auto); }
