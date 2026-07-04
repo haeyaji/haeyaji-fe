@@ -2,7 +2,7 @@ import { PlusIcon, WeatherIcon, CategoryIcon, SparkleIcon } from '@/lib/icons'
 import { useEffect } from 'react'
 import { PLACES } from '@/lib/mockData'
 import { aiHint, catGrad, useDayWeather, recsFor, pseudoCond, isLightInk } from '@/lib/weather'
-import { dateFullLabel, dowLabel, greeting, next7Days, todayKey } from '@/lib/dates'
+import { addDays, dateFullLabel, dateShortLabel, dowLabel, greeting, next7Days, todayKey } from '@/lib/dates'
 import { useWeatherStore } from '@/store/useWeatherStore'
 import { useAppStore } from '@/store/useAppStore'
 import { useMapStore } from '@/store/useMapStore'
@@ -106,7 +106,18 @@ export function HomeDashboard() {
           {/* TASKS 2x3 */}
           <div className="tile" style={{ gridColumn: '3 / 5', gridRow: '1 / 4', minHeight: 560, padding: '22px 24px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: 23, fontWeight: 800, letterSpacing: '-.4px' }}>{taskTitle}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ fontSize: 23, fontWeight: 800, letterSpacing: '-.4px' }}>{taskTitle}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div onClick={() => setSelId(addDays(selId, -1))} className="hbtn" title="전날" style={{ width: 28, height: 28, borderRadius: 9, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#8B8579', minWidth: 86, textAlign: 'center' }}>{dateShortLabel(selId)}</div>
+                  <div onClick={() => setSelId(addDays(selId, 1))} className="hbtn" title="다음날" style={{ width: 28, height: 28, borderRadius: 9, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+                  </div>
+                </div>
+              </div>
               <div style={{ fontSize: 19, fontWeight: 700, color: '#A39C8E' }}>{frac}</div>
             </div>
             <div style={{ height: 5, borderRadius: 5, background: '#E4E7EE', marginTop: 14, overflow: 'hidden' }}>
