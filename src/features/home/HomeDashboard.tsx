@@ -33,7 +33,12 @@ export function HomeDashboard() {
 
   const dateLabel = `${dateFullLabel(selId)} · ${region}`
   const completedText = `${done} / ${total} 완료`
-  const taskTitle = selId === todayKey() ? '오늘 할 일' : '할 일'
+  const taskTitle =
+    selId === todayKey()
+      ? '오늘 할 일'
+      : selId === addDays(todayKey(), 1)
+        ? '내일 할 일'
+        : `${dateShortLabel(selId).replace(/ \(.\)$/, '')} 할 일`
   const tileHourly = w.hourly.slice(0, 5)
 
   const recs = recsFor(w.cond)
@@ -111,7 +116,7 @@ export function HomeDashboard() {
               </div>
               <div style={{ textAlign: 'center' }}>
                 <span style={{ fontSize: 23, fontWeight: 800, letterSpacing: '-.4px' }}>{taskTitle}</span>
-                <span style={{ fontSize: 15, fontWeight: 700, color: '#A39C8E', marginLeft: 10 }}>{dateShortLabel(selId)} · {frac}</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: '#A39C8E', marginLeft: 10 }}>{frac}</span>
               </div>
               <div onClick={() => setSelId(addDays(selId, 1))} className="hbtn" title="다음날" style={{ width: 30, height: 30, borderRadius: 9, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
