@@ -19,7 +19,7 @@ export function AdherenceCard() {
   const totalSum = days.reduce((s, k) => s + (tasksByDate[k]?.length ?? 0), 0)
 
   return (
-    <div className="tile" style={{ gridColumn: '1 / -1', minHeight: 230, padding: '18px 22px', display: 'flex', flexDirection: 'column' }}>
+    <div className="tile" style={{ gridColumn: '3 / 5', gridRow: '4 / 6', padding: '18px 22px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
         <div style={{ fontSize: 15, fontWeight: 800 }}>주간 달성률</div>
         <div style={{ fontSize: 13, fontWeight: 800, color: '#15795A' }}>평균 {avg}%</div>
