@@ -55,6 +55,12 @@ export function dayState(key: string): DayState {
   return key < t ? 'past' : 'future'
 }
 
+/** 오늘 기준 앞으로 7일(오늘 … +6일) 키 배열 — 주간 예보용 */
+export function next7Days(): string[] {
+  const t = todayKey()
+  return Array.from({ length: 7 }, (_, i) => addDays(t, i))
+}
+
 /** 오늘 기준 최근 7일(6일 전 … 오늘) 키 배열 */
 export function last7Days(): string[] {
   const t = todayKey()
