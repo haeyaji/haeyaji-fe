@@ -10,6 +10,7 @@ import { WeatherDrawer } from '@/features/weather/WeatherDrawer'
 import { RoutineDrawer } from '@/features/routine/RoutineDrawer'
 import { AddTaskModal } from '@/features/todo/AddTaskModal'
 import { MapModal } from '@/features/map/MapModal'
+import { Sidebar } from '@/components/Sidebar'
 import { Fab } from '@/components/Fab'
 import { Toast } from '@/components/Toast'
 
@@ -41,7 +42,10 @@ export default function App() {
 
   return (
     <>
-      {view === 'home' ? <HomeDashboard /> : <CalendarPage />}
+      <div style={{ display: 'flex', alignItems: 'stretch', minHeight: '100vh' }}>
+        <Sidebar />
+        <main style={{ flex: 1, minWidth: 0 }}>{view === 'home' ? <HomeDashboard /> : <CalendarPage />}</main>
+      </div>
 
       {/* overlays */}
       <Fab />
