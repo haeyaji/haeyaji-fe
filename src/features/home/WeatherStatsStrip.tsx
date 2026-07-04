@@ -24,7 +24,7 @@ export function WeatherStatsStrip({ selId }: { selId: string }) {
   const state = dayState(selId)
 
   return (
-    <div className="tile" style={{ gridColumn: '1 / 3', gridRow: '2 / 3', display: 'flex', alignItems: 'stretch', padding: '0 8px' }}>
+    <div className="tile" style={{ gridColumn: '1 / -1', minHeight: 110, display: 'flex', alignItems: 'stretch', padding: '0 8px' }}>
       {state === 'today' && (
         <>
           <Stat icon={<DetailIcon name="pop" c="#5B8FE0" />} label="강수확률" value={`${w.pop}%`} />

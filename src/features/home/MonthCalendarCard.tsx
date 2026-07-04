@@ -32,7 +32,7 @@ export function MonthCalendarCard() {
   }
 
   return (
-    <div className="tile" style={{ gridColumn: '1 / 3', gridRow: '4 / 7', padding: '18px 20px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <div className="tile" style={{ gridColumn: '1 / -1', minHeight: 380, padding: '18px 20px', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <div style={{ fontSize: 15, fontWeight: 800 }}>{ym.y}년 {ym.m + 1}월</div>
         <div style={{ display: 'flex', gap: 6 }}>
