@@ -5,6 +5,8 @@ type View = 'home' | 'calendar'
 
 interface AppState {
   authed: boolean
+  nickname: string // 회원가입 닉네임 (be 인증 붙으면 그 값으로 대체)
+  sidebarCollapsed: boolean
   view: View
   selId: string
   // drawers / modals
@@ -19,6 +21,7 @@ interface AppState {
 
   login: (msg: string) => void
   logout: () => void
+  toggleSidebar: () => void
   setView: (v: View) => void
   setSelId: (id: string) => void
   openAi: () => void
@@ -38,6 +41,8 @@ let toastTimer: ReturnType<typeof setTimeout> | undefined
 
 export const useAppStore = create<AppState>((set) => ({
   authed: false,
+  nickname: '알렉스', // TODO: be 회원가입 연동 시 실제 닉네임
+  sidebarCollapsed: false,
   view: 'home',
   selId: todayKey(),
   aiOpen: false,
@@ -54,6 +59,7 @@ export const useAppStore = create<AppState>((set) => ({
   },
   logout: () =>
     set({ authed: false, aiOpen: false, weatherOpen: false, routineOpen: false, addOpen: false, mapOpen: false, view: 'home' }),
+  toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
   setView: (view) => set({ view }),
   setSelId: (selId) => set({ selId }),
   openAi: () => set({ aiOpen: true }),

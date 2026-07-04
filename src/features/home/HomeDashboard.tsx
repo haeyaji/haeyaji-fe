@@ -2,7 +2,7 @@ import { Gauge, PlusIcon, WeatherIcon, CategoryIcon, SparkleIcon } from '@/lib/i
 import { useEffect } from 'react'
 import { PLACES } from '@/lib/mockData'
 import { aiHint, catGrad, useDayWeather, dustColor, recsFor, uvColor, pseudoCond } from '@/lib/weather'
-import { dateFullLabel, dowLabel, dayNum, todayKey, weekOf } from '@/lib/dates'
+import { dateFullLabel, dowLabel, dayNum, greeting, todayKey, weekOf } from '@/lib/dates'
 import { useWeatherStore } from '@/store/useWeatherStore'
 import { useAppStore } from '@/store/useAppStore'
 import { useMapStore } from '@/store/useMapStore'
@@ -11,24 +11,8 @@ import { useDayTasks } from '@/features/todo/useDayTasks'
 import { TaskRow, EmptyTasks } from '@/features/todo/TaskRow'
 import { WeatherScene } from '@/features/weather/WeatherScene'
 
-const navBtn = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 7,
-  background: '#fff',
-  border: '1px solid rgba(24,21,15,.07)',
-  borderRadius: 14,
-  padding: '10px 14px',
-  fontSize: 13,
-  fontWeight: 700,
-  color: '#5A554B',
-  cursor: 'pointer',
-} as const
-
-const navIcon = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
-
 export function HomeDashboard() {
-  const { selId, setSelId, openWeather, openAdd, openAi, openMap, openRoutine, setView, logout } = useAppStore()
+  const { selId, setSelId, openWeather, openAdd, openAi, openMap, nickname } = useAppStore()
   const setMapSel = useMapStore((s) => s.setMapSel)
   const { tasks, done, total, progPct, frac } = useDayTasks()
 
@@ -67,29 +51,15 @@ export function HomeDashboard() {
     <div className="page-pad" style={{ minHeight: '100vh', width: '100%', color: '#17150F', background: 'var(--canvas)' }}>
       <div style={{ maxWidth: 1180, margin: '0 auto' }}>
         {/* header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, gap: 16, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div onClick={logout} title="로그아웃" style={{ width: 44, height: 44, borderRadius: '50%', background: '#17150F', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 17, cursor: 'pointer' }}>
-              A
-            </div>
-            <div>
-              <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-.7px' }}>좋은 아침이에요, 알렉스</div>
-              <div style={{ fontSize: 13.5, fontWeight: 600, color: '#8B8579', marginTop: 2 }}>{dateLabel}</div>
-            </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, gap: 16, flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-.7px' }}>{greeting()}, {nickname}</div>
+            <div style={{ fontSize: 13.5, fontWeight: 600, color: '#8B8579', marginTop: 2 }}>{dateLabel}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff', border: '1px solid rgba(24,21,15,.07)', borderRadius: 14, padding: '10px 16px', fontSize: 13.5, fontWeight: 700 }}>{completedText}</div>
-            <div onClick={() => setView('calendar')} className="hbtn" style={navBtn}>
-              <svg width="16" height="16" viewBox="0 0 24 24" {...navIcon}><rect x="3" y="4.5" width="18" height="16" rx="3" /><path d="M3 9h18M8 2.5v4M16 2.5v4" /></svg>
-              캘린더
-            </div>
-            <div onClick={openMap} className="hbtn" style={navBtn}>
-              <svg width="16" height="16" viewBox="0 0 24 24" {...navIcon}><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" /><path d="M9 4v14M15 6v14" /></svg>
-              지도
-            </div>
-            <div onClick={openRoutine} className="hbtn" style={navBtn}>
-              <svg width="16" height="16" viewBox="0 0 24 24" {...navIcon}><rect x="3" y="4.5" width="18" height="16" rx="3" /><path d="M3 9h18M8 13l2.5 2.5L16 11" /></svg>
-              루틴
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff', borderRadius: 14, padding: '10px 16px', fontSize: 13.5, fontWeight: 700, boxShadow: '0 1px 2px rgba(22,26,32,.04), 0 8px 22px rgba(22,26,32,.045)' }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#15795A' }} />
+              {completedText}
             </div>
             <div onClick={openAdd} className="lift" style={{ width: 44, height: 44, borderRadius: 14, background: '#17150F', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
               <PlusIcon />
