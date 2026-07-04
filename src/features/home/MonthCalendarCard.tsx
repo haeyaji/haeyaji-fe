@@ -34,7 +34,7 @@ export function MonthCalendarCard() {
   return (
     <div className="tile" style={{ gridColumn: '1 / 3', gridRow: '4 / 6', minHeight: 520, padding: '18px 20px', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div style={{ fontSize: 17.5, fontWeight: 800 }}>{ym.y}년 {ym.m + 1}월</div>
+        <div style={{ fontSize: 35, fontWeight: 800 }}>{ym.y}년 {ym.m + 1}월</div>
         <div style={{ display: 'flex', gap: 6 }}>
           {[-1, 1].map((d) => (
             <div key={d} onClick={() => moveMonth(d)} className="hbtn" style={{ width: 30, height: 30, borderRadius: 9, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -48,7 +48,7 @@ export function MonthCalendarCard() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', marginBottom: 4 }}>
         {DOW_HDR.map((l, i) => (
-          <div key={l} style={{ textAlign: 'center', fontSize: 12.5, fontWeight: 700, color: i === 5 ? '#8E93A6' : i === 6 ? '#A68E8A' : '#A39C8E', padding: '4px 0' }}>{l}</div>
+          <div key={l} style={{ textAlign: 'center', fontSize: 25, fontWeight: 700, color: i === 5 ? '#8E93A6' : i === 6 ? '#A68E8A' : '#A39C8E', padding: '4px 0' }}>{l}</div>
         ))}
       </div>
 
@@ -68,7 +68,7 @@ export function MonthCalendarCard() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 14,
+                  fontSize: 28,
                   fontWeight: isToday || isSel ? 800 : 600,
                   background: isToday ? '#17150F' : 'transparent',
                   color: isToday ? '#fff' : isSel ? '#15795A' : '#17150F',
