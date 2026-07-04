@@ -142,24 +142,24 @@ export function HomeDashboard() {
             <div style={{ position: 'absolute', top: -28, right: -22, width: 116, height: 116, borderRadius: '50%', background: 'rgba(21,121,90,.4)', filter: 'blur(28px)' }} />
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8 }}>
               <SparkleIcon c="#5BD6A6" />
-              <div style={{ fontSize: 21, fontWeight: 800, color: '#fff' }}>AI 추천</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>AI 추천</div>
             </div>
-            <div style={{ position: 'relative', fontSize: 20, fontWeight: 600, lineHeight: 1.55, color: 'rgba(255,255,255,.92)' }}>{aiHint(w.cond)}</div>
-            <div style={{ position: 'relative', fontSize: 19, fontWeight: 800, color: '#6FE6B8' }}>대화 열기 →</div>
+            <div style={{ position: 'relative', fontSize: 14, fontWeight: 600, lineHeight: 1.55, color: 'rgba(255,255,255,.92)' }}>{aiHint(w.cond)}</div>
+            <div style={{ position: 'relative', fontSize: 13.5, fontWeight: 800, color: '#6FE6B8' }}>대화 열기 →</div>
           </div>
 
           {/* RECOMMENDATION 1x1 */}
           <div onClick={openRecMap} className="tile lift" style={{ gridColumn: '4 / 5', gridRow: '5 / 6', minHeight: 150, padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}>
             <div style={{ position: 'absolute', inset: 0, background: catGrad(top.cat) }} />
             <div style={{ position: 'relative', padding: 18, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', color: recInk }}>
-              <div style={{ position: 'absolute', top: 14, left: 14, fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,.85)', color: '#1E3318', padding: '5px 10px', borderRadius: 20 }}>적합도 {recs[0].fit}%</div>
+              <div style={{ position: 'absolute', top: 14, left: 14, fontSize: 10.5, fontWeight: 800, background: 'rgba(255,255,255,.85)', color: '#1E3318', padding: '5px 10px', borderRadius: 20 }}>적합도 {recs[0].fit}%</div>
               <div style={{ position: 'absolute', top: 12, right: 12, width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={{ width: 16, height: 16, display: 'inline-flex' }}>
                   <CategoryIcon cat={top.cat} c="#17150F" />
                 </span>
               </div>
-              <div style={{ fontSize: 23, fontWeight: 800 }}>{recName}</div>
-              <div style={{ fontSize: 17, fontWeight: 600, opacity: 0.72, marginTop: 2 }}>{top.type} · {top.dist}</div>
+              <div style={{ fontSize: 16, fontWeight: 800 }}>{recName}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.72, marginTop: 2 }}>{top.type} · {top.dist}</div>
             </div>
           </div>
           {/* 월간 캘린더 (신규) */}
