@@ -124,7 +124,8 @@
 /* 홈 컨테이너: 데스크탑=1220 중앙 고정 / 노트북 이하=풀폭 유동 (노트북 맞춤 화면) */
 .home-wrap { max-width: 1220px; margin: 0 auto; }
 @media (max-width: 1700px) {
-  .home-wrap { max-width: none; }
+  /* 노트북: 풀폭 + 컴포넌트 비율 유지 10% 확대 */
+  .home-wrap { max-width: none; zoom: 1.1; }
 }
 
 /* 홈 벤토 그리드 */
