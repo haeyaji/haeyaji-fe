@@ -39,11 +39,11 @@ export function TaskRow({ task, variant }: { task: Task; variant: 'home' | 'asid
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <div style={{ fontSize: home ? 16 : 15, fontWeight: 700, color: titleColor, textDecoration: task.done ? 'line-through' : 'none', ...ellipsis }}>
+          <div style={{ fontSize: home ? 19 : 17, fontWeight: 700, color: titleColor, textDecoration: task.done ? 'line-through' : 'none', ...ellipsis }}>
             {task.title}
           </div>
           {task.ai && (
-            <div style={{ flexShrink: 0, fontSize: home ? 10 : 9.5, fontWeight: 800, color: '#15795A', background: '#E4F2EC', padding: home ? '3px 8px' : '3px 7px', borderRadius: 20 }}>
+            <div style={{ flexShrink: 0, fontSize: home ? 12 : 11, fontWeight: 800, color: '#15795A', background: '#E4F2EC', padding: home ? '3px 8px' : '3px 7px', borderRadius: 20 }}>
               {home ? 'AI 추천' : 'AI'}
             </div>
           )}
