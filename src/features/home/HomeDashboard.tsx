@@ -1,7 +1,7 @@
-import { Gauge, PlusIcon, WeatherIcon, CategoryIcon, SparkleIcon } from '@/lib/icons'
+import { PlusIcon, WeatherIcon, CategoryIcon, SparkleIcon } from '@/lib/icons'
 import { useEffect } from 'react'
 import { PLACES } from '@/lib/mockData'
-import { aiHint, catGrad, useDayWeather, dustColor, recsFor, uvColor, pseudoCond } from '@/lib/weather'
+import { aiHint, catGrad, useDayWeather, recsFor, pseudoCond } from '@/lib/weather'
 import { dateFullLabel, dowLabel, dayNum, greeting, todayKey, weekOf } from '@/lib/dates'
 import { useWeatherStore } from '@/store/useWeatherStore'
 import { useAppStore } from '@/store/useAppStore'
@@ -10,6 +10,9 @@ import { useLocationStore } from '@/store/useLocationStore'
 import { useDayTasks } from '@/features/todo/useDayTasks'
 import { TaskRow, EmptyTasks } from '@/features/todo/TaskRow'
 import { WeatherScene } from '@/features/weather/WeatherScene'
+import { WeatherStatsStrip } from './WeatherStatsStrip'
+import { MonthCalendarCard } from './MonthCalendarCard'
+import { AdherenceCard } from './AdherenceCard'
 
 export function HomeDashboard() {
   const { selId, setSelId, openWeather, openAdd, openAi, openMap, nickname } = useAppStore()
@@ -70,7 +73,7 @@ export function HomeDashboard() {
         {/* bento grid */}
         <div className="bento">
           {/* WEATHER 2x2 */}
-          <div onClick={openWeather} className="tile lift" style={{ gridColumn: 'span 2', gridRow: 'span 2', minHeight: 300, padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer', background: w.sky, backgroundClip: 'padding-box', borderColor: 'rgba(24,21,15,.12)' }}>
+          <div onClick={openWeather} className="tile lift" style={{ gridColumn: '1 / 3', gridRow: '1 / 2', padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer', background: w.sky, backgroundClip: 'padding-box', borderColor: 'rgba(24,21,15,.12)' }}>
             <WeatherScene cond={w.cond} tod={w.tod} ink={w.ink} />
             <div style={{ position: 'relative', padding: '26px 28px', height: '100%', display: 'flex', flexDirection: 'column', color: w.ink }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
@@ -101,7 +104,7 @@ export function HomeDashboard() {
           </div>
 
           {/* TASKS 2x3 */}
-          <div className="tile" style={{ gridColumn: 'span 2', gridRow: 'span 3', minHeight: 440, padding: '24px 26px', display: 'flex', flexDirection: 'column' }}>
+          <div className="tile" style={{ gridColumn: '3 / 5', gridRow: '1 / 4', padding: '22px 24px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-.4px' }}>{taskTitle}</div>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#A39C8E' }}>{frac}</div>
@@ -120,31 +123,11 @@ export function HomeDashboard() {
               할 일 추가
             </div>
           </div>
+          {/* 지표 스트립 (신규) */}
+          <WeatherStatsStrip selId={selId} />
 
-          {/* UV 1x1 */}
-          <div className="tile" style={{ gridColumn: 'span 1', gridRow: 'span 1', padding: '16px 18px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: '#A39C8E' }}>자외선 지수</div>
-            <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ width: 106, height: 106 }}>
-                <Gauge value={w.uvIdx} max={11} color={uvColor(w.uvIdx)} big={w.uvIdx} small={w.uvLv} />
-              </div>
-            </div>
-          </div>
-
-          {/* DUST 1x1 */}
-          <div className="tile" style={{ gridColumn: 'span 1', gridRow: 'span 1', padding: '16px 18px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: '#A39C8E' }}>
-              미세먼지 <span style={{ fontWeight: 600, color: '#C1C7D2' }}>㎍/㎥</span>
-            </div>
-            <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ width: 106, height: 106 }}>
-                <Gauge value={w.dustVal} max={150} color={dustColor(w.dustVal)} big={w.dustVal} small={w.dustLv} />
-              </div>
-            </div>
-          </div>
-
-          {/* WEEK selector 2x1 */}
-          <div className="tile" style={{ gridColumn: 'span 2', gridRow: 'span 1', padding: '18px 22px' }}>
+          {/* WEEK selector */}
+          <div className="tile" style={{ gridColumn: '1 / 3', gridRow: '3 / 4', padding: '14px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <div style={{ fontSize: 14, fontWeight: 800 }}>이번 주 날씨</div>
               <div style={{ fontSize: 11.5, fontWeight: 700, color: '#A39C8E' }}>날짜를 눌러 전환</div>
@@ -155,7 +138,7 @@ export function HomeDashboard() {
           </div>
 
           {/* AI 1x1 */}
-          <div onClick={openAi} className="tile lift" style={{ gridColumn: 'span 1', gridRow: 'span 1', padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', cursor: 'pointer', background: '#17150F', border: '1px solid rgba(255,255,255,.06)', position: 'relative', overflow: 'hidden' }}>
+          <div onClick={openAi} className="tile lift" style={{ gridColumn: '3 / 4', gridRow: '6 / 7', padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', cursor: 'pointer', background: '#17150F', border: '1px solid rgba(255,255,255,.06)', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: -28, right: -22, width: 116, height: 116, borderRadius: '50%', background: 'rgba(21,121,90,.4)', filter: 'blur(28px)' }} />
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8 }}>
               <SparkleIcon c="#5BD6A6" />
@@ -166,7 +149,7 @@ export function HomeDashboard() {
           </div>
 
           {/* RECOMMENDATION 1x1 */}
-          <div onClick={openRecMap} className="tile lift" style={{ gridColumn: 'span 1', gridRow: 'span 1', padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}>
+          <div onClick={openRecMap} className="tile lift" style={{ gridColumn: '4 / 5', gridRow: '6 / 7', padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}>
             <div style={{ position: 'absolute', inset: 0, background: catGrad(top.cat) }} />
             <div style={{ position: 'relative', padding: 18, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', color: recInk }}>
               <div style={{ position: 'absolute', top: 14, left: 14, fontSize: 10.5, fontWeight: 800, background: 'rgba(255,255,255,.85)', color: '#1E3318', padding: '5px 10px', borderRadius: 20 }}>적합도 {recs[0].fit}%</div>
@@ -179,6 +162,11 @@ export function HomeDashboard() {
               <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.72, marginTop: 2 }}>{top.type} · {top.dist}</div>
             </div>
           </div>
+          {/* 월간 캘린더 (신규) */}
+          <MonthCalendarCard />
+
+          {/* 주간 달성률 (신규) */}
+          <AdherenceCard />
         </div>
       </div>
     </div>
