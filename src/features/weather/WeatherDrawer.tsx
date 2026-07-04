@@ -6,7 +6,7 @@ import { useLocationStore } from '@/store/useLocationStore'
 import { WeatherScene } from './WeatherScene'
 
 export function WeatherDrawer() {
-  const { weatherOpen, closeWeather, selId } = useAppStore()
+  const { weatherOpen, closeWeather, weatherSelId: selId } = useAppStore()
   const region = useLocationStore((s) => s.region) || '현재 위치'
   const w = useDayWeather(selId) // 훅은 early return보다 먼저
 

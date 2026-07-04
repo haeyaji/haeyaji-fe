@@ -15,12 +15,12 @@ import { MonthCalendarCard } from './MonthCalendarCard'
 import { AdherenceCard } from './AdherenceCard'
 
 export function HomeDashboard() {
-  const { selId, setSelId, openWeather, openAdd, openAi, openMap, nickname } = useAppStore()
+  const { selId, setSelId, weatherSelId, setWeatherSelId, openWeather, openAdd, openAi, openMap, nickname } = useAppStore()
   const setMapSel = useMapStore((s) => s.setMapSel)
   const { tasks, done, total, progPct, frac } = useDayTasks()
 
   const region = useLocationStore((s) => s.region) || '현재 위치'
-  const w = useDayWeather(selId)
+  const w = useDayWeather(weatherSelId)
   const lat = useLocationStore((s) => s.lat)
   const lng = useLocationStore((s) => s.lng)
   const weekKeys = next7Days() // 오늘 기준 앞으로 7일 (실예보 범위)
@@ -45,9 +45,9 @@ export function HomeDashboard() {
     setMapSel(top.id)
     openMap()
   }
+  // 주간 예보 클릭 = 날씨만 전환 (할일·캘린더는 그대로)
   const onWeekClick = (id: string) => {
-    setSelId(id)
-    setMapSel(null)
+    setWeatherSelId(id)
   }
 
   return (
@@ -135,7 +135,7 @@ export function HomeDashboard() {
             </div>
           </div>
           {/* 지표 스트립 (신규) */}
-          <WeatherStatsStrip selId={selId} />
+          <WeatherStatsStrip selId={weatherSelId} />
 
           {/* WEEK selector */}
           <div className="tile" style={{ gridColumn: '1 / 3', gridRow: '3 / 4', padding: '14px 20px' }}>
@@ -144,7 +144,7 @@ export function HomeDashboard() {
               <div style={{ fontSize: 16, fontWeight: 700, color: '#A39C8E' }}>날짜를 눌러 전환</div>
             </div>
             <div style={{ display: 'flex', gap: 7 }}>
-              <WeekStrip selId={selId} weekKeys={weekKeys} onPick={onWeekClick} />
+              <WeekStrip selId={weatherSelId} weekKeys={weekKeys} onPick={onWeekClick} />
             </div>
           </div>
 

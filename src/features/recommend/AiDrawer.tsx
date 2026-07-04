@@ -31,7 +31,7 @@ function fmtDist(m: number | null): string | null {
 }
 
 export function AiDrawer() {
-  const { aiOpen, closeAi, selId } = useAppStore()
+  const { aiOpen, closeAi, weatherSelId: selId } = useAppStore()
   const { chat, input, loading, setInput, send, ask } = useChatStore()
   const addPlaceTask = useTodoStore((s) => s.addPlaceTask)
   const loc = useLocationStore()
