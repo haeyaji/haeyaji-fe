@@ -80,7 +80,7 @@ export function HomeDashboard() {
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, marginTop: 'auto' }}>
-                <div style={{ fontSize: 88, fontWeight: 300, letterSpacing: '-4px', lineHeight: 0.8 }}>{w.temp}°</div>
+                <div style={{ fontSize: 64, fontWeight: 300, letterSpacing: '-2.5px', lineHeight: 0.8 }}>{w.temp}°</div>
                 <div style={{ paddingBottom: 10 }}>
                   <div style={{ fontSize: 15, fontWeight: 700 }}>{w.condKo}</div>
                   <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.7 }}>최고 {w.hi}° / 최저 {w.lo}°</div>
@@ -88,9 +88,12 @@ export function HomeDashboard() {
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
                 {tileHourly.map((h, i) => (
-                  <div key={i} style={{ flex: 1, background: 'rgba(255,255,255,.42)', borderRadius: 14, padding: '11px 0', textAlign: 'center' }}>
+                  <div key={i} style={{ flex: 1, background: 'rgba(255,255,255,.42)', borderRadius: 12, padding: '9px 0', textAlign: 'center' }}>
                     <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.7 }}>{h.label}</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, marginTop: 5 }}>{h.temp}°</div>
+                    <div style={{ width: 16, height: 16, margin: '4px auto' }}>
+                      <WeatherIcon cond={w.cond} c={w.iconC} />
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 700 }}>{h.temp}°</div>
                   </div>
                 ))}
               </div>
