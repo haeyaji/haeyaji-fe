@@ -133,8 +133,8 @@ export function MapModal() {
 
   return (
     <>
-      <div onClick={closeMap} style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(24,21,15,.42)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 30, animation: 'rb-fade .16s ease' }}>
-        <div onClick={(e) => e.stopPropagation()} style={{ width: 1040, maxWidth: '100%', height: 660, maxHeight: '92vh', background: '#fff', borderRadius: 24, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 100px rgba(24,21,15,.42)', animation: 'rb-modal .24s ease' }}>
+      <div onClick={closeMap} style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'var(--canvas)', display: 'flex', animation: 'rb-fade .16s ease' }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', height: '100%', background: '#fff', overflow: 'hidden', display: 'flex', flexDirection: 'column', animation: 'rb-modal .24s ease' }}>
           {/* header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 26px', borderBottom: '1px solid #E6E9F0' }}>
             <div>

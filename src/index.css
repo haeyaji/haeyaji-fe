@@ -140,7 +140,7 @@
 /* 캘린더 본문 / 사이드 / 월 그리드 */
 .cal-body { display: flex; gap: 18px; align-items: stretch; }
 .cal-aside { width: 344px; flex-shrink: 0; }
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 106px; gap: 8px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 118px; gap: 8px; }
 
 /* 지도 모달 본문 / 좌측 패널 */
 .map-body { flex: 1; min-height: 0; display: flex; }
