@@ -2,7 +2,7 @@ import { PlusIcon, WeatherIcon, CategoryIcon, SparkleIcon } from '@/lib/icons'
 import { useEffect } from 'react'
 import { PLACES } from '@/lib/mockData'
 import { aiHint, catGrad, useDayWeather, recsFor, pseudoCond } from '@/lib/weather'
-import { dateFullLabel, dowLabel, dayNum, greeting, todayKey, weekOf } from '@/lib/dates'
+import { dateFullLabel, dayState, dowLabel, dayNum, greeting, todayKey, weekOf } from '@/lib/dates'
 import { useWeatherStore } from '@/store/useWeatherStore'
 import { useAppStore } from '@/store/useAppStore'
 import { useMapStore } from '@/store/useMapStore'
@@ -179,23 +179,31 @@ function WeekStrip({ selId, weekKeys, onPick }: { selId: string; weekKeys: strin
     <>
       {weekKeys.map((k) => {
         const on = k === selId
+        const st = dayState(k)
         const raw = byDate[k]
         const cond = raw && ['sunny', 'cloudy', 'rainy', 'snowy'].includes(raw.cond) ? (raw.cond as 'sunny') : pseudoCond(k)
-        const hi = raw?.hi
-        const today = k === todayKey()
+        const today = st === 'today'
+        const past = st === 'past'
         const iconColor = on ? '#fff' : cond === 'sunny' ? '#E6A52E' : '#9AA0A8'
         return (
           <div
             key={k}
             onClick={() => onPick(k)}
             className="hbtn"
-            style={{ flex: 1, textAlign: 'center', padding: '9px 0', borderRadius: 13, cursor: 'pointer', background: on ? '#17150F' : '#F0F2F6' }}
+            style={{ flex: 1, textAlign: 'center', padding: '9px 0', borderRadius: 13, cursor: 'pointer', background: on ? '#17150F' : '#F0F2F6', opacity: past && !on ? 0.55 : 1 }}
           >
             <div style={{ fontSize: 10.5, fontWeight: 700, color: on ? 'rgba(255,255,255,.7)' : today ? '#15795A' : '#A39C8E' }}>{today ? '오늘' : dowLabel(k)}</div>
-            <div style={{ height: 18, margin: '5px auto 0', width: 18 }}>
-              <WeatherIcon cond={cond} c={iconColor} />
+            {past ? (
+              // 과거: 예보 없음 — 날짜만 담백하게
+              <div style={{ height: 18, margin: '5px auto 0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: on ? '#fff' : '#B6BCC7' }}>{dayNum(k)}일</div>
+            ) : (
+              <div style={{ height: 18, margin: '5px auto 0', width: 18 }}>
+                <WeatherIcon cond={cond} c={iconColor} />
+              </div>
+            )}
+            <div style={{ fontSize: 13, fontWeight: 800, marginTop: 5, color: on ? '#fff' : '#17150F' }}>
+              {past ? '–' : raw?.hi != null ? `${raw.hi}°` : '–'}
             </div>
-            <div style={{ fontSize: 13, fontWeight: 800, marginTop: 5, color: on ? '#fff' : '#17150F' }}>{hi != null ? `${hi}°` : `${dayNum(k)}일`}</div>
           </div>
         )
       })}
