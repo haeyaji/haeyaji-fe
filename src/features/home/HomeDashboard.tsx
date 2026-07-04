@@ -56,11 +56,11 @@ export function HomeDashboard() {
         {/* header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, gap: 16, flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-.7px' }}>{greeting()}, {nickname}</div>
-            <div style={{ fontSize: 13.5, fontWeight: 600, color: '#8B8579', marginTop: 2 }}>{dateLabel}</div>
+            <div style={{ fontSize: 52, fontWeight: 800, letterSpacing: '-.7px' }}>{greeting()}, {nickname}</div>
+            <div style={{ fontSize: 27, fontWeight: 600, color: '#8B8579', marginTop: 2 }}>{dateLabel}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff', borderRadius: 14, padding: '10px 16px', fontSize: 13.5, fontWeight: 700, boxShadow: '0 1px 2px rgba(22,26,32,.04), 0 8px 22px rgba(22,26,32,.045)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff', borderRadius: 14, padding: '10px 16px', fontSize: 27, fontWeight: 700, boxShadow: '0 1px 2px rgba(22,26,32,.04), 0 8px 22px rgba(22,26,32,.045)' }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#15795A' }} />
               {completedText}
             </div>
@@ -78,25 +78,25 @@ export function HomeDashboard() {
             <div style={{ position: 'relative', padding: '18px 22px', height: '100%', display: 'flex', flexDirection: 'column', color: w.ink }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '1.5px', opacity: 0.6 }}>LOCAL FORECAST</div>
-                  <div style={{ fontSize: 21, fontWeight: 800, marginTop: 4 }}>{region}</div>
+                  <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '1.5px', opacity: 0.6 }}>LOCAL FORECAST</div>
+                  <div style={{ fontSize: 42, fontWeight: 800, marginTop: 4 }}>{region}</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, marginTop: 'auto', paddingTop: 6 }}>
                 <div style={{ fontSize: 'clamp(44px, 3.6vw, 64px)', fontWeight: 300, letterSpacing: '-2.5px', lineHeight: 0.85 }}>{w.temp}°</div>
                 <div style={{ paddingBottom: 10 }}>
-                  <div style={{ fontSize: 16.5, fontWeight: 700 }}>{w.condKo}</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, opacity: 0.7 }}>최고 {w.hi}° / 최저 {w.lo}°</div>
+                  <div style={{ fontSize: 33, fontWeight: 700 }}>{w.condKo}</div>
+                  <div style={{ fontSize: 28, fontWeight: 600, opacity: 0.7 }}>최고 {w.hi}° / 최저 {w.lo}°</div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 {tileHourly.map((h, i) => (
                   <div key={i} style={{ flex: 1, background: 'rgba(255,255,255,.42)', borderRadius: 12, padding: '9px 0', textAlign: 'center' }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 700, opacity: 0.7 }}>{h.label}</div>
+                    <div style={{ fontSize: 25, fontWeight: 700, opacity: 0.7 }}>{h.label}</div>
                     <div style={{ width: 16, height: 16, margin: '4px auto' }}>
                       <WeatherIcon cond={w.cond} c={w.iconC} />
                     </div>
-                    <div style={{ fontSize: 15.5, fontWeight: 700 }}>{h.temp}°</div>
+                    <div style={{ fontSize: 31, fontWeight: 700 }}>{h.temp}°</div>
                   </div>
                 ))}
               </div>
@@ -106,8 +106,8 @@ export function HomeDashboard() {
           {/* TASKS 2x3 */}
           <div className="tile" style={{ gridColumn: '3 / 5', gridRow: '1 / 4', minHeight: 560, padding: '22px 24px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: 21, fontWeight: 800, letterSpacing: '-.4px' }}>{taskTitle}</div>
-              <div style={{ fontSize: 14.5, fontWeight: 700, color: '#A39C8E' }}>{frac}</div>
+              <div style={{ fontSize: 42, fontWeight: 800, letterSpacing: '-.4px' }}>{taskTitle}</div>
+              <div style={{ fontSize: 29, fontWeight: 700, color: '#A39C8E' }}>{frac}</div>
             </div>
             <div style={{ height: 5, borderRadius: 5, background: '#E4E7EE', marginTop: 14, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: progPct, borderRadius: 5, background: '#15795A', transition: 'width .3s ease' }} />
@@ -118,7 +118,7 @@ export function HomeDashboard() {
               ))}
               {total === 0 && <EmptyTasks />}
             </div>
-            <div onClick={openAdd} className="hbtn" style={{ borderTop: '1px solid #E4E7EE', paddingTop: 14, marginTop: 4, fontSize: 14, fontWeight: 700, color: '#A39C8E', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div onClick={openAdd} className="hbtn" style={{ borderTop: '1px solid #E4E7EE', paddingTop: 14, marginTop: 4, fontSize: 28, fontWeight: 700, color: '#A39C8E', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7 }}>
               <PlusIcon c="currentColor" w={17} />
               할 일 추가
             </div>
@@ -129,8 +129,8 @@ export function HomeDashboard() {
           {/* WEEK selector */}
           <div className="tile" style={{ gridColumn: '1 / 3', gridRow: '3 / 4', padding: '14px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div style={{ fontSize: 16.5, fontWeight: 800 }}>주간 예보</div>
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: '#A39C8E' }}>날짜를 눌러 전환</div>
+              <div style={{ fontSize: 33, fontWeight: 800 }}>주간 예보</div>
+              <div style={{ fontSize: 25, fontWeight: 700, color: '#A39C8E' }}>날짜를 눌러 전환</div>
             </div>
             <div style={{ display: 'flex', gap: 7 }}>
               <WeekStrip selId={selId} weekKeys={weekKeys} onPick={onWeekClick} />
@@ -142,24 +142,24 @@ export function HomeDashboard() {
             <div style={{ position: 'absolute', top: -28, right: -22, width: 116, height: 116, borderRadius: '50%', background: 'rgba(21,121,90,.4)', filter: 'blur(28px)' }} />
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8 }}>
               <SparkleIcon c="#5BD6A6" />
-              <div style={{ fontSize: 16.5, fontWeight: 800, color: '#fff' }}>AI 추천</div>
+              <div style={{ fontSize: 33, fontWeight: 800, color: '#fff' }}>AI 추천</div>
             </div>
-            <div style={{ position: 'relative', fontSize: 15, fontWeight: 600, lineHeight: 1.55, color: 'rgba(255,255,255,.92)' }}>{aiHint(w.cond)}</div>
-            <div style={{ position: 'relative', fontSize: 14.5, fontWeight: 800, color: '#6FE6B8' }}>대화 열기 →</div>
+            <div style={{ position: 'relative', fontSize: 30, fontWeight: 600, lineHeight: 1.55, color: 'rgba(255,255,255,.92)' }}>{aiHint(w.cond)}</div>
+            <div style={{ position: 'relative', fontSize: 29, fontWeight: 800, color: '#6FE6B8' }}>대화 열기 →</div>
           </div>
 
           {/* RECOMMENDATION 1x1 */}
           <div onClick={openRecMap} className="tile lift" style={{ gridColumn: '4 / 5', gridRow: '5 / 6', minHeight: 150, padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}>
             <div style={{ position: 'absolute', inset: 0, background: catGrad(top.cat) }} />
             <div style={{ position: 'relative', padding: 18, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', color: recInk }}>
-              <div style={{ position: 'absolute', top: 14, left: 14, fontSize: 10.5, fontWeight: 800, background: 'rgba(255,255,255,.85)', color: '#1E3318', padding: '5px 10px', borderRadius: 20 }}>적합도 {recs[0].fit}%</div>
+              <div style={{ position: 'absolute', top: 14, left: 14, fontSize: 21, fontWeight: 800, background: 'rgba(255,255,255,.85)', color: '#1E3318', padding: '5px 10px', borderRadius: 20 }}>적합도 {recs[0].fit}%</div>
               <div style={{ position: 'absolute', top: 12, right: 12, width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={{ width: 16, height: 16, display: 'inline-flex' }}>
                   <CategoryIcon cat={top.cat} c="#17150F" />
                 </span>
               </div>
-              <div style={{ fontSize: 17.5, fontWeight: 800 }}>{recName}</div>
-              <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.72, marginTop: 2 }}>{top.type} · {top.dist}</div>
+              <div style={{ fontSize: 35, fontWeight: 800 }}>{recName}</div>
+              <div style={{ fontSize: 26, fontWeight: 600, opacity: 0.72, marginTop: 2 }}>{top.type} · {top.dist}</div>
             </div>
           </div>
           {/* 월간 캘린더 (신규) */}
@@ -190,11 +190,11 @@ function WeekStrip({ selId, weekKeys, onPick }: { selId: string; weekKeys: strin
             className="hbtn"
             style={{ flex: 1, textAlign: 'center', padding: '9px 0', borderRadius: 13, cursor: 'pointer', background: on ? '#17150F' : '#F0F2F6' }}
           >
-            <div style={{ fontSize: 12, fontWeight: 700, color: on ? 'rgba(255,255,255,.7)' : today ? '#15795A' : '#A39C8E' }}>{today ? '오늘' : dowLabel(k)}</div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: on ? 'rgba(255,255,255,.7)' : today ? '#15795A' : '#A39C8E' }}>{today ? '오늘' : dowLabel(k)}</div>
             <div style={{ height: 18, margin: '5px auto 0', width: 18 }}>
               <WeatherIcon cond={cond} c={iconColor} />
             </div>
-            <div style={{ fontSize: 15, fontWeight: 800, marginTop: 5, color: on ? '#fff' : '#17150F' }}>{raw?.hi != null ? `${raw.hi}°` : '–'}</div>
+            <div style={{ fontSize: 30, fontWeight: 800, marginTop: 5, color: on ? '#fff' : '#17150F' }}>{raw?.hi != null ? `${raw.hi}°` : '–'}</div>
           </div>
         )
       })}

@@ -63,8 +63,8 @@ export function Sidebar() {
         </div>
         {!c && (
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-.4px' }}>해야지</div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#A39C8E', marginTop: 1 }}>날씨 기반 할 일</div>
+            <div style={{ fontSize: 38, fontWeight: 800, letterSpacing: '-.4px' }}>해야지</div>
+            <div style={{ fontSize: 24, fontWeight: 600, color: '#A39C8E', marginTop: 1 }}>날씨 기반 할 일</div>
           </div>
         )}
         <div
@@ -86,7 +86,7 @@ export function Sidebar() {
         style={{ marginTop: 26, height: 50, borderRadius: 15, background: '#17150F', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', flexShrink: 0 }}
       >
         <PlusIcon w={17} />
-        {!c && <div style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>새 일정 추가</div>}
+        {!c && <div style={{ fontSize: 28, fontWeight: 700, whiteSpace: 'nowrap' }}>새 일정 추가</div>}
       </div>
 
       {/* 내비게이션 */}
@@ -107,7 +107,7 @@ export function Sidebar() {
               cursor: 'pointer',
               color: it.active ? '#15795A' : '#8B8579',
               background: it.active ? 'rgba(21,121,90,.09)' : 'transparent',
-              fontSize: 14,
+              fontSize: 28,
               fontWeight: 700,
             }}
           >
@@ -121,14 +121,14 @@ export function Sidebar() {
 
       {/* 프로필 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: c ? 'center' : 'flex-start', gap: 11 }}>
-        <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#17150F', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, flexShrink: 0 }}>
+        <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#17150F', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, fontWeight: 800, flexShrink: 0 }}>
           {nickname.slice(0, 1)}
         </div>
         {!c && (
           <>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nickname}</div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#A39C8E' }}>무료 플랜</div>
+              <div style={{ fontSize: 27, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nickname}</div>
+              <div style={{ fontSize: 22, fontWeight: 600, color: '#A39C8E' }}>무료 플랜</div>
             </div>
             <div onClick={logout} title="로그아웃" className="hbtn" style={{ flexShrink: 0, width: 28, height: 28, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A39C8E', cursor: 'pointer' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7" /><circle cx="12" cy="12" r="1.7" /><circle cx="19" cy="12" r="1.7" /></svg>
