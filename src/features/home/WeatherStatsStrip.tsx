@@ -7,7 +7,7 @@ import { useDayWeather } from '@/lib/weather'
 function Stat({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-      <div style={{ width: 18, height: 18 }}>{icon}</div>
+      <div style={{ width: 28, height: 28 }}>{icon}</div>
       <div style={{ fontSize: 16, fontWeight: 700, color: '#A39C8E' }}>{label}</div>
       <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-.4px' }}>
         {value}
