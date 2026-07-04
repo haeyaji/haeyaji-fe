@@ -24,12 +24,12 @@ export default function App() {
     useLocationStore.getState().init()
   }, [])
 
-  const selId = useAppStore((s) => s.selId)
+  const weatherSelId = useAppStore((s) => s.weatherSelId)
 
-  // 위치·선택날짜 기준 실날씨 로드 (날짜별 캐시)
+  // 위치·날씨선택날짜 기준 실날씨 로드 (날짜별 캐시)
   useEffect(() => {
-    useWeatherStore.getState().loadDay(lat, lng, selId)
-  }, [lat, lng, selId])
+    useWeatherStore.getState().loadDay(lat, lng, weatherSelId)
+  }, [lat, lng, weatherSelId])
 
   if (!authed) {
     return (

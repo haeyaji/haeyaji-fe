@@ -8,7 +8,8 @@ interface AppState {
   nickname: string // 회원가입 닉네임 (be 인증 붙으면 그 값으로 대체)
   sidebarCollapsed: boolean
   view: View
-  selId: string
+  selId: string // 할일·캘린더용 선택 날짜
+  weatherSelId: string // 날씨(히어로·지표·주간예보)용 — 할일 이동과 독립
   // drawers / modals
   aiOpen: boolean
   weatherOpen: boolean
@@ -24,6 +25,7 @@ interface AppState {
   toggleSidebar: () => void
   setView: (v: View) => void
   setSelId: (id: string) => void
+  setWeatherSelId: (id: string) => void
   openAi: () => void
   closeAi: () => void
   openWeather: () => void
@@ -45,6 +47,7 @@ export const useAppStore = create<AppState>((set) => ({
   sidebarCollapsed: false,
   view: 'home',
   selId: todayKey(),
+  weatherSelId: todayKey(),
   aiOpen: false,
   weatherOpen: false,
   routineOpen: false,
@@ -62,6 +65,7 @@ export const useAppStore = create<AppState>((set) => ({
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
   setView: (view) => set({ view }),
   setSelId: (selId) => set({ selId }),
+  setWeatherSelId: (weatherSelId) => set({ weatherSelId }),
   openAi: () => set({ aiOpen: true }),
   closeAi: () => set({ aiOpen: false }),
   openWeather: () => set({ weatherOpen: true }),

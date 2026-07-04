@@ -37,7 +37,7 @@ function catOf(categoryName: string): PlaceCat {
 }
 
 export function MapModal() {
-  const { mapOpen, closeMap, selId } = useAppStore()
+  const { mapOpen, closeMap, weatherSelId: selId } = useAppStore()
   const { mapSelId, mapSearch, origin, setMapSel, setMapSearch, setOrigin, resetOrigin } = useMapStore()
   const addPlaceTask = useTodoStore((s) => s.addPlaceTask)
   const loc = useLocationStore()
