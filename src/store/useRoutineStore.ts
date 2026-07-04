@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { Routine } from '@/types'
 import { INITIAL_ROUTINES } from '@/lib/mockData'
-import { dowIndex } from '@/lib/weather'
+import { dowIndexOf } from '@/lib/weather'
 import { useAppStore } from './useAppStore'
 
 type PresetKind = 'every' | 'week' | 'weekend'
@@ -44,13 +44,15 @@ export const useRoutineStore = create<RoutineState>((set, get) => ({
       routines: [...s.routines, { id: 'nr' + Date.now(), title: '새 루틴', cat: 'code', time: '오전 09:00', days: [true, true, true, true, true, false, false], active: true }],
     })),
   batchApply: () => {
-    // 활성 루틴이 5월 잔여일(24~31)에 등록되는 횟수 집계
+    // 활성 루틴이 이번 달 잔여일(오늘~말일)에 등록되는 횟수 집계
+    const now = new Date()
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
     let cnt = 0
     get()
       .routines.filter((r) => r.active)
       .forEach((r) => {
-        for (let d = 24; d <= 31; d++) {
-          if (r.days[dowIndex(d)]) cnt++
+        for (let d = now.getDate(); d <= lastDay; d++) {
+          if (r.days[dowIndexOf(new Date(now.getFullYear(), now.getMonth(), d))]) cnt++
         }
       })
     useAppStore.getState().toast(`${cnt}개 일정을 이번 달에 등록했어요`)

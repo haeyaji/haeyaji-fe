@@ -1,9 +1,9 @@
 // 날씨 → 시각 토큰 + 수치 파생, 날씨별 추천 장소 매핑, 게이지 색상.
 // 시안의 결정론적 규칙을 그대로 옮김. (추후 weatherApi/recommendApi가 대체)
-import type { DayWeather, PlaceCat, TimeOfDay, WeatherCond, WeekDay } from '@/types'
+import type { DayWeather, PlaceCat, TimeOfDay, WeatherCond } from '@/types'
 import type { WeatherRaw } from '@/api/weatherApi'
 import { useWeatherStore } from '@/store/useWeatherStore'
-import { WEEK } from './mockData'
+import { dayNum, parseKey } from './dates'
 
 export const condKo: Record<WeatherCond, string> = {
   sunny: '대체로 맑음',
@@ -106,10 +106,6 @@ const SKY: Record<WeatherCond, Record<TimeOfDay, SkyToken>> = {
 /** 밤 시간대인지 (오버레이·별 표시 판단용) */
 export const isNight = (tod: TimeOfDay): boolean => tod === 'night'
 
-export function dayMeta(id: string): WeekDay {
-  return WEEK.find((w) => w.id === id) ?? WEEK[4]
-}
-
 // 자외선/미세먼지 수치 → 등급 문자열
 export const uvLevel = (i: number): string => (i <= 2 ? '낮음' : i <= 5 ? '보통' : i <= 7 ? '높음' : i <= 10 ? '매우높음' : '위험')
 export const dustLevel = (v: number): string => (v <= 30 ? '좋음' : v <= 80 ? '보통' : v <= 150 ? '나쁨' : '매우나쁨')
@@ -141,22 +137,30 @@ export function deriveWeather(raw: WeatherRaw, tod: TimeOfDay): DayWeather {
   }
 }
 
-/** 선택 날짜 날씨. 실날씨(be) 로드됐으면 그걸, 아니면 mock. (컴포넌트 외부용 — 비반응형) */
+/** 선택 날짜 날씨. 실날씨(be) 로드됐으면 그걸, 아니면 폴백. (컴포넌트 외부용 — 비반응형) */
 export function dayWeather(id: string): DayWeather {
-  const raw = useWeatherStore.getState().raw
+  const raw = useWeatherStore.getState().byDate[id]
   if (raw) return deriveWeather(raw, timeOfDay())
-  return mockDayWeather(id)
+  return fallbackDayWeather(id)
 }
 
 /** 컴포넌트용 반응형 훅 — 실날씨 로드 시 자동 리렌더 */
 export function useDayWeather(id: string): DayWeather {
-  const raw = useWeatherStore((s) => s.raw)
-  return raw ? deriveWeather(raw, timeOfDay()) : mockDayWeather(id)
+  const raw = useWeatherStore((s) => s.byDate[id])
+  return raw ? deriveWeather(raw, timeOfDay()) : fallbackDayWeather(id)
 }
 
-function mockDayWeather(id: string): DayWeather {
-  const w = dayMeta(id)
-  const c = w.cond
+/** 날짜 기반 의사 날씨 조건 (be 미로드/과거 폴백용, 결정적) */
+export function pseudoCond(id: string): WeatherCond {
+  const n = dayNum(id) + parseKey(id).getMonth()
+  return (['sunny', 'cloudy', 'rainy'] as WeatherCond[])[n % 3]
+}
+
+function fallbackDayWeather(id: string): DayWeather {
+  const c = pseudoCond(id)
+  const month = parseKey(id).getMonth() + 1
+  const base_hi = [8, 10, 15, 20, 24, 27, 30, 31, 27, 21, 14, 9][month - 1]
+  const w = { hi: base_hi, lo: base_hi - 8 }
   const base = {
     sunny: { pop: 5, humid: 45, wind: 11, uvLv: '높음', uvIdx: 7, dustLv: '보통', dustVal: 42, sky: 'linear-gradient(160deg,#A6C6E6,#DEE9F1)', glow: 'rgba(255,248,225,.7)', ink: '#16263C', sub: '#3A4E63', iconC: '#F6B23A' },
     cloudy: { pop: 20, humid: 60, wind: 14, uvLv: '보통', uvIdx: 5, dustLv: '보통', dustVal: 48, sky: 'linear-gradient(160deg,#AEB8C2,#D8DEE4)', glow: 'rgba(255,255,255,.5)', ink: '#2A333C', sub: '#4A555E', iconC: '#5E6B78' },
@@ -219,4 +223,5 @@ export function aiHint(cond: WeatherCond): string {
   return '맑은 오후, 테라스 카페에서 일하기 좋아요.'
 }
 
-export const dowIndex = (date: number): number => (date + 1) % 7 // 5월 1일=수
+/** Date → 월요일 시작 요일 인덱스(월=0…일=6) — 루틴 요일 매칭용 */
+export const dowIndexOf = (d: Date): number => (d.getDay() + 6) % 7

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { CategoryIcon, CloseIcon } from '@/lib/icons'
-import { dayMeta, useDayWeather } from '@/lib/weather'
+import { useDayWeather } from '@/lib/weather'
+import { dateShortLabel } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
 import { useChatStore, type SendCtx } from '@/store/useChatStore'
 import { useTodoStore } from '@/store/useTodoStore'
@@ -45,8 +46,7 @@ export function AiDrawer() {
 
   if (!aiOpen) return null
 
-  const meta = dayMeta(selId)
-  const dateShort = `5월 ${meta.date}일 (${meta.dow})`
+  const dateShort = dateShortLabel(selId)
   const ctx: SendCtx = {
     lat: loc.lat,
     lng: loc.lng,

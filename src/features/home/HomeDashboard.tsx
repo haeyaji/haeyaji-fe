@@ -1,6 +1,9 @@
 import { Gauge, PlusIcon, WeatherIcon, CategoryIcon, SparkleIcon } from '@/lib/icons'
-import { PLACES, WEEK } from '@/lib/mockData'
-import { aiHint, catGrad, dayMeta, useDayWeather, dustColor, recsFor, uvColor } from '@/lib/weather'
+import { useEffect } from 'react'
+import { PLACES } from '@/lib/mockData'
+import { aiHint, catGrad, useDayWeather, dustColor, recsFor, uvColor, pseudoCond } from '@/lib/weather'
+import { dateFullLabel, dowLabel, dayNum, todayKey, weekOf } from '@/lib/dates'
+import { useWeatherStore } from '@/store/useWeatherStore'
 import { useAppStore } from '@/store/useAppStore'
 import { useMapStore } from '@/store/useMapStore'
 import { useLocationStore } from '@/store/useLocationStore'
@@ -31,10 +34,19 @@ export function HomeDashboard() {
 
   const region = useLocationStore((s) => s.region) || '현재 위치'
   const w = useDayWeather(selId)
-  const meta = dayMeta(selId)
-  const dateLabel = `5월 ${meta.date}일 ${meta.dow}요일 · ${region}`
+  const lat = useLocationStore((s) => s.lat)
+  const lng = useLocationStore((s) => s.lng)
+  const weekKeys = weekOf(selId)
+
+  // 주간 스트립용 날씨 미리 로드 (날짜별 캐시, 과거는 스토어가 스킵)
+  useEffect(() => {
+    weekKeys.forEach((k) => useWeatherStore.getState().loadDay(lat, lng, k))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lat, lng, selId])
+
+  const dateLabel = `${dateFullLabel(selId)} · ${region}`
   const completedText = `${done} / ${total} 완료`
-  const taskTitle = selId === '24' ? '오늘 할 일' : '할 일'
+  const taskTitle = selId === todayKey() ? '오늘 할 일' : '할 일'
   const tileHourly = w.hourly.slice(0, 4)
 
   const recs = recsFor(w.cond)
@@ -165,7 +177,7 @@ export function HomeDashboard() {
               <div style={{ fontSize: 11.5, fontWeight: 700, color: '#A39C8E' }}>날짜를 눌러 전환</div>
             </div>
             <div style={{ display: 'flex', gap: 7 }}>
-              <WeekStrip selId={selId} onPick={onWeekClick} />
+              <WeekStrip selId={selId} weekKeys={weekKeys} onPick={onWeekClick} />
             </div>
           </div>
 
@@ -200,24 +212,29 @@ export function HomeDashboard() {
   )
 }
 
-function WeekStrip({ selId, onPick }: { selId: string; onPick: (id: string) => void }) {
+function WeekStrip({ selId, weekKeys, onPick }: { selId: string; weekKeys: string[]; onPick: (id: string) => void }) {
+  const byDate = useWeatherStore((s) => s.byDate)
   return (
     <>
-      {WEEK.map((d) => {
-        const on = d.id === selId
-        const iconColor = on ? '#fff' : d.cond === 'sunny' ? '#E6A52E' : '#9AA0A8'
+      {weekKeys.map((k) => {
+        const on = k === selId
+        const raw = byDate[k]
+        const cond = raw && ['sunny', 'cloudy', 'rainy', 'snowy'].includes(raw.cond) ? (raw.cond as 'sunny') : pseudoCond(k)
+        const hi = raw?.hi
+        const today = k === todayKey()
+        const iconColor = on ? '#fff' : cond === 'sunny' ? '#E6A52E' : '#9AA0A8'
         return (
           <div
-            key={d.id}
-            onClick={() => onPick(d.id)}
+            key={k}
+            onClick={() => onPick(k)}
             className="hbtn"
             style={{ flex: 1, textAlign: 'center', padding: '9px 0', borderRadius: 13, cursor: 'pointer', background: on ? '#17150F' : '#F0F2F6' }}
           >
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: on ? 'rgba(255,255,255,.7)' : '#A39C8E' }}>{d.dow}</div>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: on ? 'rgba(255,255,255,.7)' : today ? '#15795A' : '#A39C8E' }}>{today ? '오늘' : dowLabel(k)}</div>
             <div style={{ height: 18, margin: '5px auto 0', width: 18 }}>
-              <WeatherIcon cond={d.cond} c={iconColor} />
+              <WeatherIcon cond={cond} c={iconColor} />
             </div>
-            <div style={{ fontSize: 13, fontWeight: 800, marginTop: 5, color: on ? '#fff' : '#17150F' }}>{d.hi}°</div>
+            <div style={{ fontSize: 13, fontWeight: 800, marginTop: 5, color: on ? '#fff' : '#17150F' }}>{hi != null ? `${hi}°` : `${dayNum(k)}일`}</div>
           </div>
         )
       })}

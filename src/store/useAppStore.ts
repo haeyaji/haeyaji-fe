@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { todayKey } from '@/lib/dates'
 
 type View = 'home' | 'calendar'
 
@@ -38,7 +39,7 @@ let toastTimer: ReturnType<typeof setTimeout> | undefined
 export const useAppStore = create<AppState>((set) => ({
   authed: false,
   view: 'home',
-  selId: '24',
+  selId: todayKey(),
   aiOpen: false,
   weatherOpen: false,
   routineOpen: false,

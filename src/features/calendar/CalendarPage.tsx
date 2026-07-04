@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { CategoryIcon, PlusIcon, WeatherIcon } from '@/lib/icons'
-import { CAL_COND, PLACES } from '@/lib/mockData'
-import { catGrad, dayMeta, useDayWeather, recsFor } from '@/lib/weather'
+import { PLACES } from '@/lib/mockData'
+import { catGrad, useDayWeather, recsFor, pseudoCond } from '@/lib/weather'
+import { dateShortLabel, fmtKey, parseKey, todayKey } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
 import { useMapStore } from '@/store/useMapStore'
 import { useTodoStore } from '@/store/useTodoStore'
@@ -20,25 +22,32 @@ export function CalendarPage() {
   const tasksByDate = useTodoStore((s) => s.tasksByDate)
   const { tasks, total, frac } = useDayTasks()
 
-  const meta = dayMeta(selId)
   const w = useDayWeather(selId)
-  const dateShort = `5월 ${meta.date}일 (${meta.dow})`
+  const dateShort = dateShortLabel(selId)
   const recs = recsFor(w.cond)
   const top = PLACES.find((p) => p.id === recs[0].id)!
 
-  let weekTotal = 0
-  for (let d = 20; d <= 26; d++) weekTotal += (tasksByDate[String(d)] ?? []).length
-  const calSummary = `이번 주 일정 ${weekTotal}개 · ${meta.date}일 (${meta.dow}) 선택됨`
+  // 표시 중인 연·월 (기본: 선택 날짜의 달), 좌우로 이동 가능
+  const sel = parseKey(selId)
+  const [ym, setYm] = useState({ y: sel.getFullYear(), m: sel.getMonth() }) // m: 0-based
+  const moveMonth = (d: number) => setYm(({ y, m }) => ({ y: y + Math.floor((m + d) / 12), m: (((m + d) % 12) + 12) % 12 }))
+
+  const monthKeys: string[] = []
+  const lastDay = new Date(ym.y, ym.m + 1, 0).getDate()
+  for (let d = 1; d <= lastDay; d++) monthKeys.push(fmtKey(new Date(ym.y, ym.m, d)))
+  const monthTotal = monthKeys.reduce((n, k) => n + (tasksByDate[k]?.length ?? 0), 0)
+  const calSummary = `이번 달 일정 ${monthTotal}개 · ${dateShort} 선택됨`
 
   const weekHdr = ['일', '월', '화', '수', '목', '금', '토'].map((label, i) => ({ label, color: i === 0 ? '#C2453B' : i === 6 ? '#3F82C2' : '#A39C8E' }))
 
   type Cell = { key: string; day: number | null; cond?: WeatherCond; isToday?: boolean; inWeek?: boolean; wid?: string }
+  const firstDow = new Date(ym.y, ym.m, 1).getDay() // 0=일 (헤더가 일요일 시작)
   const cells: Cell[] = []
-  for (let i = 0; i < 3; i++) cells.push({ key: 'b' + i, day: null })
-  for (let d = 1; d <= 31; d++) {
-    const inWeek = d >= 20 && d <= 26
-    cells.push({ key: 'd' + d, day: d, cond: CAL_COND[d - 1], isToday: d === 24, inWeek, wid: String(d) })
-  }
+  for (let i = 0; i < firstDow; i++) cells.push({ key: 'b' + i, day: null })
+  const T = todayKey()
+  monthKeys.forEach((k, i) => {
+    cells.push({ key: k, day: i + 1, cond: pseudoCond(k), isToday: k === T, inWeek: true, wid: k })
+  })
 
   const pickDay = (wid: string) => {
     setSelId(wid)
@@ -56,18 +65,18 @@ export function CalendarPage() {
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 9 }}>
-                <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: '-.8px' }}>5월</div>
-                <div style={{ fontSize: 18, fontWeight: 600, color: '#B6BCC7' }}>2024</div>
+                <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: '-.8px' }}>{ym.m + 1}월</div>
+                <div style={{ fontSize: 18, fontWeight: 600, color: '#B6BCC7' }}>{ym.y}</div>
               </div>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#8B8579', marginTop: 2 }}>{calSummary}</div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
             <div style={{ display: 'flex', background: '#fff', border: '1px solid rgba(24,21,15,.07)', borderRadius: 14, overflow: 'hidden' }}>
-              <div className="hbtn" style={{ padding: '11px 14px', cursor: 'pointer', color: '#A39C8E' }}>
+              <div onClick={() => moveMonth(-1)} className="hbtn" style={{ padding: '11px 14px', cursor: 'pointer', color: '#A39C8E' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
               </div>
-              <div className="hbtn" style={{ padding: '11px 14px', cursor: 'pointer', color: '#A39C8E', borderLeft: '1px solid #E6E9F0' }}>
+              <div onClick={() => moveMonth(1)} className="hbtn" style={{ padding: '11px 14px', cursor: 'pointer', color: '#A39C8E', borderLeft: '1px solid #E6E9F0' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
               </div>
             </div>

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { CategoryIcon, CloseIcon } from '@/lib/icons'
 import { PLACES } from '@/lib/mockData'
-import { dayMeta, useDayWeather, recsFor } from '@/lib/weather'
+import { useDayWeather, recsFor } from '@/lib/weather'
+import { dowLabel } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
 import { useMapStore } from '@/store/useMapStore'
 import { useTodoStore } from '@/store/useTodoStore'
@@ -102,8 +103,7 @@ export function MapModal() {
 
   if (!mapOpen) return null
 
-  const meta = dayMeta(selId)
-  const mapHint = `${meta.dow}요일 · ${w.condKo} 기준 · 내 주변`
+  const mapHint = `${dowLabel(selId)}요일 · ${w.condKo} 기준 · 내 주변`
   const recIds = recsFor(w.cond)
   const mq = mapSearch.trim()
 

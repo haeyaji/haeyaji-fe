@@ -1,15 +1,6 @@
 // 시안의 하드코딩 데이터. 추후 api/ 레이어가 be 응답으로 대체한다.
-import type { Place, Routine, TasksByDate, WeekDay, WeatherCond } from '@/types'
-
-export const WEEK: WeekDay[] = [
-  { id: '20', dow: '월', date: 20, cond: 'sunny', hi: 24, lo: 18 },
-  { id: '21', dow: '화', date: 21, cond: 'sunny', hi: 25, lo: 18 },
-  { id: '22', dow: '수', date: 22, cond: 'cloudy', hi: 23, lo: 17 },
-  { id: '23', dow: '목', date: 23, cond: 'sunny', hi: 26, lo: 19 },
-  { id: '24', dow: '금', date: 24, cond: 'sunny', hi: 27, lo: 19 },
-  { id: '25', dow: '토', date: 25, cond: 'rainy', hi: 21, lo: 16 },
-  { id: '26', dow: '일', date: 26, cond: 'sunny', hi: 25, lo: 18 },
-]
+import type { Place, Routine, TasksByDate } from '@/types'
+import { addDays, todayKey } from './dates'
 
 // 좌표는 강남권 실좌표 (기본 위치 강남역 기준 주변). 실지도 마커용.
 export const PLACES: Place[] = [
@@ -21,31 +12,25 @@ export const PLACES: Place[] = [
 
 export const DOW = ['월', '화', '수', '목', '금', '토', '일']
 
-// 5월 1~31일 날씨 (캘린더용)
-export const CAL_COND: WeatherCond[] = [
-  'sunny', 'sunny', 'cloudy', 'sunny', 'sunny', 'rainy', 'sunny', 'cloudy', 'sunny', 'sunny',
-  'rainy', 'sunny', 'sunny', 'cloudy', 'sunny', 'rainy', 'sunny', 'sunny', 'cloudy', 'sunny',
-  'sunny', 'cloudy', 'sunny', 'sunny', 'rainy', 'sunny', 'cloudy', 'rainy', 'sunny', 'cloudy', 'sunny',
-]
-
+const T = todayKey()
 export const INITIAL_TASKS: TasksByDate = {
-  '20': [
+  [addDays(T, -4)]: [
     { id: 'a1', title: '아침 명상', time: '오전 07:00', group: 'routine', done: true },
     { id: 'a2', title: '주간 계획 정리', time: '오전 09:00', group: 'personal', done: false },
   ],
-  '21': [
+  [addDays(T, -3)]: [
     { id: 'b1', title: '아침 명상', time: '오전 07:00', group: 'routine', done: true },
     { id: 'b2', title: '디자인 리뷰', time: '오후 02:00', group: 'personal', done: false },
   ],
-  '22': [
+  [addDays(T, -2)]: [
     { id: 'c1', title: '아침 명상', time: '오전 07:00', group: 'routine', done: false },
     { id: 'c2', title: '실내 클라이밍', time: '오후 07:00', group: 'personal', done: false, ai: true },
   ],
-  '23': [
+  [addDays(T, -1)]: [
     { id: 'd1', title: '아침 요가', time: '오전 07:00', group: 'routine', done: true },
     { id: 'd2', title: '팀 회식', time: '오후 06:30', group: 'personal', done: false },
   ],
-  '24': [
+  [addDays(T, 0)]: [
     { id: 't1', title: '아침 명상', time: '오전 07:00', group: 'routine', done: true },
     { id: 't2', title: '헬스장 운동', time: '오전 08:30', group: 'routine', done: true },
     { id: 't3', title: '이메일 답장', time: '오전 09:30', group: 'personal', done: true },
@@ -54,12 +39,12 @@ export const INITIAL_TASKS: TasksByDate = {
     { id: 't6', title: '집중 업무 카페', meta: '날씨 적합도 우수', group: 'personal', done: false, ai: true },
     { id: 't7', title: '장보기', time: '오후 06:00', group: 'personal', done: false },
   ],
-  '25': [
+  [addDays(T, 1)]: [
     { id: 'f1', title: '아침 명상', time: '오전 07:00', group: 'routine', done: false },
     { id: 'f2', title: '우산 챙기기', time: '오전 08:00', group: 'personal', done: false },
     { id: 'f3', title: '전시 관람', time: '오후 02:00', group: 'personal', done: false, ai: true },
   ],
-  '26': [
+  [addDays(T, 2)]: [
     { id: 'g1', title: '아침 요가', time: '오전 07:00', group: 'routine', done: false },
     { id: 'g2', title: '브런치 약속', time: '오전 11:00', group: 'personal', done: false },
   ],
