@@ -49,7 +49,7 @@ export function Sidebar() {
         position: 'sticky',
         top: 0,
         height: '100vh',
-        padding: c ? '22px 16px' : '22px 20px',
+        padding: c ? '26px 16px' : '26px 22px',
         display: 'flex',
         flexDirection: 'column',
         transition: 'width .22s ease, padding .22s ease',
@@ -63,8 +63,8 @@ export function Sidebar() {
         </div>
         {!c && (
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 16.5, fontWeight: 800, letterSpacing: '-.4px' }}>해야지</div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#A39C8E' }}>날씨 기반 할 일</div>
+            <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-.4px' }}>해야지</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#A39C8E', marginTop: 1 }}>날씨 기반 할 일</div>
           </div>
         )}
         <div
@@ -83,21 +83,21 @@ export function Sidebar() {
       <div
         onClick={openAdd}
         className="lift"
-        style={{ marginTop: 18, height: 48, borderRadius: 15, background: '#17150F', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', flexShrink: 0 }}
+        style={{ marginTop: 26, height: 50, borderRadius: 15, background: '#17150F', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', flexShrink: 0 }}
       >
         <PlusIcon w={17} />
         {!c && <div style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>새 일정 추가</div>}
       </div>
 
       {/* 내비게이션 */}
-      <nav style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <nav style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {items.map((it) => (
           <div
             key={it.key}
             onClick={it.onClick}
             className="hbtn"
             style={{
-              height: 46,
+              height: 48,
               borderRadius: 13,
               display: 'flex',
               alignItems: 'center',
