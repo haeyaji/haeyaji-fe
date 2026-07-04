@@ -121,11 +121,11 @@ export function HomeDashboard() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 14 }}>
-              <div style={{ flex: 1, height: 6, borderRadius: 6, background: '#E4E7EE', overflow: 'hidden' }}>
+            <div style={{ marginTop: 14 }}>
+              <div style={{ height: 6, borderRadius: 6, background: '#E4E7EE', overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: progPct, borderRadius: 6, background: '#15795A', transition: 'width .3s ease' }} />
               </div>
-              <div style={{ flexShrink: 0, fontSize: 14.5, fontWeight: 700, color: '#8B8579' }}>{frac} · {progPct}</div>
+              <div style={{ textAlign: 'right', fontSize: 14, fontWeight: 700, color: '#8B8579', marginTop: 6 }}>{frac} · {progPct}</div>
             </div>
             <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflowY: 'auto', marginRight: -8, paddingRight: 8 }}>
               {tasks.map((t) => (
