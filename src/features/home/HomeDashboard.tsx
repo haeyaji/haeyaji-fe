@@ -52,7 +52,7 @@ export function HomeDashboard() {
 
   return (
     <div className="page-pad" style={{ minHeight: '100vh', width: '100%', color: '#17150F', background: 'var(--canvas)' }}>
-      <div style={{ maxWidth: 1220, margin: '0 auto' }}>
+      <div className="home-wrap">
         {/* header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, gap: 16, flexWrap: 'wrap' }}>
           <div>
