@@ -14,7 +14,7 @@ export function TaskRow({ task, variant }: { task: Task; variant: 'home' | 'asid
   const home = variant === 'home'
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: home ? 13 : 12, padding: home ? '13px 0' : '11px 0', borderBottom: '1px solid #ECEFF4' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: home ? 13 : 12, padding: '12px 0' }}>
       <div
         onClick={() => toggleTask(task.id)}
         style={{
