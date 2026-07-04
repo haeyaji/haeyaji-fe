@@ -64,22 +64,11 @@ export function CalendarPage() {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 9 }}>
-                <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: '-.8px' }}>{ym.m + 1}월</div>
-                <div style={{ fontSize: 18, fontWeight: 600, color: '#B6BCC7' }}>{ym.y}</div>
-              </div>
+              <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: '-.8px' }}>캘린더</div>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#8B8579', marginTop: 2 }}>{calSummary}</div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-            <div style={{ display: 'flex', background: '#fff', border: '1px solid rgba(24,21,15,.07)', borderRadius: 14, overflow: 'hidden' }}>
-              <div onClick={() => moveMonth(-1)} className="hbtn" style={{ padding: '11px 14px', cursor: 'pointer', color: '#A39C8E' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
-              </div>
-              <div onClick={() => moveMonth(1)} className="hbtn" style={{ padding: '11px 14px', cursor: 'pointer', color: '#A39C8E', borderLeft: '1px solid #E6E9F0' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
-              </div>
-            </div>
             <div onClick={openAdd} className="lift" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '12px 17px', borderRadius: 14, background: '#17150F', color: '#fff', fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>
               <PlusIcon w={16} />
               할 일 추가
@@ -91,6 +80,15 @@ export function CalendarPage() {
         <div className="cal-body">
           {/* month grid */}
           <div className="tile" style={{ flex: 1, minWidth: 0, padding: '20px 22px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <div onClick={() => moveMonth(-1)} className="hbtn" style={{ width: 32, height: 32, borderRadius: 10, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 800 }}>{ym.y}년 {ym.m + 1}월</div>
+              <div onClick={() => moveMonth(1)} className="hbtn" style={{ width: 32, height: 32, borderRadius: 10, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+              </div>
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', marginBottom: 10 }}>
               {weekHdr.map((h) => (
                 <div key={h.label} style={{ textAlign: 'left', padding: '0 11px 6px', fontSize: 12.5, fontWeight: 700, color: h.color }}>{h.label}</div>
