@@ -33,16 +33,13 @@ export function MonthCalendarCard() {
 
   return (
     <div className="tile" style={{ gridColumn: '1 / 3', gridRow: '4 / 6', minHeight: 520, padding: '18px 20px', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div style={{ fontSize: 23, fontWeight: 800 }}>{ym.y}년 {ym.m + 1}월</div>
-        <div style={{ display: 'flex', gap: 6 }}>
-          {[-1, 1].map((d) => (
-            <div key={d} onClick={() => moveMonth(d)} className="hbtn" style={{ width: 30, height: 30, borderRadius: 9, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d={d < 0 ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} />
-              </svg>
-            </div>
-          ))}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div onClick={() => moveMonth(-1)} className="hbtn" style={{ width: 32, height: 32, borderRadius: 10, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
+        </div>
+        <div style={{ fontSize: 20, fontWeight: 800 }}>{ym.y}년 {ym.m + 1}월</div>
+        <div onClick={() => moveMonth(1)} className="hbtn" style={{ width: 32, height: 32, borderRadius: 10, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
         </div>
       </div>
 
