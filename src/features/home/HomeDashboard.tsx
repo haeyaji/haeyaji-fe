@@ -116,6 +116,7 @@ export function HomeDashboard() {
               </div>
               <div style={{ textAlign: 'center' }}>
                 <span style={{ fontSize: 23, fontWeight: 800, letterSpacing: '-.4px' }}>{taskTitle}</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: '#A39C8E', marginLeft: 10 }}>{frac}</span>
               </div>
               <div onClick={() => setSelId(addDays(selId, 1))} className="hbtn" title="다음날" style={{ width: 30, height: 30, borderRadius: 9, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
@@ -125,7 +126,7 @@ export function HomeDashboard() {
               <div style={{ height: 6, borderRadius: 6, background: '#E4E7EE', overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: progPct, borderRadius: 6, background: '#15795A', transition: 'width .3s ease' }} />
               </div>
-              <div style={{ textAlign: 'right', fontSize: 14, fontWeight: 700, color: '#8B8579', marginTop: 6 }}>{frac} · {progPct}</div>
+              <div style={{ textAlign: 'right', fontSize: 14, fontWeight: 700, color: '#8B8579', marginTop: 6 }}>{progPct}</div>
             </div>
             <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflowY: 'auto', marginRight: -8, paddingRight: 8 }}>
               {tasks.map((t) => (
