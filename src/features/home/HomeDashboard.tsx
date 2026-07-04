@@ -38,7 +38,7 @@ export function HomeDashboard() {
       ? '오늘 할 일'
       : selId === addDays(todayKey(), 1)
         ? '내일 할 일'
-        : `${dateShortLabel(selId).replace(/ \(.\)$/, '')} 할 일`
+        : dateShortLabel(selId).replace(/ \(.\)$/, '')
   const tileHourly = w.hourly.slice(0, 5)
 
   const recs = recsFor(w.cond)

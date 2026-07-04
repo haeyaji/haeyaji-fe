@@ -57,18 +57,20 @@ export function AiDrawer() {
     <>
       <div onClick={closeAi} style={overlay} />
       <div style={drawer}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '20px 22px', background: '#fff', borderBottom: '1px solid #E4E7EE' }}>
+        <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EE' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '18px 22px', width: '100%', maxWidth: 840, margin: '0 auto' }}>
           <div style={{ width: 38, height: 38, borderRadius: 12, background: '#17150F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="19" height="19" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l1.6 4.9 4.9 1.6-4.9 1.6L12 15l-1.6-4.9L5.5 8.5l4.9-1.6z" /></svg>
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 15.5, fontWeight: 800 }}>추천 도우미</div>
-            <div style={{ fontSize: 11.5, fontWeight: 600, color: '#A39C8E' }}>{dateShort} 날씨·위치 기반 장소 추천</div>
+            <div style={{ fontSize: 18, fontWeight: 800 }}>추천 도우미</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#A39C8E' }}>{dateShort} 날씨·위치 기반 장소 추천</div>
           </div>
           <div onClick={closeAi} style={closeBtn}><CloseIcon /></div>
         </div>
+        </div>
 
-        <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 18, display: 'flex', flexDirection: 'column', gap: 14, width: '100%', maxWidth: 840, margin: '0 auto' }}>
+        <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '26px 22px', display: 'flex', flexDirection: 'column', gap: 16, width: '100%', maxWidth: 840, margin: '0 auto' }}>
           {chat.map((m, i) => {
             const isU = m.role === 'user'
             const todos = m.todos ?? []
@@ -79,12 +81,12 @@ export function AiDrawer() {
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: isU ? 'flex-end' : 'flex-start', gap: 9, animation: 'rb-pop .2s ease' }}>
                 <div
                   style={{
-                    maxWidth: '84%',
-                    padding: '12px 15px',
+                    maxWidth: '78%',
+                    padding: '14px 18px',
                     borderRadius: isU ? '15px 15px 5px 15px' : '15px 15px 15px 5px',
-                    fontSize: 14,
+                    fontSize: 15.5,
                     fontWeight: 600,
-                    lineHeight: 1.55,
+                    lineHeight: 1.65,
                     background: isU ? '#15795A' : '#fff',
                     color: isU ? '#fff' : '#17150F',
                     border: isU ? 'none' : '1px solid #E1E5EC',
@@ -109,7 +111,7 @@ export function AiDrawer() {
                         style={
                           chipsActive
                             ? { padding: '9px 14px', borderRadius: 20, fontSize: 13, fontWeight: 700, color: '#15795A', background: '#E4F2EC', border: '1px solid #CDE8DC', cursor: 'pointer' }
-                            : { padding: '9px 14px', borderRadius: 20, fontSize: 13, fontWeight: 700, color: '#B6BCC7', background: '#F0F2F6', border: '1px solid #E4E7EE', cursor: 'default' }
+                            : { padding: '10px 16px', borderRadius: 22, fontSize: 14.5, fontWeight: 700, color: '#B6BCC7', background: '#F0F2F6', border: '1px solid #E4E7EE', cursor: 'default' }
                         }
                       >
                         {opt}
@@ -125,7 +127,7 @@ export function AiDrawer() {
 
         <div style={{ display: 'flex', gap: 7, overflowX: 'auto', padding: '8px 18px 4px', width: '100%', maxWidth: 840, margin: '0 auto' }}>
           {QUICK.map((q) => (
-            <div key={q.chip} onClick={() => !loading && ask(q.text, ctx)} style={{ whiteSpace: 'nowrap', padding: '8px 13px', borderRadius: 20, fontSize: 12.5, fontWeight: 700, color: '#5A554B', background: '#fff', border: '1px solid #E1E5EC', cursor: loading ? 'default' : 'pointer', flexShrink: 0, opacity: loading ? 0.5 : 1 }}>
+            <div key={q.chip} onClick={() => !loading && ask(q.text, ctx)} style={{ whiteSpace: 'nowrap', padding: '9px 15px', borderRadius: 20, fontSize: 14, fontWeight: 700, color: '#5A554B', background: '#fff', border: '1px solid #E1E5EC', cursor: loading ? 'default' : 'pointer', flexShrink: 0, opacity: loading ? 0.5 : 1 }}>
               {q.chip}
             </div>
           ))}
@@ -143,9 +145,9 @@ export function AiDrawer() {
               }
             }}
             placeholder="추천받고 싶은 걸 물어보세요"
-            style={{ flex: 1, border: '1px solid #E1E5EC', outline: 'none', background: '#fff', borderRadius: 13, padding: '12px 15px', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, color: '#17150F' }}
+            style={{ flex: 1, border: '1px solid #E1E5EC', outline: 'none', background: '#fff', borderRadius: 14, padding: '14px 17px', fontFamily: 'inherit', fontSize: 15.5, fontWeight: 500, color: '#17150F' }}
           />
-          <div onClick={() => send(ctx)} style={{ width: 42, height: 42, borderRadius: 13, background: loading ? '#8B8579' : '#17150F', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: loading ? 'default' : 'pointer' }}>
+          <div onClick={() => send(ctx)} style={{ width: 48, height: 48, borderRadius: 14, background: loading ? '#8B8579' : '#17150F', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: loading ? 'default' : 'pointer' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h13M12 5l7 7-7 7" /></svg>
           </div>
         </div>
@@ -166,16 +168,16 @@ function TodoCard({ todo, onAdd }: { todo: RecommendedTodo; onAdd: () => void })
           <span style={{ width: 18, height: 18, display: 'inline-flex' }}><CategoryIcon cat={cat} c="#15795A" /></span>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{headline}</div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#A39C8E', marginTop: 1 }}>{metaParts}</div>
+          <div style={{ fontSize: 16, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{headline}</div>
+          <div style={{ fontSize: 13.5, fontWeight: 600, color: '#A39C8E', marginTop: 1 }}>{metaParts}</div>
         </div>
         {todo.estimatedMinutes > 0 && (
           <div style={{ fontSize: 11, fontWeight: 800, color: '#15795A', background: '#E4F2EC', padding: '4px 9px', borderRadius: 20, flexShrink: 0 }}>{todo.estimatedMinutes}분</div>
         )}
       </div>
-      <div style={{ fontSize: 12.5, fontWeight: 500, color: '#6B665C', lineHeight: 1.5, marginTop: 11 }}>{todo.reason}</div>
+      <div style={{ fontSize: 14, fontWeight: 500, color: '#6B665C', lineHeight: 1.6, marginTop: 12 }}>{todo.reason}</div>
       <div style={{ display: 'flex', gap: 8, marginTop: 13 }}>
-        <div onClick={onAdd} style={{ flex: 1, textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#fff', background: '#17150F', borderRadius: 11, padding: 10, cursor: 'pointer' }}>일정에 추가</div>
+        <div onClick={onAdd} style={{ flex: 1, textAlign: 'center', fontSize: 14.5, fontWeight: 700, color: '#fff', background: '#17150F', borderRadius: 12, padding: 12, cursor: 'pointer' }}>일정에 추가</div>
         {todo.placeUrl && (
           <div onClick={() => window.open(todo.placeUrl!, '_blank', 'noopener')} style={{ textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#5A554B', background: '#E9EDF3', borderRadius: 11, padding: '10px 14px', cursor: 'pointer' }}>지도</div>
         )}
