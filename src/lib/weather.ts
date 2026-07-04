@@ -115,16 +115,9 @@ export function deriveWeather(raw: WeatherRaw, tod: TimeOfDay, isToday = true, n
   const cond: WeatherCond = (['sunny', 'cloudy', 'rainy', 'snowy'].includes(raw.cond) ? raw.cond : 'cloudy') as WeatherCond
   const uvIdx = raw.uvIndex ?? 0
   const dustVal = raw.pm10 ?? 0
-  // 항상 5개: 오늘은 남은 시간 + 부족하면 다음날 새벽으로 이어붙임 / 미래 날짜는 하루 전체에서 균등 샘플링
-  let picked: typeof raw.hourly
-  if (isToday) {
-    const merged = raw.hourly.length < 5 && nextRaw ? [...raw.hourly, ...nextRaw.hourly.slice(0, 5 - raw.hourly.length)] : raw.hourly
-    picked = merged.slice(0, 5)
-  } else {
-    const src = raw.hourly
-    const N = Math.min(5, src.length)
-    picked = N > 0 ? Array.from({ length: N }, (_, i) => src[Math.round((i * (src.length - 1)) / Math.max(N - 1, 1))]) : []
-  }
+  // 항상 5개, 받아온 순서 그대로: 부족하면 다음날 시간으로 이어붙임
+  const merged = raw.hourly.length < 5 && nextRaw ? [...raw.hourly, ...nextRaw.hourly.slice(0, 5 - raw.hourly.length)] : raw.hourly
+  const picked = merged.slice(0, 5)
   const hourly = picked.map((h, i) => ({ label: isToday && i === 0 ? '지금' : `${parseInt(h.time, 10)}시`, temp: h.temp, pop: h.pop }))
   return {
     ...SKY[cond][tod], // sky, glow, ink, iconC
