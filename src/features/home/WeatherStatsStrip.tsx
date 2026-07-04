@@ -2,16 +2,16 @@
 // 오늘=실시간 4지표 / 미래=강수확률만+안내 / 과거=그날 날씨 기록+안내
 import { DetailIcon, WeatherIcon } from '@/lib/icons'
 import { dayState } from '@/lib/dates'
-import { useDayWeather, uvColor, dustColor } from '@/lib/weather'
+import { useDayWeather } from '@/lib/weather'
 
 function Stat({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
       <div style={{ width: 18, height: 18 }}>{icon}</div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: '#A39C8E' }}>{label}</div>
-      <div style={{ fontSize: 29, fontWeight: 800, letterSpacing: '-.4px' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: '#A39C8E' }}>{label}</div>
+      <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-.4px' }}>
         {value}
-        {sub && <span style={{ fontSize: 16, fontWeight: 700, color: '#A39C8E', marginLeft: 4 }}>{sub}</span>}
+        {sub && <span style={{ fontSize: 12.5, fontWeight: 700, color: '#A39C8E', marginLeft: 4 }}>{sub}</span>}
       </div>
     </div>
   )
@@ -27,18 +27,18 @@ export function WeatherStatsStrip({ selId }: { selId: string }) {
     <div className="tile" style={{ gridColumn: '1 / 3', gridRow: '2 / 3', minHeight: 150, display: 'flex', alignItems: 'stretch', padding: '0 8px' }}>
       {state === 'today' && (
         <>
-          <Stat icon={<DetailIcon name="pop" c="#5B8FE0" />} label="강수확률" value={`${w.pop}%`} />
+          <Stat icon={<DetailIcon name="pop" c="#3F82C2" />} label="강수확률" value={`${w.pop}%`} />
           <Divider />
-          <Stat icon={<DetailIcon name="uv" c={uvColor(w.uvIdx)} />} label="자외선" value={String(w.uvIdx)} sub={w.uvLv} />
+          <Stat icon={<DetailIcon name="uv" c="#E0883A" />} label="자외선" value={String(w.uvIdx)} sub={w.uvLv} />
           <Divider />
-          <Stat icon={<DetailIcon name="dust" c={dustColor(w.dustVal)} />} label="미세먼지" value={String(w.dustVal)} sub={w.dustLv} />
+          <Stat icon={<DetailIcon name="dust" c="#7C8794" />} label="미세먼지" value={String(w.dustVal)} sub={w.dustLv} />
           <Divider />
-          <Stat icon={<DetailIcon name="humid" c="#3FA9C9" />} label="습도" value={`${w.humid}%`} />
+          <Stat icon={<DetailIcon name="humid" c="#3F82C2" />} label="습도" value={`${w.humid}%`} />
         </>
       )}
       {state === 'future' && (
         <>
-          <Stat icon={<DetailIcon name="pop" c="#5B8FE0" />} label="강수확률" value={`${w.pop}%`} />
+          <Stat icon={<DetailIcon name="pop" c="#3F82C2" />} label="강수확률" value={`${w.pop}%`} />
           <Divider />
           <div style={{ flex: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 18px' }}>
             <div style={{ fontSize: 16, fontWeight: 600, color: '#A39C8E', textAlign: 'center', lineHeight: 1.55 }}>

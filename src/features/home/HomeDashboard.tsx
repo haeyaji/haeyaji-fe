@@ -1,7 +1,7 @@
 import { PlusIcon, WeatherIcon, CategoryIcon, SparkleIcon } from '@/lib/icons'
 import { useEffect } from 'react'
 import { PLACES } from '@/lib/mockData'
-import { aiHint, catGrad, useDayWeather, recsFor, pseudoCond } from '@/lib/weather'
+import { aiHint, catGrad, useDayWeather, recsFor, pseudoCond, isLightInk } from '@/lib/weather'
 import { dateFullLabel, dowLabel, greeting, next7Days, todayKey } from '@/lib/dates'
 import { useWeatherStore } from '@/store/useWeatherStore'
 import { useAppStore } from '@/store/useAppStore'
@@ -91,7 +91,7 @@ export function HomeDashboard() {
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 {tileHourly.map((h, i) => (
-                  <div key={i} style={{ flex: 1, background: 'rgba(255,255,255,.42)', borderRadius: 12, padding: '9px 0', textAlign: 'center' }}>
+                  <div key={i} style={{ flex: 1, background: isLightInk(w.ink) ? 'rgba(10,16,28,.42)' : 'rgba(255,255,255,.5)', borderRadius: 12, padding: '9px 0', textAlign: 'center' }}>
                     <div style={{ fontSize: 16, fontWeight: 700, opacity: 0.7 }}>{h.label}</div>
                     <div style={{ width: 16, height: 16, margin: '4px auto' }}>
                       <WeatherIcon cond={w.cond} c={w.iconC} />
