@@ -8,10 +8,10 @@ function Stat({ icon, label, value, sub }: { icon: React.ReactNode; label: strin
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
       <div style={{ width: 18, height: 18 }}>{icon}</div>
-      <div style={{ fontSize: 25, fontWeight: 700, color: '#A39C8E' }}>{label}</div>
-      <div style={{ fontSize: 44, fontWeight: 800, letterSpacing: '-.4px' }}>
+      <div style={{ fontSize: 16, fontWeight: 700, color: '#A39C8E' }}>{label}</div>
+      <div style={{ fontSize: 29, fontWeight: 800, letterSpacing: '-.4px' }}>
         {value}
-        {sub && <span style={{ fontSize: 25, fontWeight: 700, color: '#A39C8E', marginLeft: 4 }}>{sub}</span>}
+        {sub && <span style={{ fontSize: 16, fontWeight: 700, color: '#A39C8E', marginLeft: 4 }}>{sub}</span>}
       </div>
     </div>
   )
@@ -41,7 +41,7 @@ export function WeatherStatsStrip({ selId }: { selId: string }) {
           <Stat icon={<DetailIcon name="pop" c="#5B8FE0" />} label="강수확률" value={`${w.pop}%`} />
           <Divider />
           <div style={{ flex: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 18px' }}>
-            <div style={{ fontSize: 25, fontWeight: 600, color: '#A39C8E', textAlign: 'center', lineHeight: 1.55 }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: '#A39C8E', textAlign: 'center', lineHeight: 1.55 }}>
               자외선·미세먼지·습도는 실시간 정보라
               <br />
               당일에만 표시돼요
@@ -56,13 +56,13 @@ export function WeatherStatsStrip({ selId }: { selId: string }) {
               <WeatherIcon cond={w.cond} c={w.iconC} />
             </div>
             <div>
-              <div style={{ fontSize: 30, fontWeight: 800 }}>{w.condKo}</div>
-              <div style={{ fontSize: 24, fontWeight: 600, color: '#A39C8E' }}>최고 {w.hi}° / 최저 {w.lo}°</div>
+              <div style={{ fontSize: 20, fontWeight: 800 }}>{w.condKo}</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: '#A39C8E' }}>최고 {w.hi}° / 최저 {w.lo}°</div>
             </div>
           </div>
           <Divider />
           <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 18px' }}>
-            <div style={{ fontSize: 25, fontWeight: 600, color: '#A39C8E', textAlign: 'center', lineHeight: 1.55 }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: '#A39C8E', textAlign: 'center', lineHeight: 1.55 }}>
               지난 날짜예요 — 실시간 지표는
               <br />
               기록하지 않아요

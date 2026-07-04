@@ -48,10 +48,10 @@ export function TaskRow({ task, variant }: { task: Task; variant: 'home' | 'asid
             </div>
           )}
         </div>
-        {!home && <div style={{ fontSize: 24, fontWeight: 600, color: metaColor, marginTop: 1 }}>{meta}</div>}
+        {!home && <div style={{ fontSize: 16, fontWeight: 600, color: metaColor, marginTop: 1 }}>{meta}</div>}
       </div>
 
-      {home && <div style={{ fontSize: 27, fontWeight: 600, color: metaColor, flexShrink: 0 }}>{meta}</div>}
+      {home && <div style={{ fontSize: 18, fontWeight: 600, color: metaColor, flexShrink: 0 }}>{meta}</div>}
 
       <div onClick={() => deleteTask(task.id)} className="hbtn" style={{ display: 'flex', cursor: 'pointer', color: '#CAD0DA', flexShrink: 0 }}>
         <TrashIcon />
@@ -67,7 +67,7 @@ export function EmptyTasks() {
         <rect x="3" y="4.5" width="18" height="16" rx="3" />
         <path d="M8 11h8M8 15h5" />
       </svg>
-      <div style={{ fontSize: 26, fontWeight: 600 }}>이 날 할 일이 없어요</div>
+      <div style={{ fontSize: 17, fontWeight: 600 }}>이 날 할 일이 없어요</div>
     </div>
   )
 }

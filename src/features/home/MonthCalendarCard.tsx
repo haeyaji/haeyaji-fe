@@ -34,7 +34,7 @@ export function MonthCalendarCard() {
   return (
     <div className="tile" style={{ gridColumn: '1 / 3', gridRow: '4 / 6', minHeight: 520, padding: '18px 20px', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div style={{ fontSize: 35, fontWeight: 800 }}>{ym.y}년 {ym.m + 1}월</div>
+        <div style={{ fontSize: 23, fontWeight: 800 }}>{ym.y}년 {ym.m + 1}월</div>
         <div style={{ display: 'flex', gap: 6 }}>
           {[-1, 1].map((d) => (
             <div key={d} onClick={() => moveMonth(d)} className="hbtn" style={{ width: 30, height: 30, borderRadius: 9, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -48,7 +48,7 @@ export function MonthCalendarCard() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', marginBottom: 4 }}>
         {DOW_HDR.map((l, i) => (
-          <div key={l} style={{ textAlign: 'center', fontSize: 25, fontWeight: 700, color: i === 5 ? '#8E93A6' : i === 6 ? '#A68E8A' : '#A39C8E', padding: '4px 0' }}>{l}</div>
+          <div key={l} style={{ textAlign: 'center', fontSize: 16, fontWeight: 700, color: i === 5 ? '#8E93A6' : i === 6 ? '#A68E8A' : '#A39C8E', padding: '4px 0' }}>{l}</div>
         ))}
       </div>
 
@@ -62,13 +62,13 @@ export function MonthCalendarCard() {
             <div key={k} onClick={() => setSelId(k)} className="hbtn" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '3px 0', borderRadius: 10, cursor: 'pointer', background: isSel && !isToday ? 'rgba(21,121,90,.09)' : 'transparent' }}>
               <div
                 style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: 13,
+                  width: 34,
+                  height: 34,
+                  borderRadius: 17,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 28,
+                  fontSize: 18,
                   fontWeight: isToday || isSel ? 800 : 600,
                   background: isToday ? '#17150F' : 'transparent',
                   color: isToday ? '#fff' : isSel ? '#15795A' : '#17150F',
