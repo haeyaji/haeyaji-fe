@@ -75,21 +75,21 @@ export function HomeDashboard() {
           {/* WEATHER 2x2 */}
           <div onClick={openWeather} className="tile lift" style={{ gridColumn: '1 / 3', gridRow: '1 / 2', padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer', background: w.sky, backgroundClip: 'padding-box', borderColor: 'rgba(24,21,15,.12)' }}>
             <WeatherScene cond={w.cond} tod={w.tod} ink={w.ink} />
-            <div style={{ position: 'relative', padding: '26px 28px', height: '100%', display: 'flex', flexDirection: 'column', color: w.ink }}>
+            <div style={{ position: 'relative', padding: '18px 22px', height: '100%', display: 'flex', flexDirection: 'column', color: w.ink }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', opacity: 0.6 }}>LOCAL FORECAST</div>
                   <div style={{ fontSize: 19, fontWeight: 800, marginTop: 4 }}>{region}</div>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, marginTop: 'auto' }}>
-                <div style={{ fontSize: 64, fontWeight: 300, letterSpacing: '-2.5px', lineHeight: 0.8 }}>{w.temp}°</div>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, marginTop: 'auto', paddingTop: 6 }}>
+                <div style={{ fontSize: 'clamp(44px, 3.6vw, 64px)', fontWeight: 300, letterSpacing: '-2.5px', lineHeight: 0.85 }}>{w.temp}°</div>
                 <div style={{ paddingBottom: 10 }}>
                   <div style={{ fontSize: 15, fontWeight: 700 }}>{w.condKo}</div>
                   <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.7 }}>최고 {w.hi}° / 최저 {w.lo}°</div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 {tileHourly.map((h, i) => (
                   <div key={i} style={{ flex: 1, background: 'rgba(255,255,255,.42)', borderRadius: 12, padding: '9px 0', textAlign: 'center' }}>
                     <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.7 }}>{h.label}</div>

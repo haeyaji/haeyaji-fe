@@ -125,7 +125,8 @@
 .bento {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: 216px 120px 108px 131px 131px 131px;
+  /* 1920 스펙 값을 최소치로, 내용이 크면 늘어나게 (노트북 대응) */
+  grid-template-rows: minmax(216px, auto) minmax(110px, auto) minmax(104px, auto) repeat(3, minmax(124px, auto));
   gap: 16px;
 }
 
