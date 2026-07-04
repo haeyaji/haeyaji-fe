@@ -39,7 +39,7 @@ export function TaskRow({ task, variant }: { task: Task; variant: 'home' | 'asid
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <div style={{ fontSize: home ? 15 : 14, fontWeight: 700, color: titleColor, textDecoration: task.done ? 'line-through' : 'none', ...ellipsis }}>
+          <div style={{ fontSize: home ? 16 : 15, fontWeight: 700, color: titleColor, textDecoration: task.done ? 'line-through' : 'none', ...ellipsis }}>
             {task.title}
           </div>
           {task.ai && (
@@ -51,7 +51,7 @@ export function TaskRow({ task, variant }: { task: Task; variant: 'home' | 'asid
         {!home && <div style={{ fontSize: 12, fontWeight: 600, color: metaColor, marginTop: 1 }}>{meta}</div>}
       </div>
 
-      {home && <div style={{ fontSize: 12.5, fontWeight: 600, color: metaColor, flexShrink: 0 }}>{meta}</div>}
+      {home && <div style={{ fontSize: 13.5, fontWeight: 600, color: metaColor, flexShrink: 0 }}>{meta}</div>}
 
       <div onClick={() => deleteTask(task.id)} className="hbtn" style={{ display: 'flex', cursor: 'pointer', color: '#CAD0DA', flexShrink: 0 }}>
         <TrashIcon />
