@@ -84,7 +84,7 @@ export function HomeDashboard() {
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginTop: 'auto', paddingTop: 6 }}>
                 <div style={{ fontSize: 'clamp(44px, 3.6vw, 64px)', fontWeight: 300, letterSpacing: '-2.5px', lineHeight: 0.85 }}>{w.temp}°</div>
-                <div style={{ paddingTop: 6 }}>
+                <div style={{ paddingTop: 0, marginTop: -2 }}>
                   <div style={{ fontSize: 21, fontWeight: 700 }}>{w.condKo}</div>
                   <div style={{ fontSize: 18, fontWeight: 600, opacity: 0.7 }}>최고 {w.hi}° / 최저 {w.lo}°</div>
                 </div>
