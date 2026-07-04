@@ -1,5 +1,6 @@
 // 앱 셸 좌측 사이드바 (핸드오프 §4) — 프로토타입과 달리 전부 실동작:
 // 홈/캘린더=view 전환, AI/루틴=드로어, 지도=모달, CTA=할일 추가.
+import { useEffect } from 'react'
 import { BrandLogo, PlusIcon } from '@/lib/icons'
 import { useAppStore } from '@/store/useAppStore'
 
@@ -23,6 +24,12 @@ function RoutineIcon() {
 
 export function Sidebar() {
   const { view, setView, openAi, openMap, openRoutine, openAdd, sidebarCollapsed: c, toggleSidebar, nickname, logout } = useAppStore()
+
+  // 좁은 화면에서는 처음부터 접힘
+  useEffect(() => {
+    if (window.innerWidth < 900 && !useAppStore.getState().sidebarCollapsed) toggleSidebar()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const items = [
     { key: 'home', label: '홈', icon: <HomeIcon />, active: view === 'home', onClick: () => setView('home') },
