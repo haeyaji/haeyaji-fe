@@ -34,7 +34,7 @@ export function HomeDashboard() {
   const dateLabel = `${dateFullLabel(selId)} · ${region}`
   const completedText = `${done} / ${total} 완료`
   const taskTitle = selId === todayKey() ? '오늘 할 일' : '할 일'
-  const tileHourly = w.hourly.slice(0, 4)
+  const tileHourly = w.hourly.slice(0, 5)
 
   const recs = recsFor(w.cond)
   const top = PLACES.find((p) => p.id === recs[0].id)!
