@@ -38,6 +38,9 @@ export type TaskGroup = 'routine' | 'personal'
 /** 칸반 상태 (기존 done과 매핑: done=true ↔ 'done') */
 export type TaskStatus = 'todo' | 'doing' | 'done'
 
+/** 칸반 우선순위 (지라식). 미지정은 '보통' 취급 */
+export type TaskPriority = 'high' | 'mid' | 'low'
+
 export interface Subtask {
   id: string
   title: string
@@ -53,6 +56,10 @@ export interface Task {
   done: boolean
   status?: TaskStatus // 미지정 시 done 값으로 유추
   subtasks?: Subtask[]
+  key?: string // 지라식 이슈 키 (HAE-N)
+  priority?: TaskPriority
+  desc?: string
+  labels?: string[]
   ai?: boolean
 }
 
