@@ -17,7 +17,9 @@ export interface MapPoint {
 interface Props {
   center: { lat: number; lng: number }
   origin?: { lat: number; lng: number; label: string }
-  points: MapPoint[]
+  points: MapPoint[] // 추천 핀 (강조, 클러스터 O)
+  browsePoints?: MapPoint[] // 탐색 마커 (연한 점, 클러스터 X)
+  onIdle?: (map: any) => void // 팬/줌 멈춤 콜백 (자동 재검색용)
 }
 
 const CAT_SVG: Record<PlaceCat, string> = {
@@ -52,6 +54,17 @@ function hoverCardEl(p: MapPoint): HTMLElement {
   el.style.cssText = `background:#fff;border-radius:12px;box-shadow:0 8px 22px rgba(24,21,15,.2);padding:9px 13px;white-space:nowrap;transform:translateY(-12px);font-family:'Pretendard',sans-serif;pointer-events:none`
   const meta = [p.type, p.dist].filter(Boolean).join(' · ')
   el.innerHTML = `<div style="font-size:13px;font-weight:800;color:#17150F">${p.name}</div>${meta ? `<div style="font-size:11.5px;font-weight:600;color:#A39C8E;margin-top:2px">${meta}</div>` : ''}`
+  return el
+}
+
+// 탐색 마커: 연한 점 (추천 핀과 시각 구분)
+function dotEl(p: MapPoint, hover: { in: (p: MapPoint) => void; out: () => void }): HTMLElement {
+  const el = document.createElement('div')
+  el.style.cssText = `width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.95);border:2px solid rgba(21,121,90,.55);box-shadow:0 2px 8px rgba(24,21,15,.18);cursor:pointer;display:flex;align-items:center;justify-content:center`
+  el.innerHTML = `<div style="width:6px;height:6px;border-radius:50%;background:#15795A;opacity:.75"></div>`
+  el.addEventListener('mouseenter', () => hover.in(p))
+  el.addEventListener('mouseleave', () => hover.out())
+  el.addEventListener('click', (e) => { e.stopPropagation(); p.onClick() })
   return el
 }
 
@@ -92,17 +105,21 @@ function popupEl(members: MapPoint[], onPick: (p: MapPoint) => void): HTMLElemen
   return box
 }
 
-export function KakaoMap({ center, origin, points }: Props) {
+export function KakaoMap({ center, origin, points, browsePoints = [], onIdle }: Props) {
   const boxRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<any>(null)
   const overlaysRef = useRef<any[]>([])
   const popupRef = useRef<any>(null)
   const hoverRef = useRef<any>(null)
   const pointsRef = useRef<MapPoint[]>(points)
+  const browseRef = useRef<MapPoint[]>(browsePoints)
+  const onIdleRef = useRef(onIdle)
   const originRef = useRef(origin)
   const [failed, setFailed] = useState(false)
 
   pointsRef.current = points
+  browseRef.current = browsePoints
+  onIdleRef.current = onIdle
   originRef.current = origin
 
   useEffect(() => {
@@ -113,9 +130,13 @@ export function KakaoMap({ center, origin, points }: Props) {
         const map = new maps.Map(boxRef.current, { center: new maps.LatLng(center.lat, center.lng), level: 3 })
         mapRef.current = map
         requestAnimationFrame(() => map.relayout())
-        maps.event.addListener(map, 'idle', recluster)
+        maps.event.addListener(map, 'idle', () => {
+          recluster()
+          onIdleRef.current?.(map)
+        })
         maps.event.addListener(map, 'click', closePopup)
         recluster()
+        onIdleRef.current?.(map) // 생성 직후엔 idle이 안 오므로 1회 수동 호출
       })
       .catch(() => setFailed(true))
     return () => {
@@ -133,7 +154,7 @@ export function KakaoMap({ center, origin, points }: Props) {
   useEffect(() => {
     recluster()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [points, origin?.lat, origin?.lng])
+  }, [points, browsePoints, origin?.lat, origin?.lng])
 
   function closePopup() {
     if (popupRef.current) {
@@ -205,6 +226,9 @@ export function KakaoMap({ center, origin, points }: Props) {
       }
     }
     selected.forEach((p) => add(p.lat, p.lng, pinEl(p, hover), 1, 4))
+
+    // 탐색 마커(연한 점): 클러스터 없이 그대로, 추천 핀 아래 레이어
+    browseRef.current.forEach((p) => add(p.lat, p.lng, dotEl(p, hover), 0.5, 0))
   }
 
   function openPopup(lat: number, lng: number, members: MapPoint[]) {

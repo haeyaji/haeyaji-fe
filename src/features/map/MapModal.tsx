@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { CategoryIcon, CloseIcon } from '@/lib/icons'
 import { PLACES } from '@/lib/mockData'
 import { useDayWeather, recsFor } from '@/lib/weather'
@@ -7,9 +7,10 @@ import { useAppStore } from '@/store/useAppStore'
 import { useMapStore } from '@/store/useMapStore'
 import { useTodoStore } from '@/store/useTodoStore'
 import { useLocationStore } from '@/store/useLocationStore'
+import { useChatStore } from '@/store/useChatStore'
 import { KakaoMap } from './KakaoMap'
 import { PlaceDetailModal } from './PlaceDetailModal'
-import type { PlaceCat } from '@/types'
+import type { Category, PlaceCat } from '@/types'
 
 // 지도/리스트 공통 장소 모델 (추천 mock + 카카오 검색결과 정규화)
 interface MapPlace {
@@ -29,6 +30,14 @@ const kmUnit = (s: string) => /km/i.test(s)
 const driveOf = (s: string) => `${Math.max(3, Math.round((kmUnit(s) ? km(s) : km(s) / 1000) * 3.4))}분`
 const fmtDist = (m: number) => (m >= 1000 ? `${(m / 1000).toFixed(1)}km` : `${m}m`)
 
+// nlp category → 지도 아이콘/검색 키워드
+const NLP_CAT_ICON: Record<Category, PlaceCat> = {
+  '맛집/카페': 'cafe', 야외: 'park', 실내: 'culture', 휴식: 'cafe', 생산성: 'culture', 사람만나기: 'food',
+}
+const NLP_CAT_KEYWORD: Record<Category, string> = {
+  '맛집/카페': '맛집', 야외: '공원', 실내: '전시', 휴식: '카페', 생산성: '카페', 사람만나기: '맛집',
+}
+
 function catOf(categoryName: string): PlaceCat {
   if (/카페|커피|디저트|베이커리|제과/.test(categoryName)) return 'cafe'
   if (/음식|맛집|식당|레스토랑|술집|주점|고기|분식/.test(categoryName)) return 'food'
@@ -44,6 +53,36 @@ export function MapModal() {
 
   const [results, setResults] = useState<MapPlace[]>([])
   const [searching, setSearching] = useState(false)
+  const [zoomNotice, setZoomNotice] = useState(false)
+  const mapObj = useRef<any>(null)
+  const lastSearch = useRef<{ lat: number; lng: number; kw: string } | null>(null)
+  const chat = useChatStore((s) => s.chat)
+
+  // nlp 최신 추천(좌표 보유) → 추천 핀
+  const nlpPins: MapPlace[] = useMemo(() => {
+    for (let i = chat.length - 1; i >= 0; i--) {
+      const m = chat[i]
+      if (m.role === 'assistant' && m.todos?.some((t) => t.x != null && t.y != null && t.placeName)) {
+        return m.todos
+          .filter((t) => t.x != null && t.y != null && t.placeName)
+          .map((t, j) => ({
+            id: t.placeUrl?.split('/').pop() ?? `nlp-${j}`,
+            name: t.placeName!,
+            type: t.category,
+            dist: t.distanceM != null ? fmtDist(t.distanceM) : '',
+            cat: NLP_CAT_ICON[t.category] ?? 'culture',
+            lat: t.y!,
+            lng: t.x!,
+            placeUrl: t.placeUrl ?? undefined,
+          }))
+      }
+    }
+    return []
+  }, [chat])
+
+  // 자동 재검색 키워드: 사용자 검색어 > nlp 추천 카테고리
+  const nlpKeyword = nlpPins.length > 0 ? (NLP_CAT_KEYWORD[nlpPins[0].type as Category] ?? '') : ''
+  const activeKeyword = mapSearch.trim() || nlpKeyword
   const [mapDetail, setMapDetail] = useState<MapPlace | null>(null) // 장소 상세 iframe 모달
 
   // 출발지 = 사용자 지정 우선, 없으면 현위치(폴백 강남)
@@ -54,49 +93,76 @@ export function MapModal() {
     if (mapOpen) useLocationStore.getState().locate()
   }, [mapOpen])
 
-  // 키워드 검색 (디바운스). 출발지 기준 관련성순.
-  useEffect(() => {
-    const q = mapSearch.trim()
-    if (!q) {
+  // ── viewport 자동 재검색 (idle 기반) ────────────────────────────
+  // activeKeyword 있을 때, 보이는 영역(bounds)에서만 검색. 카카오맵 "이 지역 검색" 자동판.
+  const runBrowse = (map: any, force = false) => {
+    const maps = window.kakao?.maps
+    if (!maps?.services || !map || !activeKeyword) return
+    // 과한 줌아웃이면 생략
+    if (map.getLevel() >= 8) {
+      setZoomNotice(true)
       setResults([])
-      setSearching(false)
       return
     }
+    setZoomNotice(false)
+    const c = map.getCenter()
+    const b = map.getBounds()
+    const spanLng = Math.abs(b.getNorthEast().getLng() - b.getSouthWest().getLng())
+    // 미세 이동(지도폭 30% 미만) + 같은 키워드면 스킵
+    const last = lastSearch.current
+    if (!force && last && last.kw === activeKeyword) {
+      const moved = Math.hypot(c.getLng() - last.lng, c.getLat() - last.lat)
+      if (moved < spanLng * 0.3) return
+    }
+    lastSearch.current = { lat: c.getLat(), lng: c.getLng(), kw: activeKeyword }
     setSearching(true)
-    const t = setTimeout(() => {
-      const maps = window.kakao?.maps
-      if (!maps?.services) {
+    const ps = new maps.services.Places()
+    ps.keywordSearch(
+      activeKeyword,
+      (data: Record<string, string>[], status: string) => {
         setSearching(false)
-        return
-      }
-      const ps = new maps.services.Places()
-      ps.keywordSearch(
-        q,
-        (data: Record<string, string>[], status: string) => {
-          setSearching(false)
-          if (status === maps.services.Status.OK) {
-            setResults(
-              data.slice(0, 15).map((d) => ({
-                id: d.id,
-                name: d.place_name,
-                type: (d.category_name || '').split('>').pop()?.trim() || '장소',
-                dist: d.distance ? fmtDist(Number(d.distance)) : '',
-                cat: catOf(d.category_name || ''),
-                lat: Number(d.y),
-                lng: Number(d.x),
-                placeUrl: d.place_url,
-                address: d.road_address_name || d.address_name || '',
-              })),
-            )
-          } else {
-            setResults([])
-          }
-        },
-        { location: new maps.LatLng(effOrigin.lat, effOrigin.lng), sort: 'accuracy' },
-      )
-    }, 400)
+        if (status !== maps.services.Status.OK) {
+          setResults([])
+          return
+        }
+        const pinIds = new Set(nlpPins.map((p) => p.id))
+        setResults(
+          data
+            .filter((d) => !pinIds.has(d.id)) // 추천 핀과 겹치면 추천 우선
+            .slice(0, 15)
+            .map((d) => ({
+              id: d.id,
+              name: d.place_name,
+              type: (d.category_name || '').split('>').pop()?.trim() || '장소',
+              dist: d.distance ? fmtDist(Number(d.distance)) : '',
+              cat: catOf(d.category_name || ''),
+              lat: Number(d.y),
+              lng: Number(d.x),
+              placeUrl: d.place_url,
+              address: d.road_address_name || d.address_name || '',
+            })),
+        )
+      },
+      { bounds: map.getBounds(), size: 15 },
+    )
+  }
+
+  const onMapIdle = (map: any) => {
+    mapObj.current = map
+    runBrowse(map)
+  }
+
+  // 키워드 변경(입력/추천 갱신) 시 현재 화면에서 즉시 재검색
+  useEffect(() => {
+    if (!activeKeyword) {
+      setResults([])
+      setZoomNotice(false)
+      return
+    }
+    const t = setTimeout(() => mapObj.current && runBrowse(mapObj.current, true), 350)
     return () => clearTimeout(t)
-  }, [mapSearch, effOrigin.lat, effOrigin.lng])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeKeyword])
 
   // 훅은 early return보다 항상 먼저 (훅 순서 위반 방지)
   const w = useDayWeather(selId)
@@ -105,16 +171,18 @@ export function MapModal() {
 
   const mapHint = `${dowLabel(selId)}요일 · ${w.condKo} 기준 · 내 주변`
   const recIds = recsFor(w.cond)
-  const mq = mapSearch.trim()
 
-  const recPlaces: MapPlace[] = recIds
+  const mockRec: MapPlace[] = recIds
     .map((r) => PLACES.find((x) => x.id === r.id))
     .filter((p): p is (typeof PLACES)[number] => !!p)
     .map((p) => ({ id: p.id, name: p.name, type: p.type, dist: p.dist, cat: p.cat, lat: p.lat, lng: p.lng }))
+  // 추천 핀: nlp 추천(좌표) 우선, 없으면 mock 폴백
+  const recPins: MapPlace[] = nlpPins.length > 0 ? nlpPins : mockRec
 
-  const shown: MapPlace[] = mq ? results : recPlaces
-  const selP = shown.find((p) => p.id === mapSelId) ?? null
-  const listTitle = mq ? (searching ? '검색 중…' : '검색 결과') : '오늘 추천 장소'
+  // 목록: 탐색 중이면 탐색 결과, 아니면 추천
+  const shown: MapPlace[] = activeKeyword ? results : recPins
+  const selP = [...recPins, ...results].find((p) => p.id === mapSelId) ?? null
+  const listTitle = activeKeyword ? (searching ? '검색 중…' : `'${activeKeyword}' · 이 지역 결과`) : '오늘 추천 장소'
   const isCustomOrigin = !!origin
 
   // 출발지로 지정 / 도착지로 지정 (상세 모달에서 호출)
@@ -238,7 +306,7 @@ export function MapModal() {
                   )
                 })}
                 {!searching && shown.length === 0 && (
-                  <div style={{ padding: 26, textAlign: 'center', color: '#B6BCC7', fontSize: 13, fontWeight: 600 }}>{mq ? '검색 결과가 없어요' : '추천 장소가 없어요'}</div>
+                  <div style={{ padding: 26, textAlign: 'center', color: '#B6BCC7', fontSize: 13, fontWeight: 600 }}>{activeKeyword ? (zoomNotice ? '지도를 확대하면 검색돼요' : '이 지역엔 없어요') : '추천 장소가 없어요'}</div>
                 )}
               </div>
             </div>
@@ -246,21 +314,27 @@ export function MapModal() {
             {/* RIGHT: 실제 카카오맵 */}
             <div className="map-canvas">
               <KakaoMap
-                center={selP ? { lat: selP.lat, lng: selP.lng } : { lat: effOrigin.lat, lng: effOrigin.lng }}
-                origin={{ lat: effOrigin.lat, lng: effOrigin.lng, label: `출발 · ${effOrigin.label}` }}
-                points={shown.map((p) => ({
-                  id: p.id,
-                  lat: p.lat,
-                  lng: p.lng,
-                  name: p.name,
-                  cat: p.cat,
-                  type: p.type,
-                  dist: p.dist,
-                  selected: mapSelId === p.id,
-                  onClick: () => setMapDetail(p),
-                }))}
-              />
-              {/* 내 위치 버튼 */}
+              center={selP ? { lat: selP.lat, lng: selP.lng } : { lat: effOrigin.lat, lng: effOrigin.lng }}
+              origin={{ lat: effOrigin.lat, lng: effOrigin.lng, label: `출발 · ${effOrigin.label}` }}
+              points={recPins.map((p) => ({
+                id: p.id, lat: p.lat, lng: p.lng, name: p.name, cat: p.cat, type: p.type, dist: p.dist,
+                selected: mapSelId === p.id,
+                onClick: () => setMapDetail(p),
+              }))}
+              browsePoints={results.map((p) => ({
+                id: p.id, lat: p.lat, lng: p.lng, name: p.name, cat: p.cat, type: p.type, dist: p.dist,
+                selected: false,
+                onClick: () => setMapDetail(p),
+              }))}
+              onIdle={onMapIdle}
+            />
+            {/* 검색 상태 표시 */}
+            {(searching || (zoomNotice && activeKeyword)) && (
+              <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 6, background: 'rgba(23,21,15,.82)', color: '#fff', fontSize: 13, fontWeight: 700, padding: '8px 16px', borderRadius: 20, animation: 'rb-fade .15s ease' }}>
+                {searching ? `'${activeKeyword}' 검색 중…` : '지도를 확대하면 자동으로 검색돼요'}
+              </div>
+            )}
+            {/* 내 위치 버튼 */}
               <div
                 onClick={useMyLocation}
                 title="현재 위치로"
