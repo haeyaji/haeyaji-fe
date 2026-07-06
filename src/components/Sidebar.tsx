@@ -18,6 +18,9 @@ function AiIcon() {
 function MapIcon() {
   return <svg width="18" height="18" viewBox="0 0 24 24" {...NAV_ICON}><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" /><path d="M9 4v14M15 6v14" /></svg>
 }
+function BoardIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" {...NAV_ICON}><rect x="3" y="4" width="5.5" height="16" rx="1.5" /><rect x="10.5" y="4" width="5.5" height="10" rx="1.5" /><rect x="18" y="4" width="3" height="13" rx="1.5" /></svg>
+}
 function RoutineIcon() {
   return <svg width="18" height="18" viewBox="0 0 24 24" {...NAV_ICON}><rect x="3" y="4.5" width="18" height="16" rx="3" /><path d="M3 9h18M8 13l2.5 2.5L16 11" /></svg>
 }
@@ -34,6 +37,7 @@ export function Sidebar() {
   const items = [
     { key: 'home', label: '홈', icon: <HomeIcon />, active: view === 'home', onClick: () => setView('home') },
     { key: 'calendar', label: '캘린더', icon: <CalIcon />, active: view === 'calendar', onClick: () => setView('calendar') },
+    { key: 'kanban', label: '칸반보드', icon: <BoardIcon />, active: view === 'kanban', onClick: () => setView('kanban') },
     { key: 'ai', label: 'AI 추천', icon: <AiIcon />, active: false, onClick: openAi },
     { key: 'map', label: '지도', icon: <MapIcon />, active: false, onClick: openMap },
     { key: 'routine', label: '루틴', icon: <RoutineIcon />, active: false, onClick: openRoutine },

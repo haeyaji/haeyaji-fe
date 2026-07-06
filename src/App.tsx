@@ -5,6 +5,7 @@ import { useWeatherStore } from '@/store/useWeatherStore'
 import { LoginScreen } from '@/features/auth/LoginScreen'
 import { HomeDashboard } from '@/features/home/HomeDashboard'
 import { CalendarPage } from '@/features/calendar/CalendarPage'
+import { KanbanPage } from '@/features/kanban/KanbanPage'
 import { AiDrawer } from '@/features/recommend/AiDrawer'
 import { WeatherDrawer } from '@/features/weather/WeatherDrawer'
 import { RoutineDrawer } from '@/features/routine/RoutineDrawer'
@@ -44,7 +45,7 @@ export default function App() {
     <>
       <div style={{ display: 'flex', alignItems: 'stretch', minHeight: '100vh' }}>
         <Sidebar />
-        <main style={{ flex: 1, minWidth: 0 }}>{view === 'home' ? <HomeDashboard /> : <CalendarPage />}</main>
+        <main style={{ flex: 1, minWidth: 0 }}>{view === 'home' ? <HomeDashboard /> : view === 'kanban' ? <KanbanPage /> : <CalendarPage />}</main>
       </div>
 
       {/* overlays */}
