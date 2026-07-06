@@ -6,6 +6,12 @@ import { useAppStore } from './useAppStore'
 /** 칸반 상태 유추: status 미지정 구데이터는 done 값으로 */
 export const statusOf = (t: Task): TaskStatus => t.status ?? (t.done ? 'done' : 'todo')
 
+// 지라식 이슈 키 발급 — 목데이터 최대 번호 다음부터 (be 붙으면 서버 발급으로 대체)
+let keySeq = Object.values(INITIAL_TASKS)
+  .flat()
+  .reduce((m, t) => Math.max(m, Number(t.key?.split('-')[1] ?? 0)), 0)
+const nextKey = () => `HAE-${++keySeq}`
+
 interface TodoState {
   tasksByDate: TasksByDate
   toggleTask: (id: string) => void
@@ -17,6 +23,7 @@ interface TodoState {
   updateTitle: (dateKey: string, id: string, title: string) => void
   removeTask: (dateKey: string, id: string) => void
   addTaskAt: (dateKey: string, title: string, status: TaskStatus) => void
+  patchTask: (dateKey: string, id: string, patch: Partial<Task>) => void
   addSubtask: (dateKey: string, id: string, title: string) => void
   toggleSubtask: (dateKey: string, id: string, subId: string) => void
   deleteSubtask: (dateKey: string, id: string, subId: string) => void
@@ -51,7 +58,7 @@ export const useTodoStore = create<TodoState>((set) => ({
     set((s) => {
       const selId = sel()
       const m = { ...s.tasksByDate }
-      m[selId] = [...(m[selId] ?? []), { id: 'a' + Date.now(), title: name, time: '', group: 'personal', done: false, ai: true }]
+      m[selId] = [...(m[selId] ?? []), { id: 'a' + Date.now(), key: nextKey(), title: name, time: '', group: 'personal', done: false, ai: true }]
       return { tasksByDate: m }
     })
     useAppStore.getState().toast(`'${name}' 일정에 추가됨`)
@@ -62,7 +69,7 @@ export const useTodoStore = create<TodoState>((set) => ({
     set((s) => {
       const selId = sel()
       const m = { ...s.tasksByDate }
-      m[selId] = [...(m[selId] ?? []), { id: 'n' + Date.now(), title: t, time: time || '', group, done: false }]
+      m[selId] = [...(m[selId] ?? []), { id: 'n' + Date.now(), key: nextKey(), title: t, time: time || '', group, done: false }]
       return { tasksByDate: m }
     })
     useAppStore.getState().toast(`'${t}' 추가됨`)
@@ -70,6 +77,8 @@ export const useTodoStore = create<TodoState>((set) => ({
   },
 
   // ── 칸반 ──
+  patchTask: (dateKey, id, patch) =>
+    set((s) => ({ tasksByDate: mapTask(s.tasksByDate, dateKey, id, (t) => ({ ...t, ...patch })) })),
   setStatus: (dateKey, id, status) =>
     set((s) => ({ tasksByDate: mapTask(s.tasksByDate, dateKey, id, (t) => ({ ...t, status, done: status === 'done' })) })),
   updateTitle: (dateKey, id, title) =>
@@ -84,7 +93,7 @@ export const useTodoStore = create<TodoState>((set) => ({
     set((s) => ({
       tasksByDate: {
         ...s.tasksByDate,
-        [dateKey]: [...(s.tasksByDate[dateKey] ?? []), { id: 'k' + Date.now(), title: t, group: 'personal' as const, done: status === 'done', status, subtasks: [] }],
+        [dateKey]: [...(s.tasksByDate[dateKey] ?? []), { id: 'k' + Date.now(), key: nextKey(), title: t, group: 'personal' as const, done: status === 'done', status, subtasks: [] }],
       },
     }))
   },

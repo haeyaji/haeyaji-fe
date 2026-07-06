@@ -15,38 +15,38 @@ export const DOW = ['월', '화', '수', '목', '금', '토', '일']
 const T = todayKey()
 export const INITIAL_TASKS: TasksByDate = {
   [addDays(T, -4)]: [
-    { id: 'a1', title: '아침 명상', time: '오전 07:00', group: 'routine', done: true },
-    { id: 'a2', title: '주간 계획 정리', time: '오전 09:00', group: 'personal', done: false },
+    { key: 'HAE-1', id: 'a1', title: '아침 명상', time: '오전 07:00', group: 'routine', done: true },
+    { key: 'HAE-2', id: 'a2', title: '주간 계획 정리', time: '오전 09:00', group: 'personal', done: false },
   ],
   [addDays(T, -3)]: [
-    { id: 'b1', title: '아침 명상', time: '오전 07:00', group: 'routine', done: true },
-    { id: 'b2', title: '디자인 리뷰', time: '오후 02:00', group: 'personal', done: false },
+    { key: 'HAE-3', id: 'b1', title: '아침 명상', time: '오전 07:00', group: 'routine', done: true },
+    { key: 'HAE-4', id: 'b2', title: '디자인 리뷰', time: '오후 02:00', group: 'personal', done: false, labels: ['업무'] },
   ],
   [addDays(T, -2)]: [
-    { id: 'c1', title: '아침 명상', time: '오전 07:00', group: 'routine', done: false },
-    { id: 'c2', title: '실내 클라이밍', time: '오후 07:00', group: 'personal', done: false, ai: true },
+    { key: 'HAE-5', id: 'c1', title: '아침 명상', time: '오전 07:00', group: 'routine', done: false },
+    { key: 'HAE-6', id: 'c2', title: '실내 클라이밍', time: '오후 07:00', group: 'personal', done: false, ai: true },
   ],
   [addDays(T, -1)]: [
-    { id: 'd1', title: '아침 요가', time: '오전 07:00', group: 'routine', done: true },
-    { id: 'd2', title: '팀 회식', time: '오후 06:30', group: 'personal', done: false },
+    { key: 'HAE-7', id: 'd1', title: '아침 요가', time: '오전 07:00', group: 'routine', done: true },
+    { key: 'HAE-8', id: 'd2', title: '팀 회식', time: '오후 06:30', group: 'personal', done: false },
   ],
   [addDays(T, 0)]: [
-    { id: 't1', title: '아침 명상', time: '오전 07:00', group: 'routine', done: true },
-    { id: 't2', title: '헬스장 운동', time: '오전 08:30', group: 'routine', done: true },
-    { id: 't3', title: '이메일 답장', time: '오전 09:30', group: 'personal', done: true },
-    { id: 't4', title: '스탠드업 미팅', time: '오전 10:00', group: 'personal', done: true },
-    { id: 't5', title: '프로젝트 미팅', time: '오전 11:00', group: 'personal', done: false },
-    { id: 't6', title: '집중 업무 카페', meta: '날씨 적합도 우수', group: 'personal', done: false, ai: true },
-    { id: 't7', title: '장보기', time: '오후 06:00', group: 'personal', done: false },
+    { key: 'HAE-9', id: 't1', title: '아침 명상', time: '오전 07:00', group: 'routine', done: true },
+    { key: 'HAE-10', id: 't2', title: '헬스장 운동', time: '오전 08:30', group: 'routine', done: true },
+    { key: 'HAE-11', id: 't3', title: '이메일 답장', time: '오전 09:30', group: 'personal', done: true, labels: ['업무'] },
+    { key: 'HAE-12', id: 't4', title: '스탠드업 미팅', time: '오전 10:00', group: 'personal', done: true },
+    { key: 'HAE-13', id: 't5', title: '프로젝트 미팅', time: '오전 11:00', group: 'personal', done: false, priority: 'high', labels: ['업무'], desc: '분기 로드맵 공유 및 일정 조율. 회의실 B동 3층.' },
+    { key: 'HAE-14', id: 't6', title: '집중 업무 카페', meta: '날씨 적합도 우수', group: 'personal', done: false, ai: true },
+    { key: 'HAE-15', id: 't7', title: '장보기', time: '오후 06:00', group: 'personal', done: false, priority: 'low', labels: ['집안일'] },
   ],
   [addDays(T, 1)]: [
-    { id: 'f1', title: '아침 명상', time: '오전 07:00', group: 'routine', done: false },
-    { id: 'f2', title: '우산 챙기기', time: '오전 08:00', group: 'personal', done: false },
-    { id: 'f3', title: '전시 관람', time: '오후 02:00', group: 'personal', done: false, ai: true },
+    { key: 'HAE-16', id: 'f1', title: '아침 명상', time: '오전 07:00', group: 'routine', done: false },
+    { key: 'HAE-17', id: 'f2', title: '우산 챙기기', time: '오전 08:00', group: 'personal', done: false, priority: 'high' },
+    { key: 'HAE-18', id: 'f3', title: '전시 관람', time: '오후 02:00', group: 'personal', done: false, ai: true, labels: ['외출'] },
   ],
   [addDays(T, 2)]: [
-    { id: 'g1', title: '아침 요가', time: '오전 07:00', group: 'routine', done: false },
-    { id: 'g2', title: '브런치 약속', time: '오전 11:00', group: 'personal', done: false },
+    { key: 'HAE-19', id: 'g1', title: '아침 요가', time: '오전 07:00', group: 'routine', done: false },
+    { key: 'HAE-20', id: 'g2', title: '브런치 약속', time: '오전 11:00', group: 'personal', done: false, priority: 'low', labels: ['약속'] },
   ],
 }
 
