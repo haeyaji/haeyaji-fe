@@ -17,7 +17,7 @@ function evColor(t: Task): { bg: string; color: string } {
 }
 
 export function CalendarPage() {
-  const { selId, setSelId, setView, openAdd, openWeather, openAi } = useAppStore()
+  const { selId, setSelId, openAdd, openWeather, openAi } = useAppStore()
   const setMapSel = useMapStore((s) => s.setMapSel)
   const tasksByDate = useTodoStore((s) => s.tasksByDate)
   const { tasks, total, frac } = useDayTasks()
@@ -60,9 +60,6 @@ export function CalendarPage() {
         {/* header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div onClick={() => setView('home')} className="hbtn" style={{ width: 44, height: 44, borderRadius: 14, background: '#fff', border: '1px solid rgba(24,21,15,.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#5A554B' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
-            </div>
             <div>
               <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: '-.8px' }}>캘린더</div>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#8B8579', marginTop: 2 }}>{calSummary}</div>
@@ -100,7 +97,8 @@ export function CalendarPage() {
                 const tl = c.wid ? tasksByDate[c.wid] ?? [] : []
                 const events = tl.slice(0, 2)
                 const more = tl.length > 2 ? tl.length - 2 : 0
-                const numColor = on ? '#15795A' : c.inWeek ? '#17150F' : '#C1C7D2'
+                const dowIdx = parseKey(c.wid!).getDay() // 0=일, 6=토
+                const numColor = on ? '#15795A' : dowIdx === 0 ? '#A68E8A' : dowIdx === 6 ? '#8E93A6' : '#17150F'
                 return (
                   <div
                     key={c.key}
@@ -135,7 +133,6 @@ export function CalendarPage() {
                           })}
                           {more > 0 && <div style={{ fontSize: 12.5, fontWeight: 700, color: '#A39C8E', paddingLeft: 3 }}>+{more}개</div>}
                         </div>
-                        <div style={{ fontSize: 12.5, fontWeight: 700, color: '#C2BCB0', textAlign: 'right', marginTop: 2 }}>{20 + ((c.day * 3) % 8)}°</div>
                       </>
                     )}
                   </div>
