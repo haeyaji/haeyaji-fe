@@ -35,6 +35,15 @@ export interface ChatTurn {
 
 export type TaskGroup = 'routine' | 'personal'
 
+/** 칸반 상태 (기존 done과 매핑: done=true ↔ 'done') */
+export type TaskStatus = 'todo' | 'doing' | 'done'
+
+export interface Subtask {
+  id: string
+  title: string
+  done: boolean
+}
+
 export interface Task {
   id: string
   title: string
@@ -42,6 +51,8 @@ export interface Task {
   meta?: string
   group: TaskGroup
   done: boolean
+  status?: TaskStatus // 미지정 시 done 값으로 유추
+  subtasks?: Subtask[]
   ai?: boolean
 }
 
