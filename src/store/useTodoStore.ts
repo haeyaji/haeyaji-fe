@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Task, TaskGroup, TaskStatus, TasksByDate } from '@/types'
+import type { Subtask, Task, TaskGroup, TaskStatus, TasksByDate } from '@/types'
 import { INITIAL_TASKS } from '@/lib/mockData'
 import { useAppStore } from './useAppStore'
 
@@ -26,6 +26,7 @@ interface TodoState {
   patchTask: (dateKey: string, id: string, patch: Partial<Task>) => void
   addSubtask: (dateKey: string, id: string, title: string) => void
   toggleSubtask: (dateKey: string, id: string, subId: string) => void
+  patchSubtask: (dateKey: string, id: string, subId: string, patch: Partial<Subtask>) => void
   deleteSubtask: (dateKey: string, id: string, subId: string) => void
 }
 
@@ -106,7 +107,22 @@ export const useTodoStore = create<TodoState>((set) => ({
   },
   toggleSubtask: (dateKey, id, subId) =>
     set((s) => ({
-      tasksByDate: mapTask(s.tasksByDate, dateKey, id, (t) => ({ ...t, subtasks: (t.subtasks ?? []).map((x) => (x.id === subId ? { ...x, done: !x.done } : x)) })),
+      tasksByDate: mapTask(s.tasksByDate, dateKey, id, (t) => ({
+        ...t,
+        subtasks: (t.subtasks ?? []).map((x) => (x.id === subId ? { ...x, done: !x.done, status: (!x.done ? 'done' : 'todo') as TaskStatus } : x)),
+      })),
+    })),
+  patchSubtask: (dateKey, id, subId, patch) =>
+    set((s) => ({
+      tasksByDate: mapTask(s.tasksByDate, dateKey, id, (t) => ({
+        ...t,
+        subtasks: (t.subtasks ?? []).map((x) => {
+          if (x.id !== subId) return x
+          const nx = { ...x, ...patch }
+          if (patch.status) nx.done = patch.status === 'done' // done과 동기
+          return nx
+        }),
+      })),
     })),
   deleteSubtask: (dateKey, id, subId) =>
     set((s) => ({
