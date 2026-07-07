@@ -54,6 +54,7 @@ export function MapModal() {
   const [results, setResults] = useState<MapPlace[]>([])
   const [searching, setSearching] = useState(false)
   const [zoomNotice, setZoomNotice] = useState(false)
+  const [needsResearch, setNeedsResearch] = useState(false) // 지도가 검색 시점과 달라짐 → "다시 검색" 버튼
   const mapObj = useRef<any>(null)
   const lastSearch = useRef<{ lat: number; lng: number; kw: string; span: number } | null>(null)
   const chat = useChatStore((s) => s.chat)
@@ -93,11 +94,13 @@ export function MapModal() {
     if (mapOpen) useLocationStore.getState().locate()
   }, [mapOpen])
 
-  // ── viewport 자동 재검색 (idle 기반) ────────────────────────────
-  // activeKeyword 있을 때, 보이는 영역(bounds)에서만 검색. 카카오맵 "이 지역 검색" 자동판.
-  const runBrowse = (map: any, force = false) => {
+  // ── "이 지역에서 다시 검색" (수동) ────────────────────────────
+  // 현재 화면(bounds)에서 키워드 검색. 지도 이동만으론 호출하지 않고(쿼터 절약),
+  // 키워드 입력·"다시 검색" 버튼 클릭에서만 호출한다.
+  const runBrowse = (map: any) => {
     const maps = window.kakao?.maps
     if (!maps?.services || !map || !activeKeyword) return
+    setNeedsResearch(false)
     // 과한 줌아웃이면 생략
     if (map.getLevel() >= 8) {
       setZoomNotice(true)
@@ -108,13 +111,6 @@ export function MapModal() {
     const c = map.getCenter()
     const b = map.getBounds()
     const spanLng = Math.abs(b.getNorthEast().getLng() - b.getSouthWest().getLng())
-    // 같은 키워드 + 미세 이동(지도폭 15% 미만) + 줌 그대로면 스킵. 줌이 바뀌면 bounds가 달라지므로 재검색.
-    const last = lastSearch.current
-    if (!force && last && last.kw === activeKeyword) {
-      const moved = Math.hypot(c.getLng() - last.lng, c.getLat() - last.lat)
-      const zoomed = Math.abs(spanLng - last.span) / last.span > 0.2
-      if (moved < spanLng * 0.15 && !zoomed) return
-    }
     lastSearch.current = { lat: c.getLat(), lng: c.getLng(), kw: activeKeyword, span: spanLng }
     setSearching(true)
     const ps = new maps.services.Places()
@@ -148,9 +144,22 @@ export function MapModal() {
     )
   }
 
+  // 지도 멈춤: 검색 시점보다 화면이 충분히 달라졌으면 "다시 검색" 버튼만 노출 (API 호출 X)
   const onMapIdle = (map: any) => {
     mapObj.current = map
-    runBrowse(map)
+    if (!activeKeyword) return
+    if (map.getLevel() < 8) setZoomNotice(false)
+    const last = lastSearch.current
+    if (!last || last.kw !== activeKeyword) {
+      runBrowse(map) // 이 키워드로는 첫 검색 → 자동 1회
+      return
+    }
+    const c = map.getCenter()
+    const b = map.getBounds()
+    const spanLng = Math.abs(b.getNorthEast().getLng() - b.getSouthWest().getLng())
+    const moved = Math.hypot(c.getLng() - last.lng, c.getLat() - last.lat)
+    const zoomed = Math.abs(spanLng - last.span) / last.span > 0.2
+    setNeedsResearch(moved >= spanLng * 0.15 || zoomed)
   }
 
   // 키워드 변경(입력/추천 갱신) 시 현재 화면에서 즉시 재검색
@@ -158,9 +167,10 @@ export function MapModal() {
     if (!activeKeyword) {
       setResults([])
       setZoomNotice(false)
+      setNeedsResearch(false)
       return
     }
-    const t = setTimeout(() => mapObj.current && runBrowse(mapObj.current, true), 350)
+    const t = setTimeout(() => mapObj.current && runBrowse(mapObj.current), 350)
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeKeyword])
@@ -307,7 +317,7 @@ export function MapModal() {
                   )
                 })}
                 {!searching && shown.length === 0 && (
-                  <div style={{ padding: 26, textAlign: 'center', color: '#B6BCC7', fontSize: 13, fontWeight: 600 }}>{activeKeyword ? (zoomNotice ? '지도를 확대하면 검색돼요' : '이 지역엔 없어요') : '추천 장소가 없어요'}</div>
+                  <div style={{ padding: 26, textAlign: 'center', color: '#B6BCC7', fontSize: 13, fontWeight: 600 }}>{activeKeyword ? (zoomNotice ? '지도를 확대한 뒤 다시 검색해주세요' : '이 지역엔 없어요') : '추천 장소가 없어요'}</div>
                 )}
               </div>
             </div>
@@ -332,7 +342,21 @@ export function MapModal() {
             {/* 검색 상태 표시 */}
             {(searching || (zoomNotice && activeKeyword)) && (
               <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 6, background: 'rgba(23,21,15,.82)', color: '#fff', fontSize: 13, fontWeight: 700, padding: '8px 16px', borderRadius: 20, animation: 'rb-fade .15s ease' }}>
-                {searching ? `'${activeKeyword}' 검색 중…` : '지도를 확대하면 자동으로 검색돼요'}
+                {searching ? `'${activeKeyword}' 검색 중…` : '지도를 확대한 뒤 다시 검색해주세요'}
+              </div>
+            )}
+            {/* 이 지역에서 다시 검색 (지도를 옮겼을 때만, 클릭 시에만 호출) */}
+            {needsResearch && !searching && !zoomNotice && (
+              <div
+                onClick={() => mapObj.current && runBrowse(mapObj.current)}
+                className="lift"
+                style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 6, display: 'flex', alignItems: 'center', gap: 7, background: '#fff', color: '#15795A', fontSize: 13, fontWeight: 800, padding: '9px 16px', borderRadius: 20, boxShadow: '0 4px 14px rgba(24,21,15,.2)', cursor: 'pointer', animation: 'rb-pop .18s ease' }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15795A" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+                  <path d="M21 3v6h-6" />
+                </svg>
+                이 지역에서 다시 검색
               </div>
             )}
             {/* 내 위치 버튼 */}
