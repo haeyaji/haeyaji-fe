@@ -55,7 +55,7 @@ export function MapModal() {
   const [searching, setSearching] = useState(false)
   const [zoomNotice, setZoomNotice] = useState(false)
   const mapObj = useRef<any>(null)
-  const lastSearch = useRef<{ lat: number; lng: number; kw: string } | null>(null)
+  const lastSearch = useRef<{ lat: number; lng: number; kw: string; span: number } | null>(null)
   const chat = useChatStore((s) => s.chat)
 
   // nlp 최신 추천(좌표 보유) → 추천 핀
@@ -108,13 +108,14 @@ export function MapModal() {
     const c = map.getCenter()
     const b = map.getBounds()
     const spanLng = Math.abs(b.getNorthEast().getLng() - b.getSouthWest().getLng())
-    // 미세 이동(지도폭 30% 미만) + 같은 키워드면 스킵
+    // 같은 키워드 + 미세 이동(지도폭 15% 미만) + 줌 그대로면 스킵. 줌이 바뀌면 bounds가 달라지므로 재검색.
     const last = lastSearch.current
     if (!force && last && last.kw === activeKeyword) {
       const moved = Math.hypot(c.getLng() - last.lng, c.getLat() - last.lat)
-      if (moved < spanLng * 0.3) return
+      const zoomed = Math.abs(spanLng - last.span) / last.span > 0.2
+      if (moved < spanLng * 0.15 && !zoomed) return
     }
-    lastSearch.current = { lat: c.getLat(), lng: c.getLng(), kw: activeKeyword }
+    lastSearch.current = { lat: c.getLat(), lng: c.getLng(), kw: activeKeyword, span: spanLng }
     setSearching(true)
     const ps = new maps.services.Places()
     ps.keywordSearch(
