@@ -44,7 +44,9 @@ export type TaskPriority = 'high' | 'mid' | 'low'
 export interface Subtask {
   id: string
   title: string
-  done: boolean
+  done: boolean // status와 동기 유지 (status==='done')
+  status?: TaskStatus // 진행현황 (미지정 시 done으로 유추)
+  due?: string // 일정 (YYYY-MM-DD)
 }
 
 export interface Task {

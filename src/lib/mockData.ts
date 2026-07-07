@@ -35,7 +35,11 @@ export const INITIAL_TASKS: TasksByDate = {
     { key: 'HAE-10', id: 't2', title: '헬스장 운동', time: '오전 08:30', group: 'routine', done: true },
     { key: 'HAE-11', id: 't3', title: '이메일 답장', time: '오전 09:30', group: 'personal', done: true, labels: ['업무'] },
     { key: 'HAE-12', id: 't4', title: '스탠드업 미팅', time: '오전 10:00', group: 'personal', done: true },
-    { key: 'HAE-13', id: 't5', title: '프로젝트 미팅', time: '오전 11:00', group: 'personal', done: false, priority: 'high', labels: ['업무'], desc: '분기 로드맵 공유 및 일정 조율. 회의실 B동 3층.' },
+    { key: 'HAE-13', id: 't5', title: '프로젝트 미팅', time: '오전 11:00', group: 'personal', done: false, priority: 'high', labels: ['업무'], desc: '분기 로드맵 공유 및 일정 조율. 회의실 B동 3층.', subtasks: [
+      { id: 't5s1', title: '발표 자료 준비', done: true, status: 'done', due: addDays(T, -1) },
+      { id: 't5s2', title: '회의실 예약', done: false, status: 'doing', due: T },
+      { id: 't5s3', title: '회의록 템플릿 정리', done: false, status: 'todo', due: addDays(T, 1) },
+    ] },
     { key: 'HAE-14', id: 't6', title: '집중 업무 카페', meta: '날씨 적합도 우수', group: 'personal', done: false, ai: true },
     { key: 'HAE-15', id: 't7', title: '장보기', time: '오후 06:00', group: 'personal', done: false, priority: 'low', labels: ['집안일'] },
   ],
