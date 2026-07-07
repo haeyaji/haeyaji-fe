@@ -97,7 +97,7 @@ export function CalendarPage() {
                 const tl = c.wid ? tasksByDate[c.wid] ?? [] : []
                 const events = tl.slice(0, 2)
                 const more = tl.length > 2 ? tl.length - 2 : 0
-                const dowIdx = parseKey(c.wid!).getDay() // 0=일, 6=토
+                const dowIdx = c.wid ? parseKey(c.wid).getDay() : -1 // 0=일, 6=토 (빈 셀은 wid 없음)
                 const numColor = on ? '#15795A' : dowIdx === 0 ? '#A68E8A' : dowIdx === 6 ? '#8E93A6' : '#17150F'
                 return (
                   <div
