@@ -19,7 +19,7 @@ interface Props {
   origin?: { lat: number; lng: number; label: string }
   points: MapPoint[] // 추천 핀 (강조, 클러스터 O)
   browsePoints?: MapPoint[] // 탐색 마커 (연한 점, 클러스터 X)
-  onIdle?: (map: any) => void // 팬/줌 멈춤 콜백 (자동 재검색용)
+  onIdle?: (map: any) => void // 팬/줌 멈춤 콜백 ("다시 검색" 버튼 노출 판단용)
 }
 
 const CAT_SVG: Record<PlaceCat, string> = {
