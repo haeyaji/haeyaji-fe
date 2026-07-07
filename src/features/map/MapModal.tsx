@@ -8,6 +8,7 @@ import { useMapStore } from '@/store/useMapStore'
 import { useTodoStore } from '@/store/useTodoStore'
 import { useLocationStore } from '@/store/useLocationStore'
 import { useChatStore } from '@/store/useChatStore'
+import { searchPlaces } from '@/api/placeApi'
 import { KakaoMap } from './KakaoMap'
 import { PlaceDetailModal } from './PlaceDetailModal'
 import type { Category, PlaceCat } from '@/types'
@@ -23,6 +24,16 @@ interface MapPlace {
   lng: number
   placeUrl?: string
   address?: string
+}
+
+// 두 좌표 간 거리(m) — 화면 반경 계산용 (하버사인)
+function distM(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000
+  const t = Math.PI / 180
+  const dLat = (lat2 - lat1) * t
+  const dLng = (lng2 - lng1) * t
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * t) * Math.cos(lat2 * t) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(a))
 }
 
 const km = (s: string) => parseFloat(String(s).replace(/[^\d.]/g, '')) || 0
@@ -95,11 +106,11 @@ export function MapModal() {
   }, [mapOpen])
 
   // ── "이 지역에서 다시 검색" (수동) ────────────────────────────
-  // 현재 화면(bounds)에서 키워드 검색. 지도 이동만으론 호출하지 않고(쿼터 절약),
-  // 키워드 입력·"다시 검색" 버튼 클릭에서만 호출한다.
-  const runBrowse = (map: any) => {
-    const maps = window.kakao?.maps
-    if (!maps?.services || !map || !activeKeyword) return
+  // 현재 화면 중심+반경으로 be 카카오 로컬 프록시(/places/search) 호출.
+  // 카카오 REST 의존은 be가 보유 — fe는 지도 이동만으론 호출하지 않고(쿼터 절약),
+  // 키워드 입력·"다시 검색" 버튼 클릭에서만 부른다.
+  const runBrowse = async (map: any) => {
+    if (!map || !activeKeyword) return
     setNeedsResearch(false)
     // 과한 줌아웃이면 생략
     if (map.getLevel() >= 8) {
@@ -110,38 +121,35 @@ export function MapModal() {
     setZoomNotice(false)
     const c = map.getCenter()
     const b = map.getBounds()
-    const spanLng = Math.abs(b.getNorthEast().getLng() - b.getSouthWest().getLng())
+    const ne = b.getNorthEast()
+    const spanLng = Math.abs(ne.getLng() - b.getSouthWest().getLng())
     lastSearch.current = { lat: c.getLat(), lng: c.getLng(), kw: activeKeyword, span: spanLng }
+    // 반경 = 중심~화면 모서리 거리 (viewport 외접원, 카카오 radius 상한 20km)
+    const radiusM = Math.min(20000, Math.max(200, distM(c.getLat(), c.getLng(), ne.getLat(), ne.getLng())))
     setSearching(true)
-    const ps = new maps.services.Places()
-    ps.keywordSearch(
-      activeKeyword,
-      (data: Record<string, string>[], status: string) => {
-        setSearching(false)
-        if (status !== maps.services.Status.OK) {
-          setResults([])
-          return
-        }
-        const pinIds = new Set(nlpPins.map((p) => p.id))
-        setResults(
-          data
-            .filter((d) => !pinIds.has(d.id)) // 추천 핀과 겹치면 추천 우선
-            .slice(0, 15)
-            .map((d) => ({
-              id: d.id,
-              name: d.place_name,
-              type: (d.category_name || '').split('>').pop()?.trim() || '장소',
-              dist: d.distance ? fmtDist(Number(d.distance)) : '',
-              cat: catOf(d.category_name || ''),
-              lat: Number(d.y),
-              lng: Number(d.x),
-              placeUrl: d.place_url,
-              address: d.road_address_name || d.address_name || '',
-            })),
-        )
-      },
-      { bounds: map.getBounds(), size: 15 },
-    )
+    try {
+      const places = await searchPlaces(activeKeyword, c.getLat(), c.getLng(), radiusM, 15)
+      const pinIds = new Set(nlpPins.map((p) => p.id))
+      setResults(
+        places
+          .map((d) => ({
+            id: d.url?.split('/').pop() ?? `${d.x},${d.y}`, // 추천 핀 id와 같은 규칙(placeUrl 끝 id)
+            name: d.name,
+            type: d.category || '장소',
+            dist: d.distanceM != null ? fmtDist(d.distanceM) : '',
+            cat: catOf(d.category || ''),
+            lat: d.y,
+            lng: d.x,
+            placeUrl: d.url ?? undefined,
+            address: d.address,
+          }))
+          .filter((p) => !pinIds.has(p.id)), // 추천 핀과 겹치면 추천 우선
+      )
+    } catch {
+      setResults([])
+    } finally {
+      setSearching(false)
+    }
   }
 
   // 지도 멈춤: 검색 시점보다 화면이 충분히 달라졌으면 "다시 검색" 버튼만 노출 (API 호출 X)
