@@ -130,13 +130,16 @@ export function MapModal() {
     try {
       const places = await searchPlaces(activeKeyword, c.getLat(), c.getLng(), radiusM, 15)
       const pinIds = new Set(nlpPins.map((p) => p.id))
+      // 거리는 출발지 기준으로 직접 계산 — be의 distanceM은 검색 중심(지도 중심) 기준이라
+      // 지도를 옮겨 검색하면 출발→도착 UI·자동차 소요시간과 어긋난다.
+      const org = effOrigin
       setResults(
         places
           .map((d) => ({
             id: d.url?.split('/').pop() ?? `${d.x},${d.y}`, // 추천 핀 id와 같은 규칙(placeUrl 끝 id)
             name: d.name,
             type: d.category || '장소',
-            dist: d.distanceM != null ? fmtDist(d.distanceM) : '',
+            dist: fmtDist(Math.round(distM(org.lat, org.lng, d.y, d.x))),
             cat: catOf(d.category || ''),
             lat: d.y,
             lng: d.x,
