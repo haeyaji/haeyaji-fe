@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { CloseIcon, PlusIcon, TrashIcon } from '@/lib/icons'
 import { addDays, dateShortLabel, todayKey } from '@/lib/dates'
 import { useTodoStore, statusOf } from '@/store/useTodoStore'
-import type { Task, TaskPriority, TaskStatus } from '@/types'
+import type { Subtask, Task, TaskPriority, TaskStatus } from '@/types'
 
 interface Card {
   dateKey: string
@@ -49,6 +49,14 @@ const labelStyle = (name: string) => {
   return LABEL_PALETTE[h % LABEL_PALETTE.length]
 }
 
+/* 세부 할 일 진행현황 (지라 하위 이슈 테이블) */
+const subStatusOf = (x: Subtask): TaskStatus => x.status ?? (x.done ? 'done' : 'todo')
+const SUB_STATUS_STYLE: Record<TaskStatus, { bg: string; color: string }> = {
+  todo: { bg: '#F0F2F6', color: '#5A554B' },
+  doing: { bg: '#FBF1E4', color: '#B26A14' },
+  done: { bg: '#E4F2EC', color: '#15795A' },
+}
+
 function dateBadge(dateKey: string): { label: string; color: string; bg: string } {
   const T = todayKey()
   if (dateKey === T) return { label: '오늘', color: '#15795A', bg: '#E4F2EC' }
@@ -69,12 +77,14 @@ export function KanbanPage() {
   const [prioFilter, setPrioFilter] = useState<TaskPriority | null>(null)
 
   // 전체 날짜의 카드 수집 → 검색/필터 → 우선순위·날짜 정렬
+  // 루틴(매일 반복 잡일)은 제외 — 보드엔 굵직한 task만
   const cards: Card[] = useMemo(() => {
     const q = query.trim().toLowerCase()
     return Object.keys(tasksByDate)
       .sort()
       .flatMap((dateKey) => tasksByDate[dateKey].map((task) => ({ dateKey, task })))
       .filter(({ task }) => {
+        if (task.group === 'routine') return false
         if (prioFilter && prioOf(task) !== prioFilter) return false
         if (!q) return true
         return (
@@ -269,7 +279,7 @@ export function KanbanPage() {
 /* ── 카드 상세: 키 · 제목 · 상태 · 우선순위 · 라벨 · 설명 · 세부 할일 ──── */
 function CardDetail({ card, onClose }: { card: Card; onClose: () => void }) {
   const tasksByDate = useTodoStore((s) => s.tasksByDate)
-  const { updateTitle, setStatus, removeTask, patchTask, addSubtask, toggleSubtask, deleteSubtask } = useTodoStore()
+  const { updateTitle, setStatus, removeTask, patchTask, addSubtask, patchSubtask, deleteSubtask } = useTodoStore()
   const [subText, setSubText] = useState('')
   const [labelText, setLabelText] = useState('')
 
@@ -397,24 +407,46 @@ function CardDetail({ card, onClose }: { card: Card; onClose: () => void }) {
               </div>
             )}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: 220, overflowY: 'auto' }}>
-            {subs.map((x) => (
-              <div key={x.id} className="hbtn" style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '9px 8px', borderRadius: 10 }}>
-                <div
-                  onClick={() => toggleSubtask(card.dateKey, task.id, x.id)}
-                  style={{ width: 19, height: 19, borderRadius: 6, flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px solid ${x.done ? '#15795A' : '#CCD2DC'}`, background: x.done ? '#15795A' : '#fff' }}
-                >
-                  {x.done && (
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l4.5 4.5L19 7" /></svg>
-                  )}
-                </div>
-                <div style={{ flex: 1, fontSize: 15, fontWeight: 600, color: x.done ? '#AEA89B' : '#17150F', textDecoration: x.done ? 'line-through' : 'none' }}>{x.title}</div>
-                <div onClick={() => deleteSubtask(card.dateKey, task.id, x.id)} className="hbtn" style={{ color: '#CAD0DA', cursor: 'pointer', display: 'flex' }}>
-                  <TrashIcon w={14} />
-                </div>
+          {subs.length > 0 && (
+            <div style={{ border: '1px solid #E7EAEF', borderRadius: 12, overflow: 'hidden' }}>
+              {/* 헤더 행 (지라 하위 이슈 테이블) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 96px 124px 30px', alignItems: 'center', gap: 8, padding: '8px 12px', background: '#F6F8FA', fontSize: 12, fontWeight: 800, color: '#A39C8E' }}>
+                <div>할 일</div>
+                <div>상태</div>
+                <div>일정</div>
+                <div />
               </div>
-            ))}
-          </div>
+              <div style={{ maxHeight: 240, overflowY: 'auto' }}>
+                {subs.map((x) => {
+                  const st = subStatusOf(x)
+                  const sc = SUB_STATUS_STYLE[st]
+                  return (
+                    <div key={x.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 96px 124px 30px', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px solid #EEF0F4' }}>
+                      <div style={{ fontSize: 14.5, fontWeight: 600, color: st === 'done' ? '#AEA89B' : '#17150F', textDecoration: st === 'done' ? 'line-through' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.title}</div>
+                      <select
+                        value={st}
+                        onChange={(e) => patchSubtask(card.dateKey, task.id, x.id, { status: e.target.value as TaskStatus })}
+                        style={{ appearance: 'none', WebkitAppearance: 'none', border: 'none', outline: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 800, borderRadius: 8, padding: '5px 8px', textAlign: 'center', background: sc.bg, color: sc.color }}
+                      >
+                        {COLUMNS.map((c) => (
+                          <option key={c.key} value={c.key}>{c.label}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="date"
+                        value={x.due ?? ''}
+                        onChange={(e) => patchSubtask(card.dateKey, task.id, x.id, { due: e.target.value || undefined })}
+                        style={{ border: 'none', outline: 'none', background: 'transparent', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 700, color: x.due ? '#5A554B' : '#B6BCC7', padding: 0, width: '100%', cursor: 'pointer' }}
+                      />
+                      <div onClick={() => deleteSubtask(card.dateKey, task.id, x.id)} className="hbtn" style={{ color: '#CAD0DA', cursor: 'pointer', display: 'flex', justifyContent: 'center' }}>
+                        <TrashIcon w={14} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
             <input
               value={subText}
