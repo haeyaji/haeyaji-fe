@@ -5,10 +5,12 @@ import { dayState } from '@/lib/dates'
 
 // 날짜(YYYY-MM-DD)별 실날씨 캐시.
 // - 좌표도 키에 포함: 기본좌표(강남)로 먼저 받았어도 실위치 잡히면 다시 받아 갱신
+// - TTL 30분: 탭을 켜둔 채로도 온도·예보가 최신으로 갱신되게
 // - 실패 시 자동 재시도(최대 2회): 첫 로드 폴백 고정 방지
 interface WeatherState {
   byDate: Record<string, WeatherRaw>
   fetchedWith: Record<string, string> // dateKey → "lat,lng" (어느 좌표로 받은 데이터인지)
+  fetchedAt: Record<string, number> // dateKey → 성공 시각(ms)
   loading: Record<string, boolean>
   retries: Record<string, number>
   loadDay: (lat: number, lng: number, dateKey: string) => Promise<void>
@@ -16,16 +18,20 @@ interface WeatherState {
 
 const coordKey = (lat: number, lng: number) => `${lat.toFixed(2)},${lng.toFixed(2)}`
 
+const TTL = 30 * 60 * 1000 // 30분
+
 export const useWeatherStore = create<WeatherState>((set, get) => ({
   byDate: {},
   fetchedWith: {},
+  fetchedAt: {},
   loading: {},
   retries: {},
   loadDay: async (lat, lng, dateKey) => {
     if (dayState(dateKey) === 'past') return // 과거는 기록 없음 → fe에서 안내 처리
     const ck = coordKey(lat, lng)
     if (get().loading[dateKey]) return
-    if (get().byDate[dateKey] && get().fetchedWith[dateKey] === ck) return // 같은 좌표로 이미 로드됨
+    const fresh = Date.now() - (get().fetchedAt[dateKey] ?? 0) < TTL
+    if (get().byDate[dateKey] && get().fetchedWith[dateKey] === ck && fresh) return // 같은 좌표 + TTL 이내
 
     set((s) => ({ loading: { ...s.loading, [dateKey]: true } }))
     try {
@@ -33,6 +39,7 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
       set((s) => ({
         byDate: { ...s.byDate, [dateKey]: raw },
         fetchedWith: { ...s.fetchedWith, [dateKey]: ck },
+        fetchedAt: { ...s.fetchedAt, [dateKey]: Date.now() },
         loading: { ...s.loading, [dateKey]: false },
         retries: { ...s.retries, [dateKey]: 0 },
       }))

@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAppStore } from '@/store/useAppStore'
 import { useLocationStore } from '@/store/useLocationStore'
 import { useWeatherStore } from '@/store/useWeatherStore'
+import { timeOfDay } from '@/lib/weather'
 import { LoginScreen } from '@/features/auth/LoginScreen'
 import { HomeDashboard } from '@/features/home/HomeDashboard'
 import { CalendarPage } from '@/features/calendar/CalendarPage'
@@ -30,6 +31,16 @@ export default function App() {
   // 위치·날씨선택날짜 기준 실날씨 로드 (날짜별 캐시)
   useEffect(() => {
     useWeatherStore.getState().loadDay(lat, lng, weatherSelId)
+  }, [lat, lng, weatherSelId])
+
+  // 1분 틱: TTL 지난 날씨 재조회 + 시간대(dawn/day/dusk/night) 경계에서 배경 리렌더
+  const [, setTod] = useState(timeOfDay())
+  useEffect(() => {
+    const t = setInterval(() => {
+      useWeatherStore.getState().loadDay(lat, lng, weatherSelId)
+      setTod(timeOfDay()) // 같은 값이면 리렌더 스킵
+    }, 60_000)
+    return () => clearInterval(t)
   }, [lat, lng, weatherSelId])
 
   if (!authed) {
