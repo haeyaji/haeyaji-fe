@@ -57,11 +57,11 @@ function hoverCardEl(p: MapPoint): HTMLElement {
   return el
 }
 
-// 탐색 마커: 연한 점 (추천 핀과 시각 구분)
+// 탐색 마커: 그린 원 + 흰 카테고리 아이콘 (추천 핀보다 작게, 밝은 지도 위 가시성 확보)
 function dotEl(p: MapPoint, hover: { in: (p: MapPoint) => void; out: () => void }): HTMLElement {
   const el = document.createElement('div')
-  el.style.cssText = `width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.95);border:2px solid rgba(21,121,90,.55);box-shadow:0 2px 8px rgba(24,21,15,.18);cursor:pointer;display:flex;align-items:center;justify-content:center`
-  el.innerHTML = `<div style="width:6px;height:6px;border-radius:50%;background:#15795A;opacity:.75"></div>`
+  el.style.cssText = `width:26px;height:26px;border-radius:50%;background:#15795A;border:2px solid #fff;box-shadow:0 3px 9px rgba(24,21,15,.3);cursor:pointer;display:flex;align-items:center;justify-content:center`
+  el.innerHTML = catSvg(p.cat, '#fff', 13)
   el.addEventListener('mouseenter', () => hover.in(p))
   el.addEventListener('mouseleave', () => hover.out())
   el.addEventListener('click', (e) => { e.stopPropagation(); p.onClick() })
