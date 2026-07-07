@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CategoryIcon, PlusIcon, WeatherIcon } from '@/lib/icons'
 import { PLACES } from '@/lib/mockData'
-import { catGrad, useDayWeather, recsFor, pseudoCond } from '@/lib/weather'
-import { dateShortLabel, fmtKey, parseKey, todayKey } from '@/lib/dates'
+import { catGrad, useDayWeather, recsFor } from '@/lib/weather'
+import { dateShortLabel, fmtKey, next7Days, parseKey, todayKey } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
 import { useMapStore } from '@/store/useMapStore'
 import { useTodoStore } from '@/store/useTodoStore'
+import { useWeatherStore } from '@/store/useWeatherStore'
+import { useLocationStore } from '@/store/useLocationStore'
 import { useDayTasks } from '@/features/todo/useDayTasks'
 import { TaskRow, EmptyTasks } from '@/features/todo/TaskRow'
 import type { Task, WeatherCond } from '@/types'
@@ -21,6 +23,14 @@ export function CalendarPage() {
   const setMapSel = useMapStore((s) => s.setMapSel)
   const tasksByDate = useTodoStore((s) => s.tasksByDate)
   const { tasks, total, frac } = useDayTasks()
+
+  // 실제 예보(오늘~+7일) 미리 로드 — 캘린더 셀 아이콘은 실데이터 있는 날만 표시
+  const byDate = useWeatherStore((s) => s.byDate)
+  const lat = useLocationStore((s) => s.lat)
+  const lng = useLocationStore((s) => s.lng)
+  useEffect(() => {
+    next7Days().forEach((k) => useWeatherStore.getState().loadDay(lat, lng, k))
+  }, [lat, lng])
 
   const w = useDayWeather(selId)
   const dateShort = dateShortLabel(selId)
@@ -46,7 +56,10 @@ export function CalendarPage() {
   for (let i = 0; i < firstDow; i++) cells.push({ key: 'b' + i, day: null })
   const T = todayKey()
   monthKeys.forEach((k, i) => {
-    cells.push({ key: k, day: i + 1, cond: pseudoCond(k), isToday: k === T, inWeek: true, wid: k })
+    // 실제 예보가 로드된 날만 아이콘 표시 (범위 밖·과거는 아이콘 없음 — 가짜 날씨 금지)
+    const raw = byDate[k]
+    const cond = raw && ['sunny', 'cloudy', 'rainy', 'snowy'].includes(raw.cond) ? (raw.cond as WeatherCond) : undefined
+    cells.push({ key: k, day: i + 1, cond, isToday: k === T, inWeek: true, wid: k })
   })
 
   const pickDay = (wid: string) => {
