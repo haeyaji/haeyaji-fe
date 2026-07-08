@@ -361,9 +361,9 @@ export function MapModal() {
               <div
                 onClick={() => mapObj.current && runBrowse(mapObj.current)}
                 className="lift"
-                style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 6, display: 'flex', alignItems: 'center', gap: 7, background: '#fff', color: '#15795A', fontSize: 13, fontWeight: 800, padding: '9px 16px', borderRadius: 20, boxShadow: '0 4px 14px rgba(24,21,15,.2)', cursor: 'pointer', animation: 'rb-pop .18s ease' }}
+                style={{ position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 6, display: 'flex', alignItems: 'center', gap: 9, background: '#fff', color: '#15795A', fontSize: 16, fontWeight: 800, padding: '13px 24px', borderRadius: 28, boxShadow: '0 5px 18px rgba(24,21,15,.22)', cursor: 'pointer', animation: 'rb-pop .18s ease' }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15795A" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15795A" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 12a9 9 0 1 1-2.64-6.36" />
                   <path d="M21 3v6h-6" />
                 </svg>
