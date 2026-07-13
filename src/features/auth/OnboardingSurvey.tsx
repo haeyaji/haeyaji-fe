@@ -33,8 +33,8 @@ const ICONS: Record<string, string> = {
 function OptIcon({ name, on }: { name: string; on: boolean }) {
   return (
     <svg
-      width="38"
-      height="38"
+      width="44"
+      height="44"
       viewBox="0 0 24 24"
       fill="none"
       stroke={on ? '#15795A' : '#8B8579'}
@@ -107,19 +107,19 @@ export function OnboardingSurvey() {
         <div className="tile" style={{ padding: '38px 44px 36px', borderRadius: 28 }}>
           {/* counter + 전체 스킵 */}
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <div style={{ fontSize: 17, fontWeight: 700, color: '#8B8579' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#8B8579' }}>
               <span style={{ color: '#15795A', fontWeight: 800 }}>{step + 1}</span> / {steps.length}
             </div>
             <div style={{ flex: 1 }} />
-            <div onClick={skipAll} className="hbtn" style={{ fontSize: 15, fontWeight: 700, color: '#8B8579', cursor: 'pointer', padding: '4px 2px' }}>
+            <div onClick={skipAll} className="hbtn" style={{ fontSize: 16, fontWeight: 700, color: '#8B8579', cursor: 'pointer', padding: '4px 2px' }}>
               나중에 할게요
             </div>
           </div>
 
           {/* question — step 바뀔 때마다 살짝 팝 */}
           <div key={step} style={{ animation: 'rb-pop .22s ease' }}>
-            <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-.8px', lineHeight: 1.32, marginTop: 14, whiteSpace: 'pre-line' }}>{cur.q}</div>
-            <div style={{ fontSize: 16.5, fontWeight: 600, color: '#5A554B', marginTop: 10 }}>{cur.sub}</div>
+            <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-.8px', lineHeight: 1.32, marginTop: 14, whiteSpace: 'pre-line' }}>{cur.q}</div>
+            <div style={{ fontSize: 17.5, fontWeight: 600, color: '#5A554B', marginTop: 10 }}>{cur.sub}</div>
 
             {/* options: 정사각 이모지 타일 + 하단 라벨 */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '18px 14px', marginTop: 34 }}>
@@ -146,7 +146,7 @@ export function OnboardingSurvey() {
                         </span>
                       )}
                     </div>
-                    <div style={{ textAlign: 'center', marginTop: 10, fontSize: 16.5, fontWeight: on ? 800 : 700, color: on ? '#0F5A42' : '#17150F', letterSpacing: '-.2px' }}>{o}</div>
+                    <div style={{ textAlign: 'center', marginTop: 11, fontSize: 18, fontWeight: on ? 800 : 700, color: on ? '#0F5A42' : '#17150F', letterSpacing: '-.2px' }}>{o}</div>
                   </div>
                 )
               })}
@@ -156,7 +156,7 @@ export function OnboardingSurvey() {
           {/* footer */}
           <div style={{ display: 'flex', alignItems: 'center', marginTop: 36 }}>
             {step > 0 ? (
-              <div onClick={() => setStep(step - 1)} className="hbtn" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 15.5, fontWeight: 700, color: '#5A554B', cursor: 'pointer', padding: '12px 8px' }}>
+              <div onClick={() => setStep(step - 1)} className="hbtn" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 16.5, fontWeight: 700, color: '#5A554B', cursor: 'pointer', padding: '12px 8px' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
                 이전
               </div>
@@ -164,7 +164,7 @@ export function OnboardingSurvey() {
               <div />
             )}
             <div style={{ flex: 1 }} />
-            <div onClick={next} className="lift" style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#17150F', color: '#fff', fontSize: 16, fontWeight: 800, borderRadius: 16, padding: '16px 38px', cursor: 'pointer', boxShadow: '0 10px 24px rgba(24,21,15,.24)' }}>
+            <div onClick={next} className="lift" style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#17150F', color: '#fff', fontSize: 17.5, fontWeight: 800, borderRadius: 17, padding: '17px 40px', cursor: 'pointer', boxShadow: '0 10px 24px rgba(24,21,15,.24)' }}>
               {last ? '시작하기' : '다음'}
               {!last && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>}
             </div>
