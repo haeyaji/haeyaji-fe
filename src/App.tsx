@@ -10,6 +10,7 @@ import { HomeDashboard } from '@/features/home/HomeDashboard'
 import { CalendarPage } from '@/features/calendar/CalendarPage'
 import { KanbanPage } from '@/features/kanban/KanbanPage'
 import { MyPage } from '@/features/profile/MyPage'
+import { MeetupPage } from '@/features/meetup/MeetupPage'
 import { AiDrawer } from '@/features/recommend/AiDrawer'
 import { WeatherDrawer } from '@/features/weather/WeatherDrawer'
 import { RoutineDrawer } from '@/features/routine/RoutineDrawer'
@@ -70,7 +71,7 @@ export default function App() {
     <>
       <div style={{ display: 'flex', alignItems: 'stretch', minHeight: 'var(--full-vh)' }}>
         <Sidebar />
-        <main style={{ flex: 1, minWidth: 0 }}>{view === 'home' ? <HomeDashboard /> : view === 'kanban' ? <KanbanPage /> : view === 'mypage' ? <MyPage /> : <CalendarPage />}</main>
+        <main style={{ flex: 1, minWidth: 0 }}>{view === 'home' ? <HomeDashboard /> : view === 'kanban' ? <KanbanPage /> : view === 'mypage' ? <MyPage /> : view === 'meetup' ? <MeetupPage /> : <CalendarPage />}</main>
       </div>
 
       {/* overlays */}

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { todayKey } from '@/lib/dates'
 
-type View = 'home' | 'calendar' | 'kanban' | 'mypage'
+type View = 'home' | 'calendar' | 'kanban' | 'mypage' | 'meetup'
 
 interface AppState {
   authed: boolean

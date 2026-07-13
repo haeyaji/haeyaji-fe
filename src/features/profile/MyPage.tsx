@@ -9,7 +9,6 @@ import { useFriendStore, userById } from '@/store/useFriendStore'
 import { PrefIcon } from './prefIcons'
 import { FriendSearchModal } from './FriendSearchModal'
 import { FriendDetailModal } from './FriendDetailModal'
-import { MeetupModal } from './MeetupModal'
 import type { AppUser } from '@/types'
 
 function Avatar({ name, size = 44, font = 20 }: { name: string; size?: number; font?: number }) {
@@ -38,7 +37,6 @@ export function MyPage() {
   const [editIntro, setEditIntro] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [detailUser, setDetailUser] = useState<AppUser | null>(null)
-  const [meetupUser, setMeetupUser] = useState<AppUser | null>(null)
 
   // 최근 7일 통계 (기존 util 재사용)
   const week = last7Days()
@@ -140,14 +138,7 @@ export function MyPage() {
       </div>
 
       {searchOpen && <FriendSearchModal onClose={() => setSearchOpen(false)} />}
-      {detailUser && (
-        <FriendDetailModal
-          user={detailUser}
-          onClose={() => setDetailUser(null)}
-          onMeetup={() => { setMeetupUser(detailUser); setDetailUser(null) }}
-        />
-      )}
-      {meetupUser && <MeetupModal initialFriend={meetupUser} onClose={() => setMeetupUser(null)} />}
+      {detailUser && <FriendDetailModal user={detailUser} onClose={() => setDetailUser(null)} />}
     </div>
   )
 }
