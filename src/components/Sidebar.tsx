@@ -1,6 +1,5 @@
 // 앱 셸 좌측 사이드바 (핸드오프 §4) — 프로토타입과 달리 전부 실동작:
 // 홈/캘린더=view 전환, 루틴=드로어, 지도=모달, CTA=할일 추가. (AI 추천은 우하단 말풍선 FAB 전담)
-import { useEffect } from 'react'
 import { BrandLogo, PlusIcon } from '@/lib/icons'
 import { useAppStore } from '@/store/useAppStore'
 
@@ -24,12 +23,7 @@ function RoutineIcon() {
 
 export function Sidebar() {
   const { view, setView, openMap, openRoutine, openAdd, sidebarCollapsed: c, toggleSidebar, nickname, logout } = useAppStore()
-
-  // 노트북 이하 폭에서는 처음부터 접힘 (콘텐츠 1220px 확보)
-  useEffect(() => {
-    if (window.innerWidth < 1700 && !useAppStore.getState().sidebarCollapsed) toggleSidebar()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  // 펼침이 기본 상태 — 화면 폭 대응은 #root zoom 분기가 하므로 자동 접힘 없음
 
   const items = [
     { key: 'home', label: '홈', icon: <HomeIcon />, active: view === 'home', onClick: () => setView('home') },
@@ -64,7 +58,6 @@ export function Sidebar() {
         {!c && (
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 25, fontWeight: 800, letterSpacing: '-.4px' }}>해야지</div>
-            <div style={{ fontSize: 16, fontWeight: 600, color: '#A39C8E', marginTop: 1 }}>날씨 기반 할 일</div>
           </div>
         )}
         <div
@@ -90,48 +83,51 @@ export function Sidebar() {
       </div>
 
       {/* 내비게이션 */}
-      <nav style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {!c && <div style={{ marginTop: 30, marginBottom: 10, paddingLeft: 8, fontSize: 13, fontWeight: 800, color: '#C0BAAD', letterSpacing: '1.2px' }}>메뉴</div>}
+      <nav style={{ marginTop: c ? 28 : 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
         {items.map((it) => (
           <div
             key={it.key}
             onClick={it.onClick}
-            className="hbtn"
+            className={it.active ? 'nav-item-active' : 'nav-item'}
             style={{
-              height: 48,
-              borderRadius: 13,
+              height: 50,
+              borderRadius: 14,
               display: 'flex',
               alignItems: 'center',
               justifyContent: c ? 'center' : 'flex-start',
-              gap: 11,
-              padding: c ? 0 : '0 13px',
+              gap: 12,
+              padding: c ? 0 : '0 14px',
               cursor: 'pointer',
-              color: it.active ? '#15795A' : '#8B8579',
-              background: it.active ? 'rgba(21,121,90,.09)' : 'transparent',
+              color: it.active ? '#fff' : '#6B665B',
+              background: it.active ? '#15795A' : 'transparent',
+              boxShadow: it.active ? '0 8px 18px rgba(21,121,90,.28)' : 'none',
               fontSize: 18,
               fontWeight: 700,
             }}
           >
             {it.icon}
             {!c && <span style={{ whiteSpace: 'nowrap' }}>{it.label}</span>}
+            {!c && it.active && <span style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,.85)' }} />}
           </div>
         ))}
       </nav>
 
       <div style={{ flex: 1 }} />
 
-      {/* 프로필 */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: c ? 'center' : 'flex-start', gap: 11 }}>
-        <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#17150F', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 21, fontWeight: 800, flexShrink: 0 }}>
+      {/* 프로필 카드 */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: c ? 'center' : 'flex-start', gap: 12, background: c ? 'transparent' : '#F7F6F2', borderRadius: 16, padding: c ? 0 : '11px 12px' }}>
+        <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg, #15795A, #57B48C)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, flexShrink: 0, boxShadow: '0 4px 10px rgba(21,121,90,.25)' }}>
           {nickname.slice(0, 1)}
         </div>
         {!c && (
           <>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 18, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nickname}</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#A39C8E' }}>무료 플랜</div>
+              <div style={{ fontSize: 17, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nickname}</div>
+              <div style={{ fontSize: 13.5, fontWeight: 600, color: '#A39C8E' }}>무료 플랜</div>
             </div>
-            <div onClick={logout} title="로그아웃" className="hbtn" style={{ flexShrink: 0, width: 28, height: 28, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A39C8E', cursor: 'pointer' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7" /><circle cx="12" cy="12" r="1.7" /><circle cx="19" cy="12" r="1.7" /></svg>
+            <div onClick={logout} title="로그아웃" className="hbtn" style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A39C8E', cursor: 'pointer', background: '#fff' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5M21 12H9" /></svg>
             </div>
           </>
         )}

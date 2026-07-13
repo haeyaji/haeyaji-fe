@@ -52,6 +52,13 @@
   .hbtn {
     transition: background 0.14s ease, color 0.14s ease;
   }
+.nav-item,
+  .nav-item-active {
+    transition: background 0.14s ease, color 0.14s ease, box-shadow 0.14s ease;
+  }
+.nav-item:hover {
+    background: #f4f3f0 !important;
+  }
 }
 
 @keyframes rb-fade {
