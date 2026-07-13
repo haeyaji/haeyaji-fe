@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { ChatMessage, ChatTurn } from '@/types'
 import { sendMessage } from '@/api/recommendApi'
+import { usePrefStore } from './usePrefStore'
 
 /** 추천 요청에 실을 맥락 (위치 필수, 날씨는 힌트) */
 export interface SendCtx {
@@ -40,7 +41,8 @@ async function run(set: SetFn, get: GetFn, text: string, ctx: SendCtx) {
   const history = buildHistory(get().chat) // 이번 입력 이전까지의 맥락
   set((s) => ({ chat: [...s.chat, { role: 'user', text }], loading: true }))
   try {
-    const res = await sendMessage({ text, lat: ctx.lat, lng: ctx.lng, weather: ctx.weather, ...timeContext(), history })
+    const mood = usePrefStore.getState().vibe ?? undefined // 온보딩 설문 vibe → 추천 분위기 힌트
+    const res = await sendMessage({ text, lat: ctx.lat, lng: ctx.lng, weather: ctx.weather, mood, ...timeContext(), history })
     set((s) => ({
       chat: [...s.chat, { role: 'assistant', text: res.reply, todos: res.todos, options: res.options }],
       loading: false,

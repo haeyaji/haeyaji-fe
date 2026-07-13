@@ -3,7 +3,9 @@ import { useAppStore } from '@/store/useAppStore'
 import { useLocationStore } from '@/store/useLocationStore'
 import { useWeatherStore } from '@/store/useWeatherStore'
 import { timeOfDay } from '@/lib/weather'
+import { usePrefStore } from '@/store/usePrefStore'
 import { LoginScreen } from '@/features/auth/LoginScreen'
+import { OnboardingSurvey } from '@/features/auth/OnboardingSurvey'
 import { HomeDashboard } from '@/features/home/HomeDashboard'
 import { CalendarPage } from '@/features/calendar/CalendarPage'
 import { KanbanPage } from '@/features/kanban/KanbanPage'
@@ -18,6 +20,7 @@ import { Toast } from '@/components/Toast'
 
 export default function App() {
   const { authed, view } = useAppStore()
+  const surveyDone = usePrefStore((s) => s.surveyDone)
   const lat = useLocationStore((s) => s.lat)
   const lng = useLocationStore((s) => s.lng)
 
@@ -47,6 +50,16 @@ export default function App() {
     return (
       <>
         <LoginScreen />
+        <Toast />
+      </>
+    )
+  }
+
+  // 회원가입(로그인) 직후 1회: 개인화 설문 (완료/스킵 여부는 persist)
+  if (!surveyDone) {
+    return (
+      <>
+        <OnboardingSurvey />
         <Toast />
       </>
     )
