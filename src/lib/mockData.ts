@@ -1,6 +1,18 @@
 // 시안의 하드코딩 데이터. 추후 api/ 레이어가 be 응답으로 대체한다.
-import type { Place, Routine, TasksByDate } from '@/types'
+import type { AppUser, Place, Routine, TasksByDate } from '@/types'
 import { addDays, todayKey } from './dates'
+
+// 친구 검색용 mock 유저. be 붙으면 GET /users?nickname= 응답으로 대체.
+export const MOCK_USERS: AppUser[] = [
+  { id: 'u1', nickname: '민지', intro: '주말엔 무조건 밖으로', vibe: '활기찬', cats: ['야외', '맛집/카페'] },
+  { id: 'u2', nickname: '지훈', intro: '카페에서 코딩하는 개발자', vibe: '조용한', cats: ['생산성', '맛집/카페'] },
+  { id: 'u3', nickname: '수연', intro: '전시·공연 좋아해요', vibe: '감성적인', cats: ['실내', '사람만나기'] },
+  { id: 'u4', nickname: '도윤', intro: '맛집 탐방이 취미', vibe: '트렌디한', cats: ['맛집/카페', '사람만나기'] },
+  { id: 'u5', nickname: '서영', intro: '집이 제일 좋아', vibe: '편안한', cats: ['휴식', '실내'] },
+  { id: 'u6', nickname: '현우', intro: '러닝·등산 크루 모집', vibe: '활기찬', cats: ['야외'] },
+  { id: 'u7', nickname: '예린', intro: '조용한 북카페 찾아다녀요', vibe: '조용한', cats: ['맛집/카페', '휴식'] },
+  { id: 'u8', nickname: '준서', intro: '주말 브런치 메이트 구해요', vibe: '트렌디한', cats: ['맛집/카페', '사람만나기'] },
+]
 
 // 좌표는 강남권 실좌표 (기본 위치 강남역 기준 주변). 실지도 마커용.
 export const PLACES: Place[] = [

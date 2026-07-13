@@ -81,6 +81,15 @@ export interface WeekDay {
   lo: number
 }
 
+/** 유저 (친구 검색·약속). be users 계약 대응 — mock에서 시작. */
+export interface AppUser {
+  id: string
+  nickname: string
+  intro: string
+  vibe: string // 대표 분위기 (usePrefStore vibe와 같은 값 집합)
+  cats: Category[] // 선호 카테고리
+}
+
 export type PlaceCat = 'cafe' | 'park' | 'food' | 'culture'
 
 export interface Place {
