@@ -57,7 +57,8 @@ export function HomeDashboard() {
 
   return (
     <div className="page-pad" style={{ minHeight: '100vh', width: '100%', color: '#17150F', background: 'var(--canvas)' }}>
-      <div className="home-wrap">
+      {/* zoom: 비율 유지한 채 전체 10% 축소 */}
+      <div className="home-wrap" style={{ zoom: 0.9 }}>
         {/* header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, gap: 16, flexWrap: 'wrap' }}>
           <div>
