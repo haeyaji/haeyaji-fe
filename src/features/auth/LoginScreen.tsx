@@ -7,7 +7,7 @@ export function LoginScreen() {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: 'var(--full-vh)',
         width: '100%',
         display: 'flex',
         alignItems: 'center',

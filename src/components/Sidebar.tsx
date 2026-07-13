@@ -48,7 +48,7 @@ export function Sidebar() {
         borderRight: '1px solid rgba(24,21,15,.06)',
         position: 'sticky',
         top: 0,
-        height: '100vh',
+        height: 'var(--full-vh)',
         padding: c ? '26px 16px' : '26px 22px',
         display: 'flex',
         flexDirection: 'column',

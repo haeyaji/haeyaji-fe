@@ -67,7 +67,7 @@ export default function App() {
 
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'stretch', minHeight: '100vh' }}>
+      <div style={{ display: 'flex', alignItems: 'stretch', minHeight: 'var(--full-vh)' }}>
         <Sidebar />
         <main style={{ flex: 1, minWidth: 0 }}>{view === 'home' ? <HomeDashboard /> : view === 'kanban' ? <KanbanPage /> : <CalendarPage />}</main>
       </div>
