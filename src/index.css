@@ -128,6 +128,13 @@
   .home-wrap { max-width: none; }
 }
 
+/* 앱 전체 스케일 분기: 데스크탑(>1700px)=80%, 맥북 15" 이하 노트북(≤1700px)=64%
+   (미디어쿼리는 실제 뷰포트 폭 기준이라 zoom과 무관하게 판정됨) */
+#root { zoom: 0.8; }
+@media (max-width: 1700px) {
+  #root { zoom: 0.64; }
+}
+
 /* 홈 벤토 그리드 */
 .bento {
   display: grid;
