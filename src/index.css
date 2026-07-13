@@ -121,12 +121,9 @@
 .page-pad { padding: 28px 44px; }
 .page-pad-cal { padding: 24px 30px 36px; }
 
-/* 홈 컨테이너: 데스크탑=1220 중앙 고정 / 노트북 이하=풀폭 유동 (노트북 맞춤 화면) */
+/* 홈 컨테이너: 전 구간 중앙 1220 고정 — 화면 폭 대응은 #root zoom 분기가 전담
+   (구 노트북 풀폭 규칙은 zoom과 겹쳐 레이아웃이 깨져서 제거) */
 .home-wrap { max-width: 1220px; margin: 0 auto; }
-@media (max-width: 1700px) {
-  /* 노트북: 풀폭 (글씨는 컴포넌트 자체에서 2배) */
-  .home-wrap { max-width: none; }
-}
 
 /* 앱 전체 스케일 분기: 데스크탑(>1700px)=80%, 맥북 15" 이하 노트북(≤1700px)=64%
    (미디어쿼리는 실제 뷰포트 폭 기준이라 zoom과 무관하게 판정됨) */
