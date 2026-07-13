@@ -1,0 +1,189 @@
+// 약속 만들기 — 정보(종류·이름·친구 선택) → 날짜 → 내 되는시간. 친구는 선택사항(나중에 추가 가능).
+import { useMemo, useState } from 'react'
+import { CloseIcon, WeatherIcon } from '@/lib/icons'
+import { todayKey, dayNum, parseKey, fmtKey, addDays } from '@/lib/dates'
+import { useWeatherStore } from '@/store/useWeatherStore'
+import { useFriendStore, userById } from '@/store/useFriendStore'
+import { useMeetupStore, type MeetCell } from '@/store/useMeetupStore'
+import { MEET_TYPES, Avatar, TimeGrid } from './meetupShared'
+import type { WeatherCond } from '@/types'
+
+export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
+  const friendIds = useFriendStore((s) => s.friendIds)
+  const byDate = useWeatherStore((s) => s.byDate)
+  const createMeetup = useMeetupStore((s) => s.create)
+
+  const [step, setStep] = useState(0)
+  const [type, setType] = useState('가벼운 모임')
+  const [title, setTitle] = useState('')
+  const [picked, setPicked] = useState<string[]>([])
+  const [dates, setDates] = useState<string[]>([])
+  const [rangeMode, setRangeMode] = useState(true)
+  const [ym, setYm] = useState(() => { const d = parseKey(todayKey()); return { y: d.getFullYear(), m: d.getMonth() } })
+  const [cells, setCells] = useState<Record<string, MeetCell>>({})
+  const [paintMode, setPaintMode] = useState<MeetCell>('free')
+
+  const friends = friendIds.map(userById).filter(Boolean)
+  const sortedDates = useMemo(() => [...dates].sort(), [dates])
+
+  const calCells = useMemo(() => {
+    const firstDow = new Date(ym.y, ym.m, 1).getDay()
+    const lastDay = new Date(ym.y, ym.m + 1, 0).getDate()
+    const arr: (string | null)[] = []
+    for (let i = 0; i < firstDow; i++) arr.push(null)
+    for (let d = 1; d <= lastDay; d++) arr.push(fmtKey(new Date(ym.y, ym.m, d)))
+    return arr
+  }, [ym])
+
+  const toggleDate = (k: string) => {
+    if (k < todayKey()) return
+    if (!rangeMode) { setDates((p) => (p.includes(k) ? p.filter((x) => x !== k) : [...p, k])); return }
+    setDates((p) => {
+      if (p.length !== 1) return [k]
+      const [a, b] = [p[0], k].sort()
+      const out: string[] = []
+      for (let d = a; d <= b; d = addDays(d, 1)) out.push(d)
+      return out
+    })
+  }
+  const moveMonth = (n: number) => setYm(({ y, m }) => ({ y: y + Math.floor((m + n) / 12), m: (((m + n) % 12) + 12) % 12 }))
+
+  const finish = () => {
+    const id = createMeetup({ title: title.trim() || type, type, friendIds: picked, dates: sortedDates, myCells: cells })
+    onCreated(id)
+  }
+
+  const canNext = step === 0 ? title.trim().length > 0 : step === 1 ? dates.length > 0 : true
+  const titles = ['새 약속', '날짜 선택', '내 되는 시간']
+
+  return (
+    <Shell onClose={onClose} title={titles[step]}>
+      <div style={{ height: 4, borderRadius: 3, background: '#EEF0F4', overflow: 'hidden', margin: '4px 0 20px' }}>
+        <div style={{ width: `${((step + 1) / 3) * 100}%`, height: '100%', background: '#15795A', borderRadius: 3, transition: 'width .3s ease' }} />
+      </div>
+
+      {step === 0 && (
+        <div style={{ animation: 'rb-pop .2s ease' }}>
+          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-.4px' }}>어떤 약속인가요?</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
+            {MEET_TYPES.map((t) => {
+              const on = type === t
+              return <div key={t} onClick={() => setType(t)} className="hbtn" style={{ padding: '9px 15px', borderRadius: 20, fontSize: 14, fontWeight: 800, cursor: 'pointer', background: on ? '#17150F' : '#F0F2F6', color: on ? '#fff' : '#8B8579' }}>{t}</div>
+            })}
+          </div>
+
+          <div style={{ fontSize: 14, fontWeight: 800, color: '#8B8579', margin: '20px 0 8px' }}>약속 이름</div>
+          <input autoFocus value={title} onChange={(e) => setTitle(e.target.value.slice(0, 15))} placeholder="예: 주말 브런치" style={{ width: '100%', border: '1px solid #E1E5EC', outline: 'none', background: '#F6F8FA', borderRadius: 12, padding: '13px 15px', fontFamily: 'inherit', fontSize: 15.5, fontWeight: 600, color: '#17150F' }} />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '20px 0 8px' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#8B8579' }}>누구랑 {picked.length > 0 && <span style={{ color: '#15795A' }}>{picked.length}</span>}</div>
+            <div style={{ fontSize: 12.5, fontWeight: 600, color: '#B6BCC7' }}>· 나중에 추가해도 돼요</div>
+          </div>
+          {friends.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 200, overflowY: 'auto' }}>
+              {friends.map((u) => {
+                const on = picked.includes(u!.id)
+                return (
+                  <div key={u!.id} onClick={() => setPicked((p) => (on ? p.filter((x) => x !== u!.id) : [...p, u!.id]))} className="hbtn" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 13px', borderRadius: 13, cursor: 'pointer', background: on ? '#EAF5EF' : '#F6F8FA', border: `2px solid ${on ? '#15795A' : 'transparent'}` }}>
+                    <Avatar name={u!.nickname} size={36} font={16} />
+                    <div style={{ flex: 1, fontSize: 15.5, fontWeight: 800, color: on ? '#0F5A42' : '#17150F' }}>{u!.nickname}</div>
+                    {on && <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#15795A" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l4.5 4.5L19 7" /></svg>}
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div style={{ padding: 18, textAlign: 'center', background: '#F6F8FA', borderRadius: 13, color: '#B6BCC7', fontSize: 13.5, fontWeight: 600 }}>친구를 추가하면 함께 조율할 수 있어요</div>
+          )}
+        </div>
+      )}
+
+      {step === 1 && (
+        <div style={{ animation: 'rb-pop .2s ease' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div onClick={() => moveMonth(-1)} className="hbtn" style={{ width: 28, height: 28, borderRadius: 8, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 800 }}>{ym.y}년 {ym.m + 1}월</div>
+              <div onClick={() => moveMonth(1)} className="hbtn" style={{ width: 28, height: 28, borderRadius: 8, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+              </div>
+            </div>
+            <div style={{ display: 'flex', background: '#F0F2F6', borderRadius: 20, padding: 3 }}>
+              {[{ k: true, l: '기간' }, { k: false, l: '하나씩' }].map((o) => (
+                <div key={o.l} onClick={() => { setRangeMode(o.k); setDates([]) }} style={{ padding: '6px 14px', borderRadius: 18, fontSize: 13, fontWeight: 800, cursor: 'pointer', background: rangeMode === o.k ? '#fff' : 'transparent', color: rangeMode === o.k ? '#15795A' : '#A39C8E', boxShadow: rangeMode === o.k ? '0 1px 3px rgba(24,21,15,.1)' : 'none' }}>{o.l}</div>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', marginTop: 16, marginBottom: 6 }}>
+            {['일', '월', '화', '수', '목', '금', '토'].map((d, i) => (
+              <div key={d} style={{ textAlign: 'center', fontSize: 12.5, fontWeight: 800, color: i === 0 ? '#C2453B' : i === 6 ? '#3F82C2' : '#A39C8E' }}>{d}</div>
+            ))}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 3 }}>
+            {calCells.map((k, i) => {
+              if (!k) return <div key={'b' + i} />
+              const on = dates.includes(k)
+              const past = k < todayKey()
+              const raw = byDate[k]
+              const cond = raw && ['sunny', 'cloudy', 'rainy', 'snowy'].includes(raw.cond) ? (raw.cond as WeatherCond) : undefined
+              return (
+                <div key={k} onClick={() => toggleDate(k)} style={{ aspectRatio: '1 / 1.15', borderRadius: 11, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, cursor: past ? 'default' : 'pointer', background: on ? '#15795A' : 'transparent', color: past ? '#D5D0C6' : on ? '#fff' : '#17150F' }}>
+                  <div style={{ fontSize: 15, fontWeight: on ? 800 : 700 }}>{dayNum(k)}</div>
+                  <div style={{ width: 15, height: 15 }}>{cond && !on && <WeatherIcon cond={cond} c={cond === 'sunny' ? '#E6A52E' : '#B6BCC7'} />}</div>
+                </div>
+              )
+            })}
+          </div>
+          {dates.length > 0 && <div style={{ marginTop: 14, fontSize: 13.5, fontWeight: 700, color: '#8B8579', textAlign: 'center' }}>{dates.length}일 선택됨</div>}
+        </div>
+      )}
+
+      {step === 2 && (
+        <div style={{ animation: 'rb-pop .2s ease' }}>
+          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-.2px' }}>
+            내 일정을{' '}
+            <span style={{ display: 'inline-flex', background: '#F0F2F6', borderRadius: 16, padding: 2, verticalAlign: 'middle', margin: '0 2px' }}>
+              {([['free', '되는'], ['busy', '안되는']] as const).map(([m, l]) => (
+                <span key={m} onClick={() => setPaintMode(m)} style={{ padding: '4px 10px', borderRadius: 14, fontSize: 13.5, fontWeight: 800, cursor: 'pointer', background: paintMode === m ? (m === 'free' ? '#15795A' : '#E0883A') : 'transparent', color: paintMode === m ? '#fff' : '#A39C8E' }}>{l}</span>
+              ))}
+            </span>{' '}
+            시간으로 칠해주세요
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#A39C8E', marginTop: 6, marginBottom: 16 }}>드래그해서 여러 칸을 한 번에 · 나중에 수정할 수 있어요</div>
+          <TimeGrid dates={sortedDates} cells={cells} onChange={setCells} paintMode={paintMode} />
+          <div onClick={() => setCells({})} className="hbtn" style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#8B8579', cursor: 'pointer' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>
+            초기화
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'center', marginTop: 24 }}>
+        {step > 0 ? (
+          <div onClick={() => setStep(step - 1)} className="hbtn" style={{ fontSize: 14.5, fontWeight: 700, color: '#8B8579', cursor: 'pointer', padding: '10px 6px' }}>이전</div>
+        ) : <div />}
+        <div style={{ flex: 1 }} />
+        <div onClick={() => { if (!canNext) return; step === 2 ? finish() : setStep(step + 1) }} className="lift" style={{ background: canNext ? '#17150F' : '#D5D0C6', color: '#fff', fontSize: 15.5, fontWeight: 800, borderRadius: 14, padding: '13px 32px', cursor: canNext ? 'pointer' : 'default' }}>{step === 2 ? '약속 만들기' : '다음'}</div>
+      </div>
+    </Shell>
+  )
+}
+
+export function Shell({ children, onClose, title }: { children: React.ReactNode; onClose: () => void; title: string }) {
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 61, background: 'rgba(24,21,15,.42)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'rb-fade .16s ease' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: 480, maxWidth: '100%', maxHeight: '88vh', overflowY: 'auto', background: '#fff', borderRadius: 22, boxShadow: '0 40px 90px rgba(24,21,15,.4)', animation: 'rb-modal .22s ease', padding: '18px 24px 24px', position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#17150F' }}>{title}</div>
+          <div style={{ flex: 1 }} />
+          <div onClick={onClose} style={{ width: 30, height: 30, borderRadius: 10, background: '#F0F2F6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <CloseIcon w={14} />
+          </div>
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+}

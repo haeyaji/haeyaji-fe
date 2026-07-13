@@ -5,7 +5,7 @@ import { useFriendStore } from '@/store/useFriendStore'
 import { PrefIcon } from './prefIcons'
 import type { AppUser } from '@/types'
 
-export function FriendDetailModal({ user, onClose, onMeetup }: { user: AppUser; onClose: () => void; onMeetup: () => void }) {
+export function FriendDetailModal({ user, onClose }: { user: AppUser; onClose: () => void }) {
   const removeFriend = useFriendStore((s) => s.removeFriend)
   const toast = useAppStore((s) => s.toast)
   const chips = [user.vibe, ...user.cats]
@@ -40,11 +40,7 @@ export function FriendDetailModal({ user, onClose, onMeetup }: { user: AppUser; 
         </div>
 
         {/* 액션 */}
-        <div onClick={onMeetup} className="lift" style={{ marginTop: 22, height: 52, borderRadius: 15, background: '#15795A', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 16, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 20px rgba(21,121,90,.28)' }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3" /><path d="M3 9h18M8 2.5v4M16 2.5v4" /></svg>
-          약속 잡기
-        </div>
-        <div onClick={() => { removeFriend(user.id); toast(`${user.nickname}님을 친구에서 삭제했어요`); onClose() }} className="hbtn" style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '12px', fontSize: 14, fontWeight: 700, color: '#C0645C', cursor: 'pointer' }}>
+        <div onClick={() => { removeFriend(user.id); toast(`${user.nickname}님을 친구에서 삭제했어요`); onClose() }} className="hbtn" style={{ marginTop: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '13px', borderRadius: 14, background: '#F6ECEA', fontSize: 14.5, fontWeight: 800, color: '#C0645C', cursor: 'pointer' }}>
           <TrashIcon w={15} c="#C0645C" /> 친구 삭제
         </div>
       </div>
