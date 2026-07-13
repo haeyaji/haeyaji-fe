@@ -13,7 +13,7 @@ export interface Meetup {
   friendIds: string[]
   dates: string[] // 후보 날짜 (YYYY-MM-DD)
   myCells: Record<string, MeetCell> // "date|hour" → 내 가용
-  confirmed?: { date: string; hour: number }
+  confirmed?: { date: string; startH: number; endH: number } // 확정 시간 범위 (endH 배타)
   createdAt: number
 }
 

@@ -16,6 +16,8 @@ function hash(s: string): number {
   return h
 }
 export const friendFree = (friendId: string, date: string, hour: number): boolean => hash(friendId + date + hour) % 4 !== 0
+// 이 친구가 약속에 시간을 입력했는지 (mock, 약속별 결정론) — 75%는 입력 완료, 나머지는 대기
+export const friendEntered = (friendId: string, meetupId: string): boolean => hash(meetupId + friendId) % 4 !== 0
 export const mdLabel = (k: string) => `${String(parseKey(k).getMonth() + 1).padStart(2, '0')}.${String(dayNum(k)).padStart(2, '0')}(${dowLabel(k)})`
 export const longDate = (k: string) => `${parseKey(k).getMonth() + 1}월 ${dayNum(k)}일 (${dowLabel(k)})`
 
@@ -98,8 +100,8 @@ export function TimeGrid({ dates, cells, onChange, paintMode }: { dates: string[
   )
 }
 
-// 겹침 히트맵 (읽기 + 클릭 확정)
-export function HeatGrid({ dates, myCells, friendIds, total, onPick, confirmed }: { dates: string[]; myCells: Record<string, MeetCell>; friendIds: string[]; total: number; onPick: (date: string, hour: number) => void; confirmed?: { date: string; hour: number } }) {
+// 겹침 히트맵 (읽기 + 클릭 → 해당 셀이 속한 시간대 선택)
+export function HeatGrid({ dates, myCells, friendIds, total, onPick, confirmed }: { dates: string[]; myCells: Record<string, MeetCell>; friendIds: string[]; total: number; onPick: (date: string, hour: number) => void; confirmed?: { date: string; startH: number; endH: number } }) {
   const byDate = useWeatherStore((s) => s.byDate)
   let max = 0
   dates.forEach((d) => HOURS.forEach((h) => {
@@ -123,7 +125,7 @@ export function HeatGrid({ dates, myCells, friendIds, total, onPick, confirmed }
                 const count = (myCells[`${d}|${h}`] === 'free' ? 1 : 0) + friendIds.filter((id) => friendFree(id, d, h)).length
                 const r = total ? count / total : 0
                 const best = count === max && count > 0
-                const isConf = confirmed && confirmed.date === d && confirmed.hour === h
+                const isConf = !!confirmed && confirmed.date === d && h >= confirmed.startH && h < confirmed.endH
                 return (
                   <div key={h} onClick={() => count > 0 && onPick(d, h)} title={`${count}/${total}명`} style={{ height: 30, borderTop: h === HOURS[0] ? 'none' : '1px solid #F0F1F3', cursor: count > 0 ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', background: isConf ? '#17150F' : r === 0 ? '#fff' : `rgba(21,121,90,${(0.15 + 0.85 * r).toFixed(2)})`, boxShadow: best && !isConf ? 'inset 0 0 0 2px #17150F' : 'none' }}>
                     {count > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: isConf || r > 0.5 ? '#fff' : '#0F5A42' }}>{count}</span>}
@@ -138,12 +140,25 @@ export function HeatGrid({ dates, myCells, friendIds, total, onPick, confirmed }
   )
 }
 
-// 겹침 랭킹 1위
-export function bestSlot(dates: string[], myCells: Record<string, MeetCell>, friendIds: string[]) {
-  let best: { date: string; hour: number; count: number } | null = null
-  dates.forEach((d) => HOURS.forEach((h) => {
-    const count = (myCells[`${d}|${h}`] === 'free' ? 1 : 0) + friendIds.filter((id) => friendFree(id, d, h)).length
-    if (count > 0 && (!best || count > best.count)) best = { date: d, hour: h, count }
-  }))
-  return best as { date: string; hour: number; count: number } | null
+export interface Slot { date: string; startH: number; endH: number; count: number } // endH 배타
+
+// 약속 가능한 "시간대"(연속 구간) — 내가 되는 시간만 후보로, 겹치는 친구 수 많은 순.
+// 내가 안 되는 시각(0)은 후보에서 제외(약속엔 내가 꼭 참석). 같은 겹침 수의 연속 시간을 하나로 묶음.
+export function candidateSlots(dates: string[], myCells: Record<string, MeetCell>, friendIds: string[]): Slot[] {
+  const countAt = (d: string, h: number) => (myCells[`${d}|${h}`] === 'free' ? 1 + friendIds.filter((id) => friendFree(id, d, h)).length : 0)
+  const slots: Slot[] = []
+  for (const d of dates) {
+    let start = 0
+    for (let i = 1; i <= HOURS.length; i++) {
+      const cntPrev = countAt(d, HOURS[i - 1])
+      const cntCur = i < HOURS.length ? countAt(d, HOURS[i]) : null
+      if (cntCur !== cntPrev) {
+        if (cntPrev >= 1) slots.push({ date: d, startH: HOURS[start], endH: HOURS[i - 1] + 1, count: cntPrev })
+        start = i
+      }
+    }
+  }
+  return slots.sort((a, b) => b.count - a.count || (b.endH - b.startH) - (a.endH - a.startH) || a.date.localeCompare(b.date) || a.startH - b.startH)
 }
+
+export const hhmm = (h: number) => `${String(h).padStart(2, '0')}:00`

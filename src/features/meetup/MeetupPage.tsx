@@ -1,17 +1,22 @@
 // 약속 — 사이드바 독립 메뉴. 만든 약속 목록 + 새 약속. 각 약속은 친구에 종속되지 않는 엔티티.
 import { useState } from 'react'
 import { PlusIcon } from '@/lib/icons'
-import { longDate } from './meetupShared'
+import { longDate, hhmm } from './meetupShared'
 import { userById } from '@/store/useFriendStore'
 import { useMeetupStore } from '@/store/useMeetupStore'
 import { AvatarStack } from './meetupShared'
 import { CreateMeetupModal } from './CreateMeetupModal'
-import { MeetupDetailModal } from './MeetupDetailModal'
+import { MeetupDetailPage } from './MeetupDetailPage'
 
 export function MeetupPage() {
   const meetups = useMeetupStore((s) => s.meetups)
   const [creating, setCreating] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
+
+  // 상세는 큰 페이지로 (모달 아님)
+  if (openId && meetups.some((m) => m.id === openId)) {
+    return <MeetupDetailPage id={openId} onBack={() => setOpenId(null)} />
+  }
 
   return (
     <div className="page-pad" style={{ minHeight: 'var(--full-vh)', width: '100%', color: '#17150F', background: 'var(--canvas)' }}>
@@ -41,7 +46,7 @@ export function MeetupPage() {
                   </div>
                   <div style={{ padding: '14px 18px' }}>
                     <div style={{ fontSize: 13.5, fontWeight: 700, color: '#5A554B' }}>
-                      {m.confirmed ? `${longDate(m.confirmed.date)} ${m.confirmed.hour}시` : m.dates.length > 0 ? `${longDate(m.dates[0])}${m.dates.length > 1 ? ` 외 ${m.dates.length - 1}일` : ''} 후보` : '날짜 미정'}
+                      {m.confirmed ? `${longDate(m.confirmed.date)} ${hhmm(m.confirmed.startH)}~${hhmm(m.confirmed.endH)}` : m.dates.length > 0 ? `${longDate(m.dates[0])}${m.dates.length > 1 ? ` 외 ${m.dates.length - 1}일` : ''} 후보` : '날짜 미정'}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
                       <AvatarStack names={['나', ...names]} />
@@ -67,7 +72,6 @@ export function MeetupPage() {
       </div>
 
       {creating && <CreateMeetupModal onClose={() => setCreating(false)} onCreated={(id) => { setCreating(false); setOpenId(id) }} />}
-      {openId && <MeetupDetailModal id={openId} onClose={() => setOpenId(null)} />}
     </div>
   )
 }
