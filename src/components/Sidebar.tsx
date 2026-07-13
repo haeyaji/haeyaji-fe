@@ -1,5 +1,5 @@
 // 앱 셸 좌측 사이드바 (핸드오프 §4) — 프로토타입과 달리 전부 실동작:
-// 홈/캘린더=view 전환, AI/루틴=드로어, 지도=모달, CTA=할일 추가.
+// 홈/캘린더=view 전환, 루틴=드로어, 지도=모달, CTA=할일 추가. (AI 추천은 우하단 말풍선 FAB 전담)
 import { useEffect } from 'react'
 import { BrandLogo, PlusIcon } from '@/lib/icons'
 import { useAppStore } from '@/store/useAppStore'
@@ -12,9 +12,6 @@ function HomeIcon() {
 function CalIcon() {
   return <svg width="18" height="18" viewBox="0 0 24 24" {...NAV_ICON}><rect x="3" y="4.5" width="18" height="16" rx="3" /><path d="M3 9h18M8 2.5v4M16 2.5v4" /></svg>
 }
-function AiIcon() {
-  return <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.6 4.9 4.9 1.6-4.9 1.6L12 15l-1.6-4.9L5.5 8.5l4.9-1.6z" /></svg>
-}
 function MapIcon() {
   return <svg width="18" height="18" viewBox="0 0 24 24" {...NAV_ICON}><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" /><path d="M9 4v14M15 6v14" /></svg>
 }
@@ -26,7 +23,7 @@ function RoutineIcon() {
 }
 
 export function Sidebar() {
-  const { view, setView, openAi, openMap, openRoutine, openAdd, sidebarCollapsed: c, toggleSidebar, nickname, logout } = useAppStore()
+  const { view, setView, openMap, openRoutine, openAdd, sidebarCollapsed: c, toggleSidebar, nickname, logout } = useAppStore()
 
   // 노트북 이하 폭에서는 처음부터 접힘 (콘텐츠 1220px 확보)
   useEffect(() => {
@@ -38,7 +35,6 @@ export function Sidebar() {
     { key: 'home', label: '홈', icon: <HomeIcon />, active: view === 'home', onClick: () => setView('home') },
     { key: 'calendar', label: '캘린더', icon: <CalIcon />, active: view === 'calendar', onClick: () => setView('calendar') },
     { key: 'kanban', label: '칸반보드', icon: <BoardIcon />, active: view === 'kanban', onClick: () => setView('kanban') },
-    { key: 'ai', label: 'AI 추천', icon: <AiIcon />, active: false, onClick: openAi },
     { key: 'map', label: '지도', icon: <MapIcon />, active: false, onClick: openMap },
     { key: 'routine', label: '루틴', icon: <RoutineIcon />, active: false, onClick: openRoutine },
   ]

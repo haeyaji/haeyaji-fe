@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CategoryIcon, CloseIcon } from '@/lib/icons'
 import { useDayWeather } from '@/lib/weather'
 import { dateShortLabel } from '@/lib/dates'
@@ -38,6 +38,25 @@ export function AiDrawer() {
   const w = useDayWeather(selId) // 훅은 early return보다 먼저
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  // 플로팅 위젯 크기 (좌상단 그립 드래그로 조절 — 우하단 앵커 고정)
+  const [size, setSize] = useState({ w: 404, h: 640 })
+  const onGripDown = (e: React.PointerEvent) => {
+    e.preventDefault()
+    const start = { x: e.clientX, y: e.clientY, w: size.w, h: size.h }
+    const move = (ev: PointerEvent) => {
+      setSize({
+        w: Math.min(720, Math.max(340, start.w + (start.x - ev.clientX))),
+        h: Math.min(window.innerHeight - 140, Math.max(460, start.h + (start.y - ev.clientY))),
+      })
+    }
+    const up = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+  }
+
   // 새 메시지/로딩 시 맨 아래로 자동 스크롤
   useEffect(() => {
     const el = scrollRef.current
@@ -55,22 +74,27 @@ export function AiDrawer() {
 
   return (
     <>
-      <div onClick={closeAi} style={overlay} />
-      <div style={drawer}>
+      {/* 플로팅 챗 위젯 (채널톡 스타일) — 백드롭 없이 페이지와 공존, FAB 위 앵커 */}
+      <div style={{ position: 'fixed', right: 28, bottom: 100, zIndex: 41, width: size.w, height: size.h, background: 'var(--canvas)', borderRadius: 24, boxShadow: '0 24px 70px rgba(24,21,15,.32), 0 4px 16px rgba(24,21,15,.16)', display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'rb-pop .22s ease' }}>
+        {/* 리사이즈 그립 (좌상단 모서리) */}
+        <div onPointerDown={onGripDown} title="드래그로 크기 조절" style={{ position: 'absolute', top: 0, left: 0, width: 26, height: 26, cursor: 'nwse-resize', zIndex: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="#B6BCC7" strokeWidth="1.5" strokeLinecap="round"><path d="M1 5V1h4M1 9V1h8" /></svg>
+        </div>
+
         <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EE' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '18px 22px', width: '100%', maxWidth: 840, margin: '0 auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '15px 18px 15px 26px' }}>
           <div style={{ width: 38, height: 38, borderRadius: 12, background: '#17150F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="19" height="19" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l1.6 4.9 4.9 1.6-4.9 1.6L12 15l-1.6-4.9L5.5 8.5l4.9-1.6z" /></svg>
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 18, fontWeight: 800 }}>추천 도우미</div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#A39C8E' }}>{dateShort} 날씨·위치 기반 장소 추천</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 17, fontWeight: 800 }}>추천 도우미</div>
+            <div style={{ fontSize: 12.5, fontWeight: 600, color: '#A39C8E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{dateShort} 날씨·위치 기반 장소 추천</div>
           </div>
           <div onClick={closeAi} style={closeBtn}><CloseIcon /></div>
         </div>
         </div>
 
-        <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '26px 22px', display: 'flex', flexDirection: 'column', gap: 16, width: '100%', maxWidth: 840, margin: '0 auto' }}>
+        <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '18px 16px', display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
           {chat.map((m, i) => {
             const isU = m.role === 'user'
             const todos = m.todos ?? []
@@ -125,7 +149,7 @@ export function AiDrawer() {
           {loading && <TypingBubble />}
         </div>
 
-        <div style={{ display: 'flex', gap: 7, overflowX: 'auto', padding: '8px 18px 4px', width: '100%', maxWidth: 840, margin: '0 auto' }}>
+        <div style={{ display: 'flex', gap: 7, overflowX: 'auto', padding: '8px 14px 4px', width: '100%' }}>
           {QUICK.map((q) => (
             <div key={q.chip} onClick={() => !loading && ask(q.text, ctx)} style={{ whiteSpace: 'nowrap', padding: '9px 15px', borderRadius: 20, fontSize: 14, fontWeight: 700, color: '#5A554B', background: '#fff', border: '1px solid #E1E5EC', cursor: loading ? 'default' : 'pointer', flexShrink: 0, opacity: loading ? 0.5 : 1 }}>
               {q.chip}
@@ -133,7 +157,7 @@ export function AiDrawer() {
           ))}
         </div>
 
-        <div style={{ padding: '8px 18px 18px', display: 'flex', alignItems: 'center', gap: 9, width: '100%', maxWidth: 840, margin: '0 auto' }}>
+        <div style={{ padding: '8px 14px 14px', display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -196,15 +220,4 @@ function TypingBubble() {
   )
 }
 
-const overlay = { position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(24,21,15,.3)', animation: 'rb-fade .18s ease' } as const
-// 전체 페이지 (사이드 드로어 아님)
-const drawer = {
-  position: 'fixed',
-  inset: 0,
-  zIndex: 41,
-  background: 'var(--canvas)',
-  display: 'flex',
-  flexDirection: 'column',
-  animation: 'rb-fade .2s ease',
-} as const
-const closeBtn = { width: 30, height: 30, borderRadius: 10, background: '#E9EDF3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' } as const
+const closeBtn = { width: 30, height: 30, borderRadius: 10, background: '#E9EDF3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 } as const
