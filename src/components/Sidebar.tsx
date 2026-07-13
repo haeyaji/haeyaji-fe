@@ -115,8 +115,8 @@ export function Sidebar() {
 
       <div style={{ flex: 1 }} />
 
-      {/* 프로필 카드 */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: c ? 'center' : 'flex-start', gap: 12, background: c ? 'transparent' : '#F7F6F2', borderRadius: 16, padding: c ? 0 : '11px 12px' }}>
+      {/* 프로필 카드 → 마이페이지 */}
+      <div onClick={() => setView('mypage')} className="hbtn" style={{ display: 'flex', alignItems: 'center', justifyContent: c ? 'center' : 'flex-start', gap: 12, background: view === 'mypage' ? '#EAF5EF' : c ? 'transparent' : '#F7F6F2', borderRadius: 16, padding: c ? 0 : '11px 12px', cursor: 'pointer', boxShadow: view === 'mypage' ? 'inset 0 0 0 2px #15795A' : 'none' }}>
         <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg, #15795A, #57B48C)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, flexShrink: 0, boxShadow: '0 4px 10px rgba(21,121,90,.25)' }}>
           {nickname.slice(0, 1)}
         </div>
@@ -126,7 +126,7 @@ export function Sidebar() {
               <div style={{ fontSize: 17, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nickname}</div>
               <div style={{ fontSize: 13.5, fontWeight: 600, color: '#A39C8E' }}>무료 플랜</div>
             </div>
-            <div onClick={logout} title="로그아웃" className="hbtn" style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A39C8E', cursor: 'pointer', background: '#fff' }}>
+            <div onClick={(e) => { e.stopPropagation(); logout() }} title="로그아웃" className="hbtn" style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A39C8E', cursor: 'pointer', background: '#fff' }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5M21 12H9" /></svg>
             </div>
           </>
