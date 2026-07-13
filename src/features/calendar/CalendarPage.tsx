@@ -68,7 +68,7 @@ export function CalendarPage() {
   }
 
   return (
-    <div className="page-pad-cal" style={{ minHeight: '100vh', width: '100%', color: '#17150F', background: 'var(--canvas)' }}>
+    <div className="page-pad-cal" style={{ minHeight: 'var(--full-vh)', width: '100%', color: '#17150F', background: 'var(--canvas)' }}>
       <div style={{ maxWidth: 1240, margin: '0 auto' }}>
         {/* header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
