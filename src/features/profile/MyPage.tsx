@@ -100,7 +100,7 @@ export function MyPage() {
                 )}
               </div>
               {editIntro ? (
-                <input autoFocus value={pref.intro} onChange={(e) => pref.setIntro(e.target.value)} onBlur={() => setEditIntro(false)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) setEditIntro(false) }} placeholder="한줄소개를 입력하세요" style={{ marginTop: 8, width: '100%', maxWidth: 400, border: `1px solid ${MC.border}`, outline: 'none', background: MC.fieldBg, borderRadius: 10, padding: '8px 12px', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, color: MC.ink }} />
+                <input autoFocus value={pref.intro} onChange={(e) => pref.setIntro(e.target.value.slice(0, 40))} onBlur={() => setEditIntro(false)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) setEditIntro(false) }} placeholder="한줄소개를 입력하세요 (최대 40자)" maxLength={40} style={{ marginTop: 8, width: '100%', maxWidth: 400, border: `1px solid ${MC.border}`, outline: 'none', background: MC.fieldBg, borderRadius: 10, padding: '8px 12px', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, color: MC.ink }} />
               ) : (
                 <div onClick={() => setEditIntro(true)} className="hbtn" style={{ marginTop: 7, fontSize: 15, fontWeight: 600, color: pref.intro ? MC.muted : MC.faint, cursor: 'pointer', display: 'inline-block' }}>{pref.intro || '한줄소개 추가 +'}</div>
               )}
