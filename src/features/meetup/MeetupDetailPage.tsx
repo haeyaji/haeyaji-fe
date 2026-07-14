@@ -45,8 +45,8 @@ export function MeetupDetailPage({ id, onBack }: { id: string; onBack: () => voi
   }
 
   return (
-    <div style={{ padding: '32px 44px 92px', minHeight: 'var(--full-vh)', width: '100%', color: MC.ink, background: MC.canvas }}>
-      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+    <div className="mp-pad" style={{ minHeight: 'var(--full-vh)', width: '100%', color: MC.ink, background: MC.canvas }}>
+      <div className="mp-wrap">
         <div onClick={onBack} className="hbtn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 15, fontWeight: 700, color: MC.muted, cursor: 'pointer', marginBottom: 16, padding: '4px 2px' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
           약속 목록
@@ -103,14 +103,9 @@ export function MeetupDetailPage({ id, onBack }: { id: string; onBack: () => voi
           <div style={cardStyle}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, gap: 10, flexWrap: 'wrap' }}>
               <div style={{ fontSize: 18, fontWeight: 800 }}>겹치는 시간</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div onClick={() => setEditOpen(true)} className="hbtn" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 800, color: MC.ink, background: MC.fieldBg, border: `1px solid ${MC.border}`, padding: '8px 13px', borderRadius: 11, cursor: 'pointer' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={MC.ink} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
-                  내 시간 수정
-                </div>
-                <div onClick={() => openSlots()} className="lift" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 800, color: '#fff', background: MC.primary, padding: '8px 14px', borderRadius: 11, cursor: 'pointer' }}>
-                  가능한 시간대 <span style={{ background: 'rgba(255,255,255,.28)', padding: '1px 7px', borderRadius: 20, fontSize: 12 }}>{slotCount}</span>
-                </div>
+              <div onClick={() => setEditOpen(true)} className="hbtn" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 800, color: MC.ink, background: MC.fieldBg, border: `1px solid ${MC.border}`, padding: '8px 13px', borderRadius: 11, cursor: 'pointer' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={MC.ink} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                내 시간 수정
               </div>
             </div>
             <div style={{ fontSize: 13.5, fontWeight: 600, color: MC.muted, marginBottom: 14 }}>입력한 사람들 기준 · 진할수록 많이 겹쳐요 · 30분 단위</div>
@@ -128,6 +123,12 @@ export function MeetupDetailPage({ id, onBack }: { id: string; onBack: () => voi
 
         {/* 하단 액션 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 16 }}>
+          {meetup.dates.length > 0 && (
+            <div onClick={() => openSlots()} className="lift" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 52, borderRadius: 15, background: MC.primary, color: '#fff', fontSize: 15.5, fontWeight: 800, cursor: 'pointer' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3" /><path d="M3 9h18M8 2.5v4M16 2.5v4" /></svg>
+              가능한 시간대 <span style={{ background: 'rgba(255,255,255,.28)', padding: '1px 8px', borderRadius: 20, fontSize: 13 }}>{slotCount}</span>
+            </div>
+          )}
           {meetup.confirmed && (
             <div onClick={openMap} className="lift" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 52, borderRadius: 15, background: MC.ink, color: '#fff', fontSize: 15.5, fontWeight: 800, cursor: 'pointer' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" /><path d="M9 4v14M15 6v14" /></svg>
@@ -174,7 +175,7 @@ function SlotListModal({ id, initial, onClose }: { id: string; initial: Slot | n
   }
 
   return (
-    <Shell onClose={onClose} title={`가능한 시간대 ${allSlots.length}개`}>
+    <Shell onClose={onClose} title={`가능한 시간대 ${allSlots.length}개`} width={620}>
       <div style={{ display: 'flex', gap: 6, marginTop: 4, marginBottom: 12 }}>
         {([['all', '모두'], ['majority', '과반수'], ['full', '전원']] as const).map(([k, l]) => {
           const active = filter === k
@@ -243,7 +244,7 @@ function EditMyTimeModal({ id, onClose }: { id: string; onClose: () => void }) {
   const [paintMode, setPaintMode] = useState<MeetCell>('free')
 
   return (
-    <Shell onClose={onClose} title="내 되는 시간">
+    <Shell onClose={onClose} title="내 되는 시간" width={680}>
       <div style={{ fontSize: 17, fontWeight: 800, marginTop: 2 }}>
         내 일정을{' '}
         <span style={{ display: 'inline-flex', background: MC.chipBg, borderRadius: 16, padding: 2, verticalAlign: 'middle', margin: '0 2px' }}>
