@@ -27,8 +27,8 @@ export function MeetupPage() {
   )
 
   return (
-    <div style={{ padding: '32px 44px 52px', minHeight: 'var(--full-vh)', width: '100%', color: MC.ink, background: MC.canvas }}>
-      <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+    <div className="mp-pad" style={{ minHeight: 'var(--full-vh)', width: '100%', color: MC.ink, background: MC.canvas }}>
+      <div className="mp-wrap">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-.6px' }}>약속</div>
