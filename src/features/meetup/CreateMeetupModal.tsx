@@ -72,7 +72,7 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
   const titles = ['새 약속', '날짜 선택', '내 되는 시간']
 
   return (
-    <Shell onClose={onClose} title={titles[step]} width={720}>
+    <Shell onClose={onClose} title={titles[step]} width={step === 2 ? 960 : 720}>
       <div style={{ height: 4, borderRadius: 3, background: '#EEF0F4', overflow: 'hidden', margin: '4px 0 20px' }}>
         <div style={{ width: `${((step + 1) / 3) * 100}%`, height: '100%', background: '#1F7A5C', borderRadius: 3, transition: 'width .3s ease' }} />
       </div>

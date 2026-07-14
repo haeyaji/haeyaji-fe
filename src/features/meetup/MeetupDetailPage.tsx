@@ -260,7 +260,7 @@ function EditMyTimeModal({ id, onClose }: { id: string; onClose: () => void }) {
   const hasMarks = Object.keys(marks).length > 0
 
   return (
-    <Shell onClose={onClose} title="내 되는 시간" width={780}>
+    <Shell onClose={onClose} title="내 되는 시간" width={960}>
       <div style={{ fontSize: 17, fontWeight: 800, marginTop: 2 }}>
         내 일정을{' '}
         <span style={{ display: 'inline-flex', background: MC.chipBg, borderRadius: 16, padding: 2, verticalAlign: 'middle', margin: '0 2px' }}>
