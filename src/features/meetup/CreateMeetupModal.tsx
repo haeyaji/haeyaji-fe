@@ -5,7 +5,8 @@ import { todayKey, dayNum, parseKey, fmtKey, addDays } from '@/lib/dates'
 import { useWeatherStore } from '@/store/useWeatherStore'
 import { useFriendStore, userById } from '@/store/useFriendStore'
 import { useMeetupStore, type MeetCell } from '@/store/useMeetupStore'
-import { MEET_TYPES, Avatar, TimeGrid } from './meetupShared'
+import { useTodoStore } from '@/store/useTodoStore'
+import { MEET_TYPES, Avatar, TimeGrid, taskTick } from './meetupShared'
 import type { WeatherCond } from '@/types'
 
 export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
@@ -23,8 +24,14 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
   const [cells, setCells] = useState<Record<string, MeetCell>>({})
   const [paintMode, setPaintMode] = useState<MeetCell>('free')
 
+  const tasksByDate = useTodoStore((s) => s.tasksByDate)
   const friends = friendIds.map(userById).filter(Boolean)
   const sortedDates = useMemo(() => [...dates].sort(), [dates])
+  const marks = useMemo(() => {
+    const out: Record<string, string[]> = {}
+    for (const d of sortedDates) for (const t of tasksByDate[d] ?? []) { const tk = taskTick(t.time); if (tk != null) (out[`${d}|${tk}`] ??= []).push(t.title) }
+    return out
+  }, [sortedDates, tasksByDate])
 
   const calCells = useMemo(() => {
     const firstDow = new Date(ym.y, ym.m, 1).getDay()
@@ -151,8 +158,11 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
             </span>{' '}
             시간으로 칠해주세요
           </div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#8C8779', marginTop: 6, marginBottom: 16 }}>드래그해서 여러 칸을 한 번에 · 나중에 수정할 수 있어요</div>
-          <TimeGrid dates={sortedDates} cells={cells} onChange={setCells} paintMode={paintMode} />
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#8C8779', marginTop: 6, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <span>드래그해서 여러 칸을 한 번에 · 나중에 수정할 수 있어요</span>
+            {Object.keys(marks).length > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#9A7A3A' }}><span style={{ width: 5, height: 5, borderRadius: '50%', background: '#C08A3A' }} />내 할 일 표시</span>}
+          </div>
+          <TimeGrid dates={sortedDates} cells={cells} onChange={setCells} paintMode={paintMode} marks={marks} />
           <div onClick={() => setCells({})} className="hbtn" style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#8C8779', cursor: 'pointer' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>
             초기화
