@@ -97,7 +97,7 @@ function DateHeader({ date, headerH = 34 }: { date: string; headerH?: number }) 
 }
 
 // 편집용 시간 그리드 (30분 단위, 드래그 페인트). marks: "date|tick"→할 일 제목들(표시 전용, 선택은 그대로).
-export function TimeGrid({ dates, cells, onChange, paintMode, marks, rowH = 33, colMinW = 88, headerH = 42, hourW = 48, maxH = 560 }: { dates: string[]; cells: Record<string, MeetCell>; onChange: (next: Record<string, MeetCell>) => void; paintMode: MeetCell; marks?: Record<string, string[]>; rowH?: number; colMinW?: number; headerH?: number; hourW?: number; maxH?: number }) {
+export function TimeGrid({ dates, cells, onChange, paintMode, marks, rowH = 38, colMinW = 100, headerH = 46, hourW = 54, maxH = 780 }: { dates: string[]; cells: Record<string, MeetCell>; onChange: (next: Record<string, MeetCell>) => void; paintMode: MeetCell; marks?: Record<string, string[]>; rowH?: number; colMinW?: number; headerH?: number; hourW?: number; maxH?: number }) {
   const painting = useRef<MeetCell | 'clear' | null>(null)
   useEffect(() => {
     const up = () => { painting.current = null }
@@ -117,7 +117,7 @@ export function TimeGrid({ dates, cells, onChange, paintMode, marks, rowH = 33, 
   const enter = (key: string) => { if (painting.current) applyLive(key, painting.current) }
 
   return (
-    <div style={{ overflow: 'auto', maxHeight: `min(${maxH}px, 58vh)`, border: '1px solid #E4E0D6', borderRadius: 16, touchAction: 'none' }}>
+    <div style={{ overflow: 'auto', maxHeight: `min(${maxH}px, 68vh)`, border: '1px solid #E4E0D6', borderRadius: 16, touchAction: 'none' }}>
       <div style={{ display: 'flex', minWidth: 'min-content' }}>
         <HourCol rowH={rowH} headerH={headerH} hourW={hourW} />
         {dates.map((d) => (

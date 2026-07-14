@@ -72,7 +72,7 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
   const titles = ['새 약속', '날짜 선택', '내 되는 시간']
 
   return (
-    <Shell onClose={onClose} title={titles[step]} width={step === 2 ? 960 : 720}>
+    <Shell onClose={onClose} title={titles[step]} width={step === 2 ? 'min(1600px, 95vw)' : 720}>
       <div style={{ height: 4, borderRadius: 3, background: '#EEF0F4', overflow: 'hidden', margin: '4px 0 20px' }}>
         <div style={{ width: `${((step + 1) / 3) * 100}%`, height: '100%', background: '#1F7A5C', borderRadius: 3, transition: 'width .3s ease' }} />
       </div>
@@ -191,7 +191,7 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
   )
 }
 
-export function Shell({ children, onClose, title, width = 640 }: { children: React.ReactNode; onClose: () => void; title: string; width?: number }) {
+export function Shell({ children, onClose, title, width = 640 }: { children: React.ReactNode; onClose: () => void; title: string; width?: number | string }) {
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 61, background: 'rgba(30,28,23,.44)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'rb-fade .16s ease' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width, maxWidth: '100%', maxHeight: '90vh', overflowY: 'auto', background: '#fff', borderRadius: 24, boxShadow: '0 40px 90px rgba(30,28,23,.4)', animation: 'rb-modal .22s ease', padding: '22px 28px 28px', position: 'relative' }}>
