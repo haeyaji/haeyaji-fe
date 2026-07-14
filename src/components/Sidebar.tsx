@@ -76,15 +76,17 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* CTA */}
-      <div
-        onClick={openAdd}
-        className="lift"
-        style={{ marginTop: 26, height: 50, borderRadius: 15, background: '#17150F', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', flexShrink: 0 }}
-      >
-        <PlusIcon w={17} />
-        {!c && <div style={{ fontSize: 18, fontWeight: 700, whiteSpace: 'nowrap' }}>새 일정 추가</div>}
-      </div>
+      {/* CTA — 약속 화면에선 숨김(할 일 추가는 맥락상 맞지 않음) */}
+      {view !== 'meetup' && (
+        <div
+          onClick={openAdd}
+          className="lift"
+          style={{ marginTop: 26, height: 50, borderRadius: 15, background: '#17150F', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', flexShrink: 0 }}
+        >
+          <PlusIcon w={17} />
+          {!c && <div style={{ fontSize: 18, fontWeight: 700, whiteSpace: 'nowrap' }}>새 일정 추가</div>}
+        </div>
+      )}
 
       {/* 내비게이션 */}
       {!c && <div style={{ marginTop: 30, marginBottom: 10, paddingLeft: 8, fontSize: 13, fontWeight: 800, color: '#C0BAAD', letterSpacing: '1.2px' }}>메뉴</div>}
