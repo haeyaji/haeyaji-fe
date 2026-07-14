@@ -33,6 +33,11 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
     return out
   }, [sortedDates, tasksByDate])
 
+  // 선택 가능 범위: 오늘 ~ 오늘+2개월. 기간 선택 최대 폭: 31일(한 달).
+  const MAX_RANGE_DAYS = 31
+  const maxKey = useMemo(() => { const d = parseKey(todayKey()); return fmtKey(new Date(d.getFullYear(), d.getMonth() + 2, d.getDate())) }, [])
+  const outOfRange = (k: string) => k < todayKey() || k > maxKey
+
   const calCells = useMemo(() => {
     const firstDow = new Date(ym.y, ym.m, 1).getDay()
     const lastDay = new Date(ym.y, ym.m + 1, 0).getDate()
@@ -43,11 +48,14 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
   }, [ym])
 
   const toggleDate = (k: string) => {
-    if (k < todayKey()) return
+    if (outOfRange(k)) return
     if (!rangeMode) { setDates((p) => (p.includes(k) ? p.filter((x) => x !== k) : [...p, k])); return }
     setDates((p) => {
       if (p.length !== 1) return [k]
-      const [a, b] = [p[0], k].sort()
+      let [a, b] = [p[0], k].sort()
+      // 최대 31일로 제한 (시작 기준). 넘으면 끝을 잘라냄.
+      const cap = addDays(a, MAX_RANGE_DAYS - 1)
+      if (b > cap) b = cap
       const out: string[] = []
       for (let d = a; d <= b; d = addDays(d, 1)) out.push(d)
       return out
@@ -132,18 +140,20 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
             {calCells.map((k, i) => {
               if (!k) return <div key={'b' + i} />
               const on = dates.includes(k)
-              const past = k < todayKey()
+              const disabled = outOfRange(k)
               const raw = byDate[k]
               const cond = raw && ['sunny', 'cloudy', 'rainy', 'snowy'].includes(raw.cond) ? (raw.cond as WeatherCond) : undefined
               return (
-                <div key={k} onClick={() => toggleDate(k)} style={{ aspectRatio: '1 / 1.15', borderRadius: 11, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, cursor: past ? 'default' : 'pointer', background: on ? '#1F7A5C' : 'transparent', color: past ? '#CFCBBE' : on ? '#fff' : '#1E1C17' }}>
+                <div key={k} onClick={() => toggleDate(k)} style={{ aspectRatio: '1 / 1.15', borderRadius: 11, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.35 : 1, background: on ? '#1F7A5C' : 'transparent', color: disabled ? '#CFCBBE' : on ? '#fff' : '#1E1C17' }}>
                   <div style={{ fontSize: 15, fontWeight: on ? 800 : 700 }}>{dayNum(k)}</div>
-                  <div style={{ width: 15, height: 15 }}>{cond && !on && <WeatherIcon cond={cond} c={cond === 'sunny' ? '#E6A52E' : '#B7B3A6'} />}</div>
+                  <div style={{ width: 15, height: 15 }}>{cond && !on && !disabled && <WeatherIcon cond={cond} c={cond === 'sunny' ? '#E6A52E' : '#B7B3A6'} />}</div>
                 </div>
               )
             })}
           </div>
-          {dates.length > 0 && <div style={{ marginTop: 14, fontSize: 13.5, fontWeight: 700, color: '#8C8779', textAlign: 'center' }}>{dates.length}일 선택됨</div>}
+          <div style={{ marginTop: 14, fontSize: 12.5, fontWeight: 600, color: '#B7B3A6', textAlign: 'center' }}>
+            {dates.length > 0 ? <span style={{ color: '#8C8779', fontWeight: 700 }}>{dates.length}일 선택됨 · </span> : null}오늘~2개월 이내 · 기간은 최대 31일
+          </div>
         </div>
       )}
 
