@@ -132,12 +132,15 @@
    (구 노트북 풀폭 규칙은 zoom과 겹쳐 레이아웃이 깨져서 제거) */
 .home-wrap { max-width: 1220px; margin: 0 auto; }
 
-/* 약속·마이페이지 컨테이너: 홈(.home-wrap)과 같은 여백 수준으로 통일 —
-   중앙 1220 고정 + 좌우 44px. 화면 폭 대응은 #root zoom이 전담. */
-.mp-pad { padding: 32px 44px 60px; }
+/* 약속·마이페이지 컨테이너: 홈(.page-pad + .home-wrap)과 픽셀 단위로 동일한 여백.
+   패딩 값은 .page-pad의 브레이크포인트를 그대로 미러링(하단만 스크롤 여유 추가). */
 .mp-wrap { max-width: 1220px; margin: 0 auto; }
+.mp-pad { padding: 28px 44px 52px; }
 @media (max-width: 1700px) {
-  .mp-pad { padding: 28px 44px 52px; }
+  .mp-pad { padding: 24px 28px 44px; }
+}
+@media (max-width: 900px) {
+  .mp-pad { padding: 22px 18px 36px; }
 }
 
 /* 앱 전체 스케일 분기: 데스크탑(>1700px)=80%, 맥북 15" 이하 노트북(≤1700px)=70%
