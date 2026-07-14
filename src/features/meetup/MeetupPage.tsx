@@ -29,9 +29,13 @@ export function MeetupPage() {
   return (
     <div className="mp-pad" style={{ minHeight: 'var(--full-vh)', width: '100%', color: MC.ink, background: MC.canvas }}>
       <div className="mp-wrap">
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-.6px' }}>약속</div>
-          <div style={{ fontSize: 14.5, fontWeight: 600, color: MC.muted, marginTop: 5 }}>날짜·시간을 함께 조율하고 날씨까지 확인하세요</div>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 24 }}>
+          <div>
+            <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-.6px' }}>약속</div>
+            <div style={{ fontSize: 14.5, fontWeight: 600, color: MC.muted, marginTop: 5 }}>날짜·시간을 함께 조율하고 날씨까지 확인하세요</div>
+          </div>
+          {/* 약속이 있을 때만 헤더에 생성 버튼 (빈 상태는 중앙 버튼이 담당) */}
+          {meetups.length > 0 && newBtn()}
         </div>
 
         {meetups.length > 0 ? (
