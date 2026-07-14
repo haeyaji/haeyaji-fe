@@ -260,8 +260,8 @@ function EditMyTimeModal({ id, onClose }: { id: string; onClose: () => void }) {
   const hasMarks = Object.keys(marks).length > 0
 
   return (
-    <Shell onClose={onClose} title="내 되는 시간" width="min(1600px, 95vw)">
-      <div style={{ fontSize: 17, fontWeight: 800, marginTop: 2 }}>
+    <Shell onClose={onClose} title="내 되는 시간" width="min(1600px, 95vw)" fill>
+      <div style={{ fontSize: 17, fontWeight: 800, marginTop: 2, flexShrink: 0 }}>
         내 일정을{' '}
         <span style={{ display: 'inline-flex', background: MC.chipBg, borderRadius: 16, padding: 2, verticalAlign: 'middle', margin: '0 2px' }}>
           {([['free', '되는'], ['busy', '안되는']] as const).map(([m, l]) => (
@@ -270,12 +270,12 @@ function EditMyTimeModal({ id, onClose }: { id: string; onClose: () => void }) {
         </span>{' '}
         시간으로 칠해주세요
       </div>
-      <div style={{ fontSize: 13, fontWeight: 600, color: MC.muted, marginTop: 6, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+      <div style={{ fontSize: 13, fontWeight: 600, color: MC.muted, marginTop: 6, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
         <span>드래그해서 여러 칸을 한 번에 · 바로 저장돼요</span>
         {hasMarks && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#9A7A3A' }}><span style={{ width: 5, height: 5, borderRadius: '50%', background: '#C08A3A' }} />내 할 일 표시</span>}
       </div>
-      <TimeGrid dates={meetup.dates} cells={meetup.myCells} onChange={(next) => update(id, { myCells: next })} paintMode={paintMode} marks={marks} />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
+      <TimeGrid dates={meetup.dates} cells={meetup.myCells} onChange={(next) => update(id, { myCells: next })} paintMode={paintMode} marks={marks} fill />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14, flexShrink: 0 }}>
         <div onClick={() => update(id, { myCells: {} })} className="hbtn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: MC.muted, cursor: 'pointer' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>
           초기화

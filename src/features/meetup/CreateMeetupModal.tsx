@@ -72,8 +72,8 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
   const titles = ['새 약속', '날짜 선택', '내 되는 시간']
 
   return (
-    <Shell onClose={onClose} title={titles[step]} width={step === 2 ? 'min(1600px, 95vw)' : 720}>
-      <div style={{ height: 4, borderRadius: 3, background: '#EEF0F4', overflow: 'hidden', margin: '4px 0 20px' }}>
+    <Shell onClose={onClose} title={titles[step]} width={step === 2 ? 'min(1600px, 95vw)' : 720} fill={step === 2}>
+      <div style={{ height: 4, borderRadius: 3, background: '#EEF0F4', overflow: 'hidden', margin: '4px 0 20px', flexShrink: 0 }}>
         <div style={{ width: `${((step + 1) / 3) * 100}%`, height: '100%', background: '#1F7A5C', borderRadius: 3, transition: 'width .3s ease' }} />
       </div>
 
@@ -158,8 +158,8 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
       )}
 
       {step === 2 && (
-        <div style={{ animation: 'rb-pop .2s ease' }}>
-          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-.2px' }}>
+        <div style={{ animation: 'rb-pop .2s ease', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-.2px', flexShrink: 0 }}>
             내 일정을{' '}
             <span style={{ display: 'inline-flex', background: '#F0EEE7', borderRadius: 16, padding: 2, verticalAlign: 'middle', margin: '0 2px' }}>
               {([['free', '되는'], ['busy', '안되는']] as const).map(([m, l]) => (
@@ -168,19 +168,19 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
             </span>{' '}
             시간으로 칠해주세요
           </div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#8C8779', marginTop: 6, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#8C8779', marginTop: 6, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
             <span>드래그해서 여러 칸을 한 번에 · 나중에 수정할 수 있어요</span>
             {Object.keys(marks).length > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#9A7A3A' }}><span style={{ width: 5, height: 5, borderRadius: '50%', background: '#C08A3A' }} />내 할 일 표시</span>}
           </div>
-          <TimeGrid dates={sortedDates} cells={cells} onChange={setCells} paintMode={paintMode} marks={marks} />
-          <div onClick={() => setCells({})} className="hbtn" style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#8C8779', cursor: 'pointer' }}>
+          <TimeGrid dates={sortedDates} cells={cells} onChange={setCells} paintMode={paintMode} marks={marks} fill />
+          <div onClick={() => setCells({})} className="hbtn" style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#8C8779', cursor: 'pointer', flexShrink: 0 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>
             초기화
           </div>
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', marginTop: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginTop: 24, flexShrink: 0 }}>
         {step > 0 ? (
           <div onClick={() => setStep(step - 1)} className="hbtn" style={{ fontSize: 14.5, fontWeight: 700, color: '#8C8779', cursor: 'pointer', padding: '10px 6px' }}>이전</div>
         ) : <div />}
@@ -191,18 +191,24 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
   )
 }
 
-export function Shell({ children, onClose, title, width = 640 }: { children: React.ReactNode; onClose: () => void; title: string; width?: number | string }) {
+// fill=true: 세로를 뷰포트 기준(92vh)으로 꽉 채우는 flex 컬럼. 자식 중 flex:1 요소가 남는 높이를 차지.
+// fill=false: 내용 높이만큼(최대 90vh) 자라는 기본 모달.
+export function Shell({ children, onClose, title, width = 640, fill = false }: { children: React.ReactNode; onClose: () => void; title: string; width?: number | string; fill?: boolean }) {
+  // fill 높이는 #root zoom을 보정한 실제 화면 기준(--full-vh)으로 잡아야 진짜 90%가 됨.
+  const box: React.CSSProperties = fill
+    ? { width, maxWidth: '100%', height: 'calc(var(--full-vh, 100vh) * 0.92)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }
+    : { width, maxWidth: '100%', maxHeight: 'calc(var(--full-vh, 100vh) * 0.9)', overflowY: 'auto' }
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 61, background: 'rgba(30,28,23,.44)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'rb-fade .16s ease' }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width, maxWidth: '100%', maxHeight: '90vh', overflowY: 'auto', background: '#fff', borderRadius: 24, boxShadow: '0 40px 90px rgba(30,28,23,.4)', animation: 'rb-modal .22s ease', padding: '22px 28px 28px', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ ...box, background: '#fff', borderRadius: 24, boxShadow: '0 40px 90px rgba(30,28,23,.4)', animation: 'rb-modal .22s ease', padding: '22px 28px 28px', position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8, flexShrink: 0 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: '#1E1C17' }}>{title}</div>
           <div style={{ flex: 1 }} />
           <div onClick={onClose} style={{ width: 34, height: 34, borderRadius: 11, background: '#F0EEE7', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <CloseIcon w={15} />
           </div>
         </div>
-        {children}
+        {fill ? <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>{children}</div> : children}
       </div>
     </div>
   )
