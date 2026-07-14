@@ -73,31 +73,31 @@ function heatColor(count: number, total: number): { bg: string; txt: string } {
   return { bg: '#D8ECE1', txt: '#3C7B60' }
 }
 
-const RH = 26 // 셀 높이
-function HourCol() {
+const RH = 26 // 셀 높이(기본, 읽기 히트맵용)
+function HourCol({ rowH = RH, headerH = 34, hourW = 40 }: { rowH?: number; headerH?: number; hourW?: number }) {
   return (
-    <div style={{ flexShrink: 0, position: 'sticky', left: 0, background: '#fff', zIndex: 1, borderRight: '1px solid #ECE9E0' }}>
-      <div style={{ height: 34, borderBottom: '1px solid #ECE9E0' }} />
+    <div style={{ flexShrink: 0, position: 'sticky', left: 0, background: '#fff', zIndex: 2, borderRight: '1px solid #ECE9E0' }}>
+      <div style={{ height: headerH, borderBottom: '1px solid #ECE9E0', position: 'sticky', top: 0, left: 0, zIndex: 3, background: '#fff' }} />
       {TICKS.map((tk) => (
-        <div key={tk} style={{ width: 40, height: RH, display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', paddingRight: 6, fontSize: 10.5, fontWeight: 700, color: MC.muted, transform: 'translateY(-6px)' }}>{Number.isInteger(tk) ? hhmm(tk) : ''}</div>
+        <div key={tk} style={{ width: hourW, height: rowH, display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', paddingRight: 7, fontSize: 11, fontWeight: 700, color: MC.muted, transform: 'translateY(-7px)' }}>{Number.isInteger(tk) ? hhmm(tk) : ''}</div>
       ))}
     </div>
   )
 }
 
-function DateHeader({ date }: { date: string }) {
+function DateHeader({ date, headerH = 34 }: { date: string; headerH?: number }) {
   const raw = useWeatherStore.getState().byDate[date]
   const cond = raw && ['sunny', 'cloudy', 'rainy', 'snowy'].includes(raw.cond) ? (raw.cond as WeatherCond) : undefined
   return (
-    <div style={{ height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontSize: 12, fontWeight: 800, borderBottom: '1px solid #ECE9E0' }}>
-      {cond && <span style={{ width: 14, height: 14, display: 'inline-flex' }}><WeatherIcon cond={cond} c={cond === 'sunny' ? MC.amber : MC.faint} /></span>}
+    <div style={{ height: headerH, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, fontSize: 13, fontWeight: 800, borderBottom: '1px solid #ECE9E0', position: 'sticky', top: 0, zIndex: 1, background: '#fff' }}>
+      {cond && <span style={{ width: 15, height: 15, display: 'inline-flex' }}><WeatherIcon cond={cond} c={cond === 'sunny' ? MC.amber : MC.faint} /></span>}
       {mdLabel(date)}
     </div>
   )
 }
 
 // 편집용 시간 그리드 (30분 단위, 드래그 페인트). marks: "date|tick"→할 일 제목들(표시 전용, 선택은 그대로).
-export function TimeGrid({ dates, cells, onChange, paintMode, marks }: { dates: string[]; cells: Record<string, MeetCell>; onChange: (next: Record<string, MeetCell>) => void; paintMode: MeetCell; marks?: Record<string, string[]> }) {
+export function TimeGrid({ dates, cells, onChange, paintMode, marks, rowH = 33, colMinW = 88, headerH = 42, hourW = 48, maxH = 560 }: { dates: string[]; cells: Record<string, MeetCell>; onChange: (next: Record<string, MeetCell>) => void; paintMode: MeetCell; marks?: Record<string, string[]>; rowH?: number; colMinW?: number; headerH?: number; hourW?: number; maxH?: number }) {
   const painting = useRef<MeetCell | 'clear' | null>(null)
   useEffect(() => {
     const up = () => { painting.current = null }
@@ -117,22 +117,22 @@ export function TimeGrid({ dates, cells, onChange, paintMode, marks }: { dates: 
   const enter = (key: string) => { if (painting.current) applyLive(key, painting.current) }
 
   return (
-    <div style={{ overflowX: 'auto', border: '1px solid #E4E0D6', borderRadius: 16, touchAction: 'none' }}>
+    <div style={{ overflow: 'auto', maxHeight: `min(${maxH}px, 58vh)`, border: '1px solid #E4E0D6', borderRadius: 16, touchAction: 'none' }}>
       <div style={{ display: 'flex', minWidth: 'min-content' }}>
-        <HourCol />
+        <HourCol rowH={rowH} headerH={headerH} hourW={hourW} />
         {dates.map((d) => (
-          <div key={d} style={{ flex: 1, minWidth: 66, borderLeft: '1px solid #ECE9E0' }}>
-            <DateHeader date={d} />
+          <div key={d} style={{ flex: 1, minWidth: colMinW, borderLeft: '1px solid #ECE9E0' }}>
+            <DateHeader date={d} headerH={headerH} />
             {TICKS.map((tk, i) => {
               const key = `${d}|${tk}`
               const st = cells[key]
               const mk = marks?.[key]
               return (
-                <div key={tk} onPointerDown={(e) => { e.preventDefault(); down(key) }} onPointerEnter={() => enter(key)} title={mk ? mk.join(', ') : undefined} style={{ position: 'relative', height: RH, borderTop: i === 0 ? 'none' : `1px solid ${Number.isInteger(tk) ? 'rgba(30,28,23,.06)' : 'rgba(255,255,255,.5)'}`, cursor: 'pointer', background: st === 'free' ? '#2F9E73' : st === 'busy' ? '#EA8850' : '#fff' }}>
+                <div key={tk} onPointerDown={(e) => { e.preventDefault(); down(key) }} onPointerEnter={() => enter(key)} title={mk ? mk.join(', ') : undefined} style={{ position: 'relative', height: rowH, borderTop: i === 0 ? 'none' : `1px solid ${Number.isInteger(tk) ? 'rgba(30,28,23,.06)' : 'rgba(255,255,255,.5)'}`, cursor: 'pointer', background: st === 'free' ? '#2F9E73' : st === 'busy' ? '#EA8850' : '#fff' }}>
                   {mk && (
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', gap: 3, padding: '0 4px', pointerEvents: 'none', overflow: 'hidden' }}>
-                      <span style={{ width: 4, height: 4, borderRadius: '50%', background: st ? 'rgba(255,255,255,.85)' : '#C08A3A', flexShrink: 0 }} />
-                      <span style={{ fontSize: 8.5, fontWeight: 700, color: st ? 'rgba(255,255,255,.92)' : '#9A7A3A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{mk[0]}{mk.length > 1 ? ` +${mk.length - 1}` : ''}</span>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', gap: 4, padding: '0 6px', pointerEvents: 'none', overflow: 'hidden' }}>
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: st ? 'rgba(255,255,255,.85)' : '#C08A3A', flexShrink: 0 }} />
+                      <span style={{ fontSize: 10, fontWeight: 700, color: st ? 'rgba(255,255,255,.92)' : '#9A7A3A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{mk[0]}{mk.length > 1 ? ` +${mk.length - 1}` : ''}</span>
                     </div>
                   )}
                 </div>
