@@ -175,7 +175,7 @@ function SlotListModal({ id, initial, onClose }: { id: string; initial: Slot | n
   }
 
   return (
-    <Shell onClose={onClose} title={`가능한 시간대 ${allSlots.length}개`} width={620}>
+    <Shell onClose={onClose} title={`가능한 시간대 ${allSlots.length}개`} width={700}>
       <div style={{ display: 'flex', gap: 6, marginTop: 4, marginBottom: 12 }}>
         {([['all', '모두'], ['majority', '과반수'], ['full', '전원']] as const).map(([k, l]) => {
           const active = filter === k
@@ -244,7 +244,7 @@ function EditMyTimeModal({ id, onClose }: { id: string; onClose: () => void }) {
   const [paintMode, setPaintMode] = useState<MeetCell>('free')
 
   return (
-    <Shell onClose={onClose} title="내 되는 시간" width={680}>
+    <Shell onClose={onClose} title="내 되는 시간" width={780}>
       <div style={{ fontSize: 17, fontWeight: 800, marginTop: 2 }}>
         내 일정을{' '}
         <span style={{ display: 'inline-flex', background: MC.chipBg, borderRadius: 16, padding: 2, verticalAlign: 'middle', margin: '0 2px' }}>
