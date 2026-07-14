@@ -67,6 +67,46 @@ export function last7Days(): string[] {
   return Array.from({ length: 7 }, (_, i) => addDays(t, i - 6))
 }
 
+/**
+ * 자유 입력 시간 문자열을 "오전/오후 HH:MM" 형태로 정규화.
+ * 허용 예: "14:00"→오후 02:00, "오후 2시"→오후 02:00, "2:30"→오전 02:30,
+ *          "오전 7"→오전 07:00, "2시반"→오전 02:30, "오후 12:00"→오후 12:00
+ * - 빈 문자열 → '' (시간 미입력, 유효)
+ * - 형식을 못 알아보면 → null (호출부에서 힌트 표시/저장 차단)
+ * 오전/오후 없이 숫자만 오면 24시간제로 해석(2→오전 2시, 14→오후 2시).
+ */
+export function normalizeTime(raw: string): string | null {
+  const s = raw.trim()
+  if (!s) return ''
+  const ampm = /오전|am|a\.m/i.test(s) ? 'am' : /오후|pm|p\.m/i.test(s) ? 'pm' : null
+  const half = /반/.test(s)
+  const hm = /(\d{1,2})\s*(?::|시)\s*(\d{1,2})?/.exec(s)
+  let hour: number
+  let min: number
+  if (hm) {
+    hour = parseInt(hm[1], 10)
+    min = hm[2] != null ? parseInt(hm[2], 10) : half ? 30 : 0
+  } else {
+    const only = /(\d{1,2})/.exec(s)
+    if (!only) return null
+    hour = parseInt(only[1], 10)
+    min = half ? 30 : 0
+  }
+  if (min > 59) return null
+  let h24: number
+  if (ampm) {
+    if (hour < 1 || hour > 12) return null
+    h24 = ampm === 'am' ? (hour === 12 ? 0 : hour) : hour === 12 ? 12 : hour + 12
+  } else {
+    if (hour > 23) return null
+    h24 = hour
+  }
+  const mer = h24 < 12 ? '오전' : '오후'
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${mer} ${pad(h12)}:${pad(min)}`
+}
+
 /** 시간대별 인사말 */
 export function greeting(hour = new Date().getHours()): string {
   if (hour >= 5 && hour < 11) return '좋은 아침이에요'

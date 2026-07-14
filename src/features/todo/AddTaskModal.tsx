@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CloseIcon } from '@/lib/icons'
-import { dateShortLabel } from '@/lib/dates'
+import { dateShortLabel, normalizeTime } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
 import { useTodoStore } from '@/store/useTodoStore'
 import type { TaskGroup } from '@/types'
@@ -10,6 +10,7 @@ export function AddTaskModal() {
   const submitTask = useTodoStore((s) => s.submitTask)
   const [title, setTitle] = useState('')
   const [time, setTime] = useState('')
+  const [timeErr, setTimeErr] = useState(false)
   const [group, setGroup] = useState<TaskGroup>('personal')
 
   if (!addOpen) return null
@@ -18,10 +19,21 @@ export function AddTaskModal() {
   const reset = () => {
     setTitle('')
     setTime('')
+    setTimeErr(false)
     setGroup('personal')
   }
+  // 자유 입력을 "오전/오후 HH:MM"으로 정규화. 형식 못 알아보면 힌트 후 저장 차단.
+  const normTime = () => {
+    const n = normalizeTime(time)
+    if (n === null) { setTimeErr(true); return null }
+    setTimeErr(false)
+    if (n && n !== time) setTime(n)
+    return n
+  }
   const submit = () => {
-    if (submitTask(title, time, group)) {
+    const n = normTime()
+    if (n === null) return
+    if (submitTask(title, n, group)) {
       reset()
       closeAdd()
     }
@@ -66,7 +78,14 @@ export function AddTaskModal() {
             style={inputStyle}
           />
           <div style={{ fontSize: 12.5, fontWeight: 700, color: '#A39C8E', margin: '16px 0 8px' }}>시간 (선택)</div>
-          <input value={time} onChange={(e) => setTime(e.target.value)} placeholder="예: 오후 02:00" style={inputStyle} />
+          <input
+            value={time}
+            onChange={(e) => { setTime(e.target.value); if (timeErr) setTimeErr(false) }}
+            onBlur={normTime}
+            placeholder="예: 오후 02:00 · 14:00 · 2시반"
+            style={{ ...inputStyle, border: `1px solid ${timeErr ? '#D9614F' : '#E1E5EC'}` }}
+          />
+          {timeErr && <div style={{ fontSize: 12, fontWeight: 700, color: '#D9614F', marginTop: 7 }}>시간 형식을 알아볼 수 없어요. 예: 오후 2시, 14:00, 2:30</div>}
           <div onClick={submit} className="lift" style={{ marginTop: 22, textAlign: 'center', fontSize: 15, fontWeight: 700, color: '#fff', background: '#17150F', borderRadius: 14, padding: 14, cursor: 'pointer' }}>
             추가하기
           </div>
