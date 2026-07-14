@@ -8,9 +8,24 @@ import { useWeatherStore } from '@/store/useWeatherStore'
 import { MC } from './tokens'
 
 export const MEET_TYPES = ['가벼운 모임', '팀 회의', '정기 모임', '기타']
-// 09:00~21:00, 30분 단위: [9, 9.5, 10, …, 20.5]
+// 오전 7시~새벽 2시, 30분 단위: [7, 7.5, …, 25.5] (24=자정, 25=새벽1시, 26=새벽2시)
 export const TICKS: number[] = []
-for (let hh = 9; hh < 21; hh++) { TICKS.push(hh); TICKS.push(hh + 0.5) }
+for (let hh = 7; hh < 26; hh++) { TICKS.push(hh); TICKS.push(hh + 0.5) }
+
+// 할 일 시간 문자열("오전 07:00")을 tick으로. 새벽(0~6시)은 +24로 07~26 범위에 매핑.
+export function taskTick(time?: string): number | null {
+  if (!time) return null
+  const m = /(오전|오후)\s*(\d{1,2}):(\d{2})/.exec(time)
+  if (!m) return null
+  let hr = parseInt(m[2], 10)
+  const min = parseInt(m[3], 10)
+  const pm = m[1] === '오후'
+  if (pm && hr !== 12) hr += 12
+  if (!pm && hr === 12) hr = 0
+  if (hr < 7) hr += 24
+  const tick = hr + (min >= 30 ? 0.5 : 0)
+  return tick >= 7 && tick <= 25.5 ? tick : null
+}
 
 function hash(s: string): number {
   let h = 0
@@ -21,7 +36,7 @@ export const friendFree = (friendId: string, date: string, tick: number): boolea
 export const friendEntered = (friendId: string, meetupId: string): boolean => hash(meetupId + friendId) % 4 !== 0
 export const mdLabel = (k: string) => `${String(parseKey(k).getMonth() + 1).padStart(2, '0')}.${String(dayNum(k)).padStart(2, '0')}(${dowLabel(k)})`
 export const longDate = (k: string) => `${parseKey(k).getMonth() + 1}월 ${dayNum(k)}일 (${dowLabel(k)})`
-export const hhmm = (t: number) => { const hr = Math.floor(t); const mn = Math.round((t - hr) * 60); return `${String(hr).padStart(2, '0')}:${String(mn).padStart(2, '0')}` }
+export const hhmm = (t: number) => { const hr = Math.floor(t) % 24; const mn = Math.round((t - Math.floor(t)) * 60); return `${String(hr).padStart(2, '0')}:${String(mn).padStart(2, '0')}` }
 export const dur = (a: number, b: number) => { const t = b - a; const hr = Math.floor(t); const mn = Math.round((t - hr) * 60); return (hr > 0 ? `${hr}시간` : '') + (mn > 0 ? `${hr > 0 ? ' ' : ''}${mn}분` : '') }
 
 export function Avatar({ name, size = 40, font = 17, ring }: { name: string; size?: number; font?: number; ring?: boolean }) {
@@ -81,8 +96,8 @@ function DateHeader({ date }: { date: string }) {
   )
 }
 
-// 편집용 시간 그리드 (30분 단위, 드래그 페인트)
-export function TimeGrid({ dates, cells, onChange, paintMode }: { dates: string[]; cells: Record<string, MeetCell>; onChange: (next: Record<string, MeetCell>) => void; paintMode: MeetCell }) {
+// 편집용 시간 그리드 (30분 단위, 드래그 페인트). marks: "date|tick"→할 일 제목들(표시 전용, 선택은 그대로).
+export function TimeGrid({ dates, cells, onChange, paintMode, marks }: { dates: string[]; cells: Record<string, MeetCell>; onChange: (next: Record<string, MeetCell>) => void; paintMode: MeetCell; marks?: Record<string, string[]> }) {
   const painting = useRef<MeetCell | 'clear' | null>(null)
   useEffect(() => {
     const up = () => { painting.current = null }
@@ -111,8 +126,16 @@ export function TimeGrid({ dates, cells, onChange, paintMode }: { dates: string[
             {TICKS.map((tk, i) => {
               const key = `${d}|${tk}`
               const st = cells[key]
+              const mk = marks?.[key]
               return (
-                <div key={tk} onPointerDown={(e) => { e.preventDefault(); down(key) }} onPointerEnter={() => enter(key)} style={{ height: RH, borderTop: i === 0 ? 'none' : `1px solid ${Number.isInteger(tk) ? 'rgba(30,28,23,.06)' : 'rgba(255,255,255,.5)'}`, cursor: 'pointer', background: st === 'free' ? '#2F9E73' : st === 'busy' ? '#EA8850' : '#fff' }} />
+                <div key={tk} onPointerDown={(e) => { e.preventDefault(); down(key) }} onPointerEnter={() => enter(key)} title={mk ? mk.join(', ') : undefined} style={{ position: 'relative', height: RH, borderTop: i === 0 ? 'none' : `1px solid ${Number.isInteger(tk) ? 'rgba(30,28,23,.06)' : 'rgba(255,255,255,.5)'}`, cursor: 'pointer', background: st === 'free' ? '#2F9E73' : st === 'busy' ? '#EA8850' : '#fff' }}>
+                  {mk && (
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', gap: 3, padding: '0 4px', pointerEvents: 'none', overflow: 'hidden' }}>
+                      <span style={{ width: 4, height: 4, borderRadius: '50%', background: st ? 'rgba(255,255,255,.85)' : '#C08A3A', flexShrink: 0 }} />
+                      <span style={{ fontSize: 8.5, fontWeight: 700, color: st ? 'rgba(255,255,255,.92)' : '#9A7A3A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{mk[0]}{mk.length > 1 ? ` +${mk.length - 1}` : ''}</span>
+                    </div>
+                  )}
+                </div>
               )
             })}
           </div>

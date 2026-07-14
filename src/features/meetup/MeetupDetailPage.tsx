@@ -2,7 +2,7 @@
 // 가능한 시간대 리스트는 버튼→모달. 내 되는/안되는 시간은 "내 시간 수정" 모달에서 편집.
 import { useMemo, useState } from 'react'
 import { WeatherIcon } from '@/lib/icons'
-import { longDate, mdLabel, hhmm, dur, candidateSlots, friendFree, friendEntered, type Slot } from './meetupShared'
+import { longDate, mdLabel, hhmm, dur, candidateSlots, friendFree, friendEntered, taskTick, type Slot } from './meetupShared'
 import { MC, cardStyle } from './tokens'
 import { useTodoStore } from '@/store/useTodoStore'
 import { useAppStore } from '@/store/useAppStore'
@@ -241,7 +241,23 @@ function EditMyTimeModal({ id, onClose }: { id: string; onClose: () => void }) {
   const meetup = useMeetupStore((s) => s.meetups.find((m) => m.id === id))!
   const update = useMeetupStore((s) => s.update)
   const toast = useAppStore((s) => s.toast)
+  const tasksByDate = useTodoStore((s) => s.tasksByDate)
   const [paintMode, setPaintMode] = useState<MeetCell>('free')
+
+  // 내 할 일을 그리드 셀에 표시 (표시 전용, 선택은 그대로)
+  const marks = useMemo(() => {
+    const out: Record<string, string[]> = {}
+    for (const d of meetup.dates) {
+      for (const t of tasksByDate[d] ?? []) {
+        const tk = taskTick(t.time)
+        if (tk == null) continue
+        const key = `${d}|${tk}`
+        ;(out[key] ??= []).push(t.title)
+      }
+    }
+    return out
+  }, [meetup.dates, tasksByDate])
+  const hasMarks = Object.keys(marks).length > 0
 
   return (
     <Shell onClose={onClose} title="내 되는 시간" width={780}>
@@ -254,8 +270,11 @@ function EditMyTimeModal({ id, onClose }: { id: string; onClose: () => void }) {
         </span>{' '}
         시간으로 칠해주세요
       </div>
-      <div style={{ fontSize: 13, fontWeight: 600, color: MC.muted, marginTop: 6, marginBottom: 16 }}>드래그해서 여러 칸을 한 번에 · 바로 저장돼요</div>
-      <TimeGrid dates={meetup.dates} cells={meetup.myCells} onChange={(next) => update(id, { myCells: next })} paintMode={paintMode} />
+      <div style={{ fontSize: 13, fontWeight: 600, color: MC.muted, marginTop: 6, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <span>드래그해서 여러 칸을 한 번에 · 바로 저장돼요</span>
+        {hasMarks && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#9A7A3A' }}><span style={{ width: 5, height: 5, borderRadius: '50%', background: '#C08A3A' }} />내 할 일 표시</span>}
+      </div>
+      <TimeGrid dates={meetup.dates} cells={meetup.myCells} onChange={(next) => update(id, { myCells: next })} paintMode={paintMode} marks={marks} />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
         <div onClick={() => update(id, { myCells: {} })} className="hbtn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: MC.muted, cursor: 'pointer' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>
