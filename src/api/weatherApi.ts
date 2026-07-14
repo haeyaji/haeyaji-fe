@@ -1,6 +1,7 @@
 // be의 날씨 중계 (FR-2). fe는 위치를 보내고 be가 기상청 조회해 응답.
 // GET {VITE_BE_BASE}/weather?lat&lng&date  (be context-path /api 포함)
 import type { WeatherCond } from '@/types'
+import { be } from './client'
 
 export interface HourlyRaw {
   time: string // "HH:mm"
@@ -25,12 +26,7 @@ export interface WeatherRaw {
   hourly: HourlyRaw[]
 }
 
-const BE_BASE = import.meta.env.VITE_BE_BASE ?? 'http://localhost:8090/api'
-
 export async function fetchWeather(lat: number, lng: number, date?: string): Promise<WeatherRaw> {
-  const q = new URLSearchParams({ lat: String(lat), lng: String(lng) })
-  if (date) q.set('date', date)
-  const res = await fetch(`${BE_BASE}/weather?${q.toString()}`)
-  if (!res.ok) throw new Error(`weather ${res.status}`)
-  return res.json() as Promise<WeatherRaw>
+  const res = await be.get<WeatherRaw>('/weather', { params: { lat, lng, ...(date ? { date } : {}) } })
+  return res.data
 }
