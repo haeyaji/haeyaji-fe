@@ -118,7 +118,8 @@ function TaskItem({ row, onOpen, onToggle }: { row: Row; onOpen: (r: Row) => voi
   const { dateKey, task } = row
   const done = statusOf(task) === 'done'
   const badge = dateBadge(dateKey)
-  const parts = (task.participants ?? []).map((p) => userById(p.userId)?.nickname).filter(Boolean) as string[]
+  const parts = (task.participants ?? []).filter((p) => p.status === 'accepted').map((p) => userById(p.userId)?.nickname).filter(Boolean) as string[]
+  const pendingCount = (task.participants ?? []).filter((p) => p.status === 'pending').length
   return (
     <div onClick={() => onOpen(row)} className="hbtn" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 6px', borderTop: '1px solid #F0EEE7', cursor: 'pointer' }}>
       {/* 완료 토글 */}
@@ -142,8 +143,9 @@ function TaskItem({ row, onOpen, onToggle }: { row: Row; onOpen: (r: Row) => voi
           <PrioIcon p={prioOf(task)} w={13} />
         </div>
       </div>
-      {/* 공유 참여자 */}
+      {/* 공유 참여자 (수락) + 대기 배지 */}
       {parts.length > 0 && <AvatarStack names={parts} />}
+      {pendingCount > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: '#C2702A', background: '#FBF0E1', padding: '3px 8px', borderRadius: 20, flexShrink: 0 }}>대기 {pendingCount}</span>}
     </div>
   )
 }

@@ -51,10 +51,13 @@ export interface Subtask {
 
 /** 공유 권한 (PRD SHARE/PERM: owner ⊃ editor ⊃ viewer) */
 export type ShareRole = 'owner' | 'editor' | 'viewer'
+/** 초대 수락 상태 (GitHub/Jira식: 초대→pending→상대 수락→accepted) */
+export type ShareStatus = 'pending' | 'accepted'
 /** 할 일 공유 참여자 (be todo_participant 대응 — 지금은 friend userId 로컬) */
 export interface TaskParticipant {
   userId: string
-  role: ShareRole
+  role: ShareRole // 초대 전에 미리 지정
+  status: ShareStatus // pending=대기 중(수락 전), accepted=활성 참여자
 }
 
 export interface Task {
