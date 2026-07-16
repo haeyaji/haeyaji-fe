@@ -43,7 +43,7 @@ let toastTimer: ReturnType<typeof setTimeout> | undefined
 
 export const useAppStore = create<AppState>((set) => ({
   authed: false,
-  nickname: '알렉스', // TODO: be 회원가입 연동 시 실제 닉네임
+  nickname: '게스트', // 임시 폴백. TODO(be): 카카오 로그인 프로필 닉네임으로 대체(login에서 set)
   sidebarCollapsed: false,
   view: 'home',
   selId: todayKey(),
