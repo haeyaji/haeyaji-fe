@@ -1,6 +1,6 @@
 // 칸반보드 (지라식) — 이슈 키(HAE-N)·우선순위·라벨·설명·검색/필터.
 // 드래그로 컬럼 이동 = 상태 변경(완료↔체크 동기화), 카드 클릭 = 상세.
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { CloseIcon, PlusIcon, TrashIcon } from '@/lib/icons'
 import { addDays, dateShortLabel, todayKey } from '@/lib/dates'
 import { useTodoStore, statusOf } from '@/store/useTodoStore'
@@ -108,7 +108,15 @@ export function KanbanPage() {
     }
   }
 
+  // ESC 취소 시 입력창 언마운트로 onBlur가 뒤늦게 submit하는 걸 차단하는 가드
+  const escRef = useRef(false)
   const submitAdd = (col: TaskStatus) => {
+    if (escRef.current) {
+      escRef.current = false
+      setAddText('')
+      setAddingCol(null)
+      return
+    }
     if (addText.trim()) addTaskAt(todayKey(), addText, col)
     setAddText('')
     setAddingCol(null)
@@ -245,6 +253,7 @@ export function KanbanPage() {
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.nativeEvent.isComposing) submitAdd(col.key)
                       if (e.key === 'Escape') {
+                        escRef.current = true
                         setAddText('')
                         setAddingCol(null)
                       }
@@ -256,6 +265,7 @@ export function KanbanPage() {
                 ) : (
                   <div
                     onClick={() => {
+                      escRef.current = false
                       setAddingCol(col.key)
                       setAddText('')
                     }}

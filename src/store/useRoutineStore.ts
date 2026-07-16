@@ -1,7 +1,9 @@
 import { create } from 'zustand'
 import type { Routine } from '@/types'
 import { dowIndexOf } from '@/lib/weather'
+import { fmtKey } from '@/lib/dates'
 import { useAppStore } from './useAppStore'
+import { useTodoStore } from './useTodoStore'
 
 type PresetKind = 'every' | 'week' | 'weekend'
 
@@ -43,18 +45,22 @@ export const useRoutineStore = create<RoutineState>((set, get) => ({
       routines: [...s.routines, { id: 'nr' + Date.now(), title: '새 루틴', cat: 'code', time: '오전 09:00', days: [true, true, true, true, true, false, false], active: true }],
     })),
   batchApply: () => {
-    // 활성 루틴이 이번 달 잔여일(오늘~말일)에 등록되는 횟수 집계
+    // 활성 루틴을 이번 달 잔여일(오늘~말일)의 해당 요일에 실제 할 일로 등록 (중복은 스킵)
     const now = new Date()
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
-    let cnt = 0
+    const y = now.getFullYear()
+    const mo = now.getMonth()
+    const lastDay = new Date(y, mo + 1, 0).getDate()
+    const entries: { dateKey: string; title: string; time: string }[] = []
     get()
       .routines.filter((r) => r.active)
       .forEach((r) => {
         for (let d = now.getDate(); d <= lastDay; d++) {
-          if (r.days[dowIndexOf(new Date(now.getFullYear(), now.getMonth(), d))]) cnt++
+          const date = new Date(y, mo, d)
+          if (r.days[dowIndexOf(date)]) entries.push({ dateKey: fmtKey(date), title: r.title, time: r.time })
         }
       })
-    useAppStore.getState().toast(`${cnt}개 일정을 이번 달에 등록했어요`)
+    const created = useTodoStore.getState().bulkAddRoutine(entries)
+    useAppStore.getState().toast(created > 0 ? `${created}개 일정을 이번 달에 등록했어요` : '이미 모두 등록되어 있어요')
     useAppStore.getState().closeRoutine()
   },
 }))
