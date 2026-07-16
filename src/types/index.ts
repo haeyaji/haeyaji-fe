@@ -49,6 +49,14 @@ export interface Subtask {
   due?: string // 일정 (YYYY-MM-DD)
 }
 
+/** 공유 권한 (PRD SHARE/PERM: owner ⊃ editor ⊃ viewer) */
+export type ShareRole = 'owner' | 'editor' | 'viewer'
+/** 할 일 공유 참여자 (be todo_participant 대응 — 지금은 friend userId 로컬) */
+export interface TaskParticipant {
+  userId: string
+  role: ShareRole
+}
+
 export interface Task {
   id: string
   title: string
@@ -63,6 +71,7 @@ export interface Task {
   desc?: string
   labels?: string[]
   ai?: boolean
+  participants?: TaskParticipant[] // 공유 대상(친구). 비어있으면 개인 할 일
 }
 
 /** 날짜 id('20'~'26') → 할 일 목록 */
