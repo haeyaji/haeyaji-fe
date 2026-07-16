@@ -15,7 +15,7 @@ interface FriendState {
 export const useFriendStore = create<FriendState>()(
   persist(
     (set, get) => ({
-      friendIds: ['u2', 'u4'], // 데모 시드 (지훈·도윤)
+      friendIds: [], // TODO(be): GET /friends 로 채움 (현재는 빈 상태로 시작)
       addFriend: (id) => set((s) => (s.friendIds.includes(id) ? s : { friendIds: [...s.friendIds, id] })),
       removeFriend: (id) => set((s) => ({ friendIds: s.friendIds.filter((x) => x !== id) })),
       isFriend: (id) => get().friendIds.includes(id),

@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import type { Routine } from '@/types'
-import { INITIAL_ROUTINES } from '@/lib/mockData'
 import { dowIndexOf } from '@/lib/weather'
 import { useAppStore } from './useAppStore'
 
@@ -23,7 +22,7 @@ interface RoutineState {
 }
 
 export const useRoutineStore = create<RoutineState>((set, get) => ({
-  routines: INITIAL_ROUTINES,
+  routines: [], // TODO(be): GET /routines 로 채움 (현재는 빈 상태로 시작)
   toggleActive: (id) => set((s) => ({ routines: s.routines.map((r) => (r.id === id ? { ...r, active: !r.active } : r)) })),
   toggleDay: (id, i) =>
     set((s) => ({

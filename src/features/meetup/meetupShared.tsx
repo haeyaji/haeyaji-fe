@@ -32,6 +32,8 @@ function hash(s: string): number {
   for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) % 100000
   return h
 }
+// 친구 가용시간 mock — BE 미구축이라 해시로 결정론적 가짜 응답을 낸다.
+// TODO(be): 약속 참여자별 실제 응답(가용 슬롯·입력 여부)으로 대체.
 export const friendFree = (friendId: string, date: string, tick: number): boolean => hash(friendId + date + tick) % 4 !== 0
 export const friendEntered = (friendId: string, meetupId: string): boolean => hash(meetupId + friendId) % 4 !== 0
 export const mdLabel = (k: string) => `${String(parseKey(k).getMonth() + 1).padStart(2, '0')}.${String(dayNum(k)).padStart(2, '0')}(${dowLabel(k)})`

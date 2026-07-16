@@ -1,15 +1,12 @@
 import { create } from 'zustand'
 import type { Subtask, Task, TaskGroup, TaskStatus, TasksByDate } from '@/types'
-import { INITIAL_TASKS } from '@/lib/mockData'
 import { useAppStore } from './useAppStore'
 
 /** 칸반 상태 유추: status 미지정 구데이터는 done 값으로 */
 export const statusOf = (t: Task): TaskStatus => t.status ?? (t.done ? 'done' : 'todo')
 
-// 지라식 이슈 키 발급 — 목데이터 최대 번호 다음부터 (be 붙으면 서버 발급으로 대체)
-let keySeq = Object.values(INITIAL_TASKS)
-  .flat()
-  .reduce((m, t) => Math.max(m, Number(t.key?.split('-')[1] ?? 0)), 0)
+// 지라식 이슈 키 발급 — 세션 내 증가. TODO(be): 서버 발급 키로 대체.
+let keySeq = 0
 const nextKey = () => `HAE-${++keySeq}`
 
 interface TodoState {
@@ -38,7 +35,7 @@ function mapTask(m: TasksByDate, dateKey: string, id: string, fn: (t: Task) => T
 const sel = () => useAppStore.getState().selId
 
 export const useTodoStore = create<TodoState>((set) => ({
-  tasksByDate: INITIAL_TASKS,
+  tasksByDate: {}, // TODO(be): GET /todos 로 채움 (현재는 빈 상태로 시작)
   toggleTask: (id) =>
     set((s) => {
       const selId = sel()
