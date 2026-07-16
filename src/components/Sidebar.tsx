@@ -23,6 +23,9 @@ function RoutineIcon() {
 function MeetIcon() {
   return <svg width="18" height="18" viewBox="0 0 24 24" {...NAV_ICON}><rect x="3" y="4.5" width="18" height="16" rx="3" /><path d="M3 9h18M8 2.5v4M16 2.5v4M9 15l2 2 4-4" /></svg>
 }
+function TodoIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" {...NAV_ICON}><path d="M9 6h11M9 12h11M9 18h11" /><path d="M4.5 6l.9.9 1.6-1.8M4.5 12l.9.9 1.6-1.8M4.5 18l.9.9 1.6-1.8" /></svg>
+}
 
 export function Sidebar() {
   const { view, setView, openMap, openRoutine, openAdd, sidebarCollapsed: c, toggleSidebar, nickname, logout } = useAppStore()
@@ -30,6 +33,7 @@ export function Sidebar() {
 
   const items = [
     { key: 'home', label: '홈', icon: <HomeIcon />, active: view === 'home', onClick: () => setView('home') },
+    { key: 'todo', label: '할 일', icon: <TodoIcon />, active: view === 'todo', onClick: () => setView('todo') },
     { key: 'calendar', label: '캘린더', icon: <CalIcon />, active: view === 'calendar', onClick: () => setView('calendar') },
     { key: 'kanban', label: '칸반보드', icon: <BoardIcon />, active: view === 'kanban', onClick: () => setView('kanban') },
     { key: 'meetup', label: '약속', icon: <MeetIcon />, active: view === 'meetup', onClick: () => setView('meetup') },
