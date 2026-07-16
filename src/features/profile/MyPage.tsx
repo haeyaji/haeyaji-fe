@@ -173,7 +173,7 @@ export function MyPage() {
         </div>
       </div>
 
-      {searchOpen && <FriendSearchModal onClose={() => setSearchOpen(false)} />}
+      {searchOpen && <FriendSearchModal onClose={() => setSearchOpen(false)} onOpenDetail={(u) => { setSearchOpen(false); setDetailUser(u) }} />}
       {detailUser && <FriendDetailModal user={detailUser} onClose={() => setDetailUser(null)} />}
     </div>
   )

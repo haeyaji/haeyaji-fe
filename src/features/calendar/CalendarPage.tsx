@@ -41,6 +41,11 @@ export function CalendarPage() {
   const sel = parseKey(selId)
   const [ym, setYm] = useState({ y: sel.getFullYear(), m: sel.getMonth() }) // m: 0-based
   const moveMonth = (d: number) => setYm(({ y, m }) => ({ y: y + Math.floor((m + d) / 12), m: (((m + d) % 12) + 12) % 12 }))
+  // 선택 날짜가 다른 달로 이동하면 달력도 그 달로 따라간다 (월 브라우징은 selId를 안 바꾸므로 영향 없음)
+  useEffect(() => {
+    const d = parseKey(selId)
+    setYm((cur) => (cur.y === d.getFullYear() && cur.m === d.getMonth() ? cur : { y: d.getFullYear(), m: d.getMonth() }))
+  }, [selId])
 
   const monthKeys: string[] = []
   const lastDay = new Date(ym.y, ym.m + 1, 0).getDate()

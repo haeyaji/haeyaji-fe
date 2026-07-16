@@ -20,6 +20,8 @@ interface TodoState {
   updateTitle: (dateKey: string, id: string, title: string) => void
   removeTask: (dateKey: string, id: string) => void
   addTaskAt: (dateKey: string, title: string, status: TaskStatus) => void
+  /** 루틴 일괄 등록 — (date,title,time) 중복은 스킵하고 실제 생성 건수 반환 */
+  bulkAddRoutine: (entries: { dateKey: string; title: string; time: string }[]) => number
   patchTask: (dateKey: string, id: string, patch: Partial<Task>) => void
   addSubtask: (dateKey: string, id: string, title: string) => void
   toggleSubtask: (dateKey: string, id: string, subId: string) => void
@@ -94,6 +96,21 @@ export const useTodoStore = create<TodoState>((set) => ({
         [dateKey]: [...(s.tasksByDate[dateKey] ?? []), { id: 'k' + Date.now(), key: nextKey(), title: t, group: 'personal' as const, done: status === 'done', status, subtasks: [] }],
       },
     }))
+  },
+  bulkAddRoutine: (entries) => {
+    let created = 0
+    set((s) => {
+      const m = { ...s.tasksByDate }
+      entries.forEach((e, i) => {
+        const list = m[e.dateKey] ?? []
+        // 이미 같은 루틴(제목·시간)이 그 날에 있으면 스킵 (ROUT-5 중복 미생성)
+        if (list.some((t) => t.group === 'routine' && t.title === e.title && t.time === e.time)) return
+        m[e.dateKey] = [...list, { id: `rt${Date.now()}_${i}`, key: nextKey(), title: e.title, time: e.time, group: 'routine', done: false }]
+        created++
+      })
+      return { tasksByDate: m }
+    })
+    return created
   },
   addSubtask: (dateKey, id, title) => {
     const v = title.trim()

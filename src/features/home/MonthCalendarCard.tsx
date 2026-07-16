@@ -1,5 +1,5 @@
 // 홈 내 월간 캘린더 (핸드오프 §5.4) — 모든 날짜 선택 가능 + 월 이동 + 완료율 점.
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { fmtKey, parseKey, todayKey } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
 import { useTodoStore } from '@/store/useTodoStore'
@@ -13,6 +13,11 @@ export function MonthCalendarCard() {
   const sel = parseKey(selId)
   const [ym, setYm] = useState({ y: sel.getFullYear(), m: sel.getMonth() })
   const moveMonth = (d: number) => setYm(({ y, m }) => ({ y: y + Math.floor((m + d) / 12), m: (((m + d) % 12) + 12) % 12 }))
+  // 선택 날짜가 다른 달로 이동하면(홈 날짜 화살표 등) 달력도 그 달로 따라간다
+  useEffect(() => {
+    const d = parseKey(selId)
+    setYm((cur) => (cur.y === d.getFullYear() && cur.m === d.getMonth() ? cur : { y: d.getFullYear(), m: d.getMonth() }))
+  }, [selId])
 
   const T = todayKey()
   const lastDay = new Date(ym.y, ym.m + 1, 0).getDate()

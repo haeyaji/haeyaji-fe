@@ -7,7 +7,7 @@ import { MC } from '@/features/meetup/tokens'
 import { Avatar } from '@/features/meetup/meetupShared'
 import type { AppUser } from '@/types'
 
-export function FriendSearchModal({ onClose }: { onClose: () => void }) {
+export function FriendSearchModal({ onClose, onOpenDetail }: { onClose: () => void; onOpenDetail?: (u: AppUser) => void }) {
   const [query, setQuery] = useState('')
   const { friendIds, addFriend, removeFriend } = useFriendStore()
   const toast = useAppStore((s) => s.toast)
@@ -61,8 +61,8 @@ export function FriendSearchModal({ onClose }: { onClose: () => void }) {
             <>
               <SectionLabel>내 친구 {friends.length > 0 && <span style={{ color: MC.primary }}>{friends.length}</span>}</SectionLabel>
               {friends.length > 0 ? friends.map((u) => (
-                <Row key={u.id} user={u} action={
-                  <div onClick={() => { removeFriend(u.id); toast(`${u.nickname}님을 친구에서 삭제했어요`) }} className="hbtn" title="삭제" style={{ width: 34, height: 34, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#CAD0DA', cursor: 'pointer', flexShrink: 0 }}>
+                <Row key={u.id} user={u} onClick={onOpenDetail ? () => onOpenDetail(u) : undefined} action={
+                  <div onClick={(e) => { e.stopPropagation(); removeFriend(u.id); toast(`${u.nickname}님을 친구에서 삭제했어요`) }} className="hbtn" title="삭제" style={{ width: 34, height: 34, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#CAD0DA', cursor: 'pointer', flexShrink: 0 }}>
                     <TrashIcon w={16} c="currentColor" />
                   </div>
                 } />
@@ -81,9 +81,9 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return <div style={{ fontSize: 13, fontWeight: 800, color: MC.muted, margin: '2px 4px 8px' }}>{children}</div>
 }
 
-function Row({ user, action }: { user: AppUser; action: React.ReactNode }) {
+function Row({ user, action, onClick }: { user: AppUser; action: React.ReactNode; onClick?: () => void }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '9px 6px' }}>
+    <div onClick={onClick} className={onClick ? 'hbtn' : undefined} style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '9px 6px', borderRadius: 12, cursor: onClick ? 'pointer' : 'default' }}>
       <Avatar name={user.nickname} size={44} font={19} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 16, fontWeight: 800 }}>{user.nickname}</div>
