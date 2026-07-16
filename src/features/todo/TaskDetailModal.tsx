@@ -14,6 +14,7 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
   const friendIds = useFriendStore((s) => s.friendIds)
   const [subText, setSubText] = useState('')
   const [labelText, setLabelText] = useState('')
+  const [inviteRole, setInviteRole] = useState<ShareRole>('editor')
 
   // 스토어 최신 상태 반영 (수정 즉시 리렌더)
   const task = (tasksByDate[dateKey] ?? []).find((t) => t.id === taskId)
@@ -22,15 +23,18 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
   const subDone = subs.filter((x) => x.done).length
   const badge = dateBadge(dateKey)
 
-  // ── 공유 ──
+  // ── 공유 (역할 먼저 지정 → 초대 → 상대 수락) ──
   const participants = task.participants ?? []
   const sharedIds = new Set(participants.map((p) => p.userId))
   const friends = friendIds.map(userById).filter((u): u is NonNullable<typeof u> => !!u)
   const addable = friends.filter((f) => !sharedIds.has(f.id))
+  const acceptedCount = participants.filter((p) => p.status === 'accepted').length
   const setParticipants = (next: typeof participants) => patchTask(dateKey, taskId, { participants: next })
-  const share = (userId: string) => setParticipants([...participants, { userId, role: 'editor' }])
+  const invite = (userId: string) => setParticipants([...participants, { userId, role: inviteRole, status: 'pending' }])
+  const accept = (userId: string) => setParticipants(participants.map((p) => (p.userId === userId ? { ...p, status: 'accepted' } : p)))
   const unshare = (userId: string) => setParticipants(participants.filter((p) => p.userId !== userId))
   const setRole = (userId: string, role: ShareRole) => setParticipants(participants.map((p) => (p.userId === userId ? { ...p, role } : p)))
+  const ROLE_LABEL: Record<ShareRole, string> = { owner: '소유자', editor: '편집', viewer: '보기' }
 
   const submitSub = () => {
     if (subText.trim()) addSubtask(dateKey, task.id, subText)
@@ -122,9 +126,9 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
           />
         </div>
 
-        {/* 공유 (참여자·권한) */}
+        {/* 공유 (역할 먼저 지정 → 초대 → 상대 수락) */}
         <div style={{ marginTop: 18 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#8B8579', marginBottom: 8 }}>공유 {participants.length > 0 && `· ${participants.length + 1}명`}</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: '#8B8579', marginBottom: 8 }}>공유 · {acceptedCount + 1}명{participants.length > acceptedCount && ` · 대기 ${participants.length - acceptedCount}`}</div>
           <div style={{ border: '1px solid #E7EAEF', borderRadius: 12, overflow: 'hidden' }}>
             {/* 소유자(나) */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 12px' }}>
@@ -136,39 +140,58 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
             {participants.map((p) => {
               const u = userById(p.userId)
               if (!u) return null
+              const pending = p.status === 'pending'
               return (
-                <div key={p.userId} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 12px', borderTop: '1px solid #EEF0F4' }}>
+                <div key={p.userId} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 12px', borderTop: '1px solid #EEF0F4', opacity: pending ? 0.72 : 1 }}>
                   <Avatar name={u.nickname} size={32} font={14} />
-                  <div style={{ flex: 1, minWidth: 0, fontSize: 14.5, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.nickname}</div>
-                  <select
-                    value={p.role}
-                    onChange={(e) => setRole(p.userId, e.target.value as ShareRole)}
-                    style={{ appearance: 'none', WebkitAppearance: 'none', border: 'none', outline: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 800, borderRadius: 8, padding: '5px 9px', background: '#F0F2F6', color: '#5A554B' }}
-                  >
-                    <option value="editor">편집</option>
-                    <option value="viewer">보기</option>
-                  </select>
-                  <div onClick={() => unshare(p.userId)} className="hbtn" title="공유 해제" style={{ color: '#CAD0DA', cursor: 'pointer', display: 'flex' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14.5, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.nickname}</div>
+                    {pending && <div style={{ fontSize: 11.5, fontWeight: 800, color: '#C2702A', marginTop: 1 }}>대기 중 · {ROLE_LABEL[p.role]}</div>}
+                  </div>
+                  {pending ? (
+                    <div onClick={() => accept(p.userId)} className="lift" title="데모: 상대가 수락한 것으로 처리" style={{ fontSize: 12, fontWeight: 800, color: '#fff', background: '#15795A', padding: '6px 12px', borderRadius: 20, cursor: 'pointer', flexShrink: 0 }}>수락(데모)</div>
+                  ) : (
+                    <select
+                      value={p.role}
+                      onChange={(e) => setRole(p.userId, e.target.value as ShareRole)}
+                      style={{ appearance: 'none', WebkitAppearance: 'none', border: 'none', outline: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 800, borderRadius: 8, padding: '5px 9px', background: '#F0F2F6', color: '#5A554B' }}
+                    >
+                      <option value="editor">편집</option>
+                      <option value="viewer">보기</option>
+                    </select>
+                  )}
+                  <div onClick={() => unshare(p.userId)} className="hbtn" title={pending ? '초대 취소' : '공유 해제'} style={{ color: '#CAD0DA', cursor: 'pointer', display: 'flex', flexShrink: 0 }}>
                     <CloseIcon w={14} c="currentColor" />
                   </div>
                 </div>
               )
             })}
           </div>
-          {/* 공유 추가 */}
+          {/* 초대: 역할 먼저 고르고 친구 선택 */}
           {addable.length > 0 ? (
-            <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 10 }}>
-              {addable.map((f) => (
-                <div key={f.id} onClick={() => share(f.id)} className="lift" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#EAF5EF', color: '#0F5A42', fontSize: 13, fontWeight: 800, padding: '7px 12px 7px 8px', borderRadius: 20, cursor: 'pointer' }}>
-                  <Avatar name={f.nickname} size={22} font={11} />
-                  <PlusIcon c="#0F5A42" w={12} />
-                  {f.nickname}
-                </div>
-              ))}
+            <div style={{ marginTop: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: '#A39C8E' }}>초대 권한</span>
+                {(['editor', 'viewer'] as ShareRole[]).map((r) => {
+                  const on = inviteRole === r
+                  return (
+                    <div key={r} onClick={() => setInviteRole(r)} className="hbtn" style={{ fontSize: 12.5, fontWeight: 800, padding: '5px 12px', borderRadius: 20, cursor: 'pointer', background: on ? '#17150F' : '#F0F2F6', color: on ? '#fff' : '#8B8579' }}>{ROLE_LABEL[r]}</div>
+                  )
+                })}
+              </div>
+              <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+                {addable.map((f) => (
+                  <div key={f.id} onClick={() => invite(f.id)} className="lift" title={`${ROLE_LABEL[inviteRole]} 권한으로 초대`} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#EAF5EF', color: '#0F5A42', fontSize: 13, fontWeight: 800, padding: '7px 12px 7px 8px', borderRadius: 20, cursor: 'pointer' }}>
+                    <Avatar name={f.nickname} size={22} font={11} />
+                    <PlusIcon c="#0F5A42" w={12} />
+                    {f.nickname}
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div style={{ fontSize: 13, fontWeight: 600, color: '#B6BCC7', marginTop: 10, padding: '0 2px' }}>
-              {friends.length === 0 ? '마이페이지에서 친구를 추가하면 공유할 수 있어요' : '모든 친구와 공유했어요'}
+              {friends.length === 0 ? '마이페이지에서 친구를 추가하면 공유할 수 있어요' : '모든 친구를 초대했어요'}
             </div>
           )}
         </div>
