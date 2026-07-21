@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Subtask, Task, TaskGroup, TaskStatus, TasksByDate } from '@/types'
+import type { Category, Subtask, Task, TaskGroup, TaskStatus, TasksByDate } from '@/types'
 import { useAppStore } from './useAppStore'
 
 /** 칸반 상태 유추: status 미지정 구데이터는 done 값으로 */
@@ -13,7 +13,7 @@ interface TodoState {
   tasksByDate: TasksByDate
   toggleTask: (id: string) => void
   deleteTask: (id: string) => void
-  addPlaceTask: (name: string) => void
+  addPlaceTask: (name: string, category?: Category | null) => void
   submitTask: (title: string, time: string, group: TaskGroup) => boolean
   // ── 칸반 (dateKey 명시 버전) ──
   setStatus: (dateKey: string, id: string, status: TaskStatus) => void
@@ -54,11 +54,12 @@ export const useTodoStore = create<TodoState>((set) => ({
     })
     useAppStore.getState().toast('할 일을 삭제했어요')
   },
-  addPlaceTask: (name) => {
+  addPlaceTask: (name, category = null) => {
     set((s) => {
       const selId = sel()
       const m = { ...s.tasksByDate }
-      m[selId] = [...(m[selId] ?? []), { id: 'a' + Date.now(), key: nextKey(), title: name, time: '', group: 'personal', done: false, ai: true }]
+      // ai:true=source AI, category=추천 카테고리(구멍3: DONE 시 어떤 카테고리를 실행했는지 학습)
+      m[selId] = [...(m[selId] ?? []), { id: 'a' + Date.now(), key: nextKey(), title: name, time: '', group: 'personal', done: false, ai: true, category }]
       return { tasksByDate: m }
     })
     useAppStore.getState().toast(`'${name}' 일정에 추가됨`)

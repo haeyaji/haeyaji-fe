@@ -6,6 +6,7 @@ import { useAppStore } from '@/store/useAppStore'
 import { useChatStore, type SendCtx } from '@/store/useChatStore'
 import { useTodoStore } from '@/store/useTodoStore'
 import { useLocationStore } from '@/store/useLocationStore'
+import { sendRecommendFeedback, fireSignal } from '@/api/personalizeApi'
 import type { Category, PlaceCat, RecommendedTodo } from '@/types'
 
 const QUICK: { chip: string; text: string }[] = [
@@ -32,11 +33,19 @@ function fmtDist(m: number | null): string | null {
 
 export function AiDrawer() {
   const { aiOpen, closeAi, weatherSelId: selId } = useAppStore()
+  const toast = useAppStore((s) => s.toast)
   const { chat, input, loading, setInput, send, ask } = useChatStore()
   const addPlaceTask = useTodoStore((s) => s.addPlaceTask)
   const loc = useLocationStore()
   const w = useDayWeather(selId) // 훅은 early return보다 먼저
   const scrollRef = useRef<HTMLDivElement>(null)
+  // 구멍2 — "관심없음" 처리한 카드 키(`msgIdx-todoIdx`). 부정 피드백 전송 후 카드 숨김.
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set())
+  const ignore = (key: string, category: Category) => {
+    fireSignal(sendRecommendFeedback(category, 'IGNORED'))
+    setDismissed((prev) => new Set(prev).add(key))
+    toast('관심없음으로 표시했어요')
+  }
 
   // 플로팅 위젯 크기 (좌상단 그립 드래그로 조절 — 우하단 앵커 고정)
   const [size, setSize] = useState({ w: 404, h: 640 })
@@ -120,9 +129,11 @@ export function AiDrawer() {
                 </div>
                 {todos.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
-                    {todos.map((t, j) => (
-                      <TodoCard key={j} todo={t} onAdd={() => addPlaceTask(t.placeName || t.title)} />
-                    ))}
+                    {todos.map((t, j) => {
+                      const key = `${i}-${j}`
+                      if (dismissed.has(key)) return null
+                      return <TodoCard key={j} todo={t} onAdd={() => addPlaceTask(t.placeName || t.title, t.category)} onIgnore={() => ignore(key, t.category)} />
+                    })}
                   </div>
                 )}
                 {chips.length > 0 && (
@@ -180,7 +191,7 @@ export function AiDrawer() {
   )
 }
 
-function TodoCard({ todo, onAdd }: { todo: RecommendedTodo; onAdd: () => void }) {
+function TodoCard({ todo, onAdd, onIgnore }: { todo: RecommendedTodo; onAdd: () => void; onIgnore: () => void }) {
   const headline = todo.placeName || todo.title
   const cat = CAT_ICON[todo.category] ?? 'culture'
   const dist = fmtDist(todo.distanceM)
@@ -205,6 +216,11 @@ function TodoCard({ todo, onAdd }: { todo: RecommendedTodo; onAdd: () => void })
         {todo.placeUrl && (
           <div onClick={() => window.open(todo.placeUrl!, '_blank', 'noopener')} style={{ textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#5A554B', background: '#E9EDF3', borderRadius: 11, padding: '10px 14px', cursor: 'pointer' }}>지도</div>
         )}
+        {/* 구멍2 — 부정 피드백(관심없음). 클릭 시 카드 숨김 + be로 IGNORED 신호 전송 */}
+        <div onClick={onIgnore} title="관심없음" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, fontSize: 13, fontWeight: 700, color: '#A39C8E', background: '#F0F2F6', borderRadius: 11, padding: '10px 13px', cursor: 'pointer' }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+          관심없음
+        </div>
       </div>
     </div>
   )

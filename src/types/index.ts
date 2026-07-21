@@ -74,6 +74,7 @@ export interface Task {
   desc?: string
   labels?: string[]
   ai?: boolean
+  category?: Category | null // 추천(RecommendedTodo)에서 실어온 6종 카테고리 — 행동학습(DONE→가중치)용. 수동 생성은 null 허용
   participants?: TaskParticipant[] // 공유 대상(친구). 비어있으면 개인 할 일
 }
 
