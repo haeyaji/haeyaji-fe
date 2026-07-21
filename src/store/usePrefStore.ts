@@ -1,9 +1,10 @@
 // 온보딩 설문 4축 (be user_preference 계약: JSON 2 + str 2, 전부 스킵 가능).
-// be 저장 API가 아직 없어 localStorage(persist)에 보관한다.
-// TODO: be user_preference API 생기면 finishSurvey에서 POST 추가.
+// be 저장 API가 아직 없어 localStorage(persist)에 보관하되, 완료 시 be로도 POST(구멍1).
+// be 미구현 구간에는 fireSignal이 실패를 삼켜 UI를 막지 않는다.
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Category } from '@/types'
+import { savePreferences, fireSignal } from '@/api/personalizeApi'
 
 // 선택지 문자열은 be/nlp 계약과 완전 일치 — 임의 변경 금지
 export const CATEGORY_OPTIONS: Category[] = ['야외', '실내', '휴식', '생산성', '사람만나기', '맛집/카페']
@@ -31,7 +32,7 @@ const toggle = <T,>(arr: T[], v: T): T[] => (arr.includes(v) ? arr.filter((x) =>
 
 export const usePrefStore = create<PrefState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       preferredCategories: [],
       avoid: [],
       vibe: null,
@@ -42,7 +43,12 @@ export const usePrefStore = create<PrefState>()(
       toggleAvoid: (a) => set((s) => ({ avoid: toggle(s.avoid, a) })),
       setVibe: (vibe) => set({ vibe }),
       setIntensity: (intensity) => set({ intensity }),
-      finishSurvey: () => set({ surveyDone: true }),
+      finishSurvey: () => {
+        set({ surveyDone: true })
+        // 구멍1 — 설문 4축을 be로 저장(온보딩 완료·마이페이지 재설정 공통 종착점). 값은 선택지 문자열 그대로.
+        const { preferredCategories, avoid, vibe, intensity } = get()
+        fireSignal(savePreferences({ preferredCategories, avoid, vibe, intensity }))
+      },
       reopenSurvey: () => set({ surveyDone: false }),
       setIntro: (intro) => set({ intro }),
     }),
