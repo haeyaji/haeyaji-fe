@@ -36,14 +36,15 @@ function Ring({ rate, size = 104, sw = 10 }: { rate: number; size?: number; sw?:
 export function MyPage() {
   const nickname = useAppStore((s) => s.nickname)
   const setView = useAppStore((s) => s.setView)
+  const searchOpen = useAppStore((s) => s.friendSearchOpen)
+  const openFriendSearch = useAppStore((s) => s.openFriendSearch)
+  const closeFriendSearch = useAppStore((s) => s.closeFriendSearch)
   const pref = usePrefStore()
   const tasksByDate = useTodoStore((s) => s.tasksByDate)
   const friendIds = useFriendStore((s) => s.friendIds)
   const meetups = useMeetupStore((s) => s.meetups)
   const byDate = useWeatherStore((s) => s.byDate)
 
-  const [editIntro, setEditIntro] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
   const [detailUser, setDetailUser] = useState<AppUser | null>(null)
 
   const week = last7Days()
@@ -99,11 +100,6 @@ export function MyPage() {
                   </span>
                 )}
               </div>
-              {editIntro ? (
-                <input autoFocus value={pref.intro} onChange={(e) => pref.setIntro(e.target.value.slice(0, 40))} onBlur={() => setEditIntro(false)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) setEditIntro(false) }} placeholder="한줄소개를 입력하세요 (최대 40자)" maxLength={40} style={{ marginTop: 8, width: '100%', maxWidth: 400, border: `1px solid ${MC.border}`, outline: 'none', background: MC.fieldBg, borderRadius: 10, padding: '8px 12px', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, color: MC.ink }} />
-              ) : (
-                <div onClick={() => setEditIntro(true)} className="hbtn" style={{ marginTop: 7, fontSize: 15, fontWeight: 600, color: pref.intro ? MC.muted : MC.faint, cursor: 'pointer', display: 'inline-block' }}>{pref.intro || '한줄소개 추가 +'}</div>
-              )}
             </div>
             <Ring rate={rate} />
           </div>
@@ -123,7 +119,7 @@ export function MyPage() {
 
         {/* 통계 벤토 */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 20, alignItems: 'start' }}>
-          <div onClick={() => setSearchOpen(true)} className="lift" style={{ ...statCard, cursor: 'pointer' }}>
+          <div onClick={openFriendSearch} className="lift" style={{ ...statCard, cursor: 'pointer' }}>
             {badge(<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={MC.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>, `${friends.length}`, '친구')}
             <div style={{ marginTop: 14 }}>{friends.length > 0 ? <AvatarStack names={friends.map((f) => f.nickname)} /> : <div style={{ fontSize: 12.5, fontWeight: 700, color: MC.faint }}>아직 없어요</div>}</div>
           </div>
@@ -173,7 +169,7 @@ export function MyPage() {
         </div>
       </div>
 
-      {searchOpen && <FriendSearchModal onClose={() => setSearchOpen(false)} onOpenDetail={(u) => { setSearchOpen(false); setDetailUser(u) }} />}
+      {searchOpen && <FriendSearchModal onClose={closeFriendSearch} onOpenDetail={(u) => { closeFriendSearch(); setDetailUser(u) }} />}
       {detailUser && <FriendDetailModal user={detailUser} onClose={() => setDetailUser(null)} />}
     </div>
   )

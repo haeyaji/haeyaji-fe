@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { todayKey } from '@/lib/dates'
 
-type View = 'home' | 'todo' | 'calendar' | 'kanban' | 'mypage' | 'meetup'
+type View = 'home' | 'todo' | 'calendar' | 'mypage' | 'meetup'
 
 interface AppState {
   authed: boolean
@@ -16,6 +16,8 @@ interface AppState {
   routineOpen: boolean
   addOpen: boolean
   mapOpen: boolean
+  meetupCreateOpen: boolean // 약속 만들기 모달 (사이드바 컨텍스트 추가 버튼에서 열림)
+  friendSearchOpen: boolean // 친구 추가/검색 모달 (마이페이지 컨텍스트 추가 버튼에서 열림)
   // toast
   toastText: string
   showToast: boolean
@@ -36,6 +38,10 @@ interface AppState {
   closeAdd: () => void
   openMap: () => void
   closeMap: () => void
+  openMeetupCreate: () => void
+  closeMeetupCreate: () => void
+  openFriendSearch: () => void
+  closeFriendSearch: () => void
   toast: (msg: string) => void
 }
 
@@ -53,6 +59,8 @@ export const useAppStore = create<AppState>((set) => ({
   routineOpen: false,
   addOpen: false,
   mapOpen: false,
+  meetupCreateOpen: false,
+  friendSearchOpen: false,
   toastText: '',
   showToast: false,
 
@@ -61,7 +69,7 @@ export const useAppStore = create<AppState>((set) => ({
     useAppStore.getState().toast(msg)
   },
   logout: () =>
-    set({ authed: false, aiOpen: false, weatherOpen: false, routineOpen: false, addOpen: false, mapOpen: false, view: 'home' }),
+    set({ authed: false, aiOpen: false, weatherOpen: false, routineOpen: false, addOpen: false, mapOpen: false, meetupCreateOpen: false, friendSearchOpen: false, view: 'home' }),
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
   setView: (view) => set({ view }),
   setSelId: (selId) => set({ selId }),
@@ -76,6 +84,10 @@ export const useAppStore = create<AppState>((set) => ({
   closeAdd: () => set({ addOpen: false }),
   openMap: () => set({ mapOpen: true }),
   closeMap: () => set({ mapOpen: false }),
+  openMeetupCreate: () => set({ meetupCreateOpen: true }),
+  closeMeetupCreate: () => set({ meetupCreateOpen: false }),
+  openFriendSearch: () => set({ friendSearchOpen: true }),
+  closeFriendSearch: () => set({ friendSearchOpen: false }),
   toast: (msg) => {
     set({ toastText: msg, showToast: true })
     if (toastTimer) clearTimeout(toastTimer)

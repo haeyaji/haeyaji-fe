@@ -14,9 +14,6 @@ function CalIcon() {
 function MapIcon() {
   return <svg width="18" height="18" viewBox="0 0 24 24" {...NAV_ICON}><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" /><path d="M9 4v14M15 6v14" /></svg>
 }
-function BoardIcon() {
-  return <svg width="18" height="18" viewBox="0 0 24 24" {...NAV_ICON}><rect x="3" y="4" width="5.5" height="16" rx="1.5" /><rect x="10.5" y="4" width="5.5" height="10" rx="1.5" /><rect x="18" y="4" width="3" height="13" rx="1.5" /></svg>
-}
 function RoutineIcon() {
   return <svg width="18" height="18" viewBox="0 0 24 24" {...NAV_ICON}><rect x="3" y="4.5" width="18" height="16" rx="3" /><path d="M3 9h18M8 13l2.5 2.5L16 11" /></svg>
 }
@@ -28,18 +25,25 @@ function TodoIcon() {
 }
 
 export function Sidebar() {
-  const { view, setView, openMap, openRoutine, openAdd, sidebarCollapsed: c, toggleSidebar, nickname, logout } = useAppStore()
+  const { view, setView, openMap, openRoutine, openAdd, openMeetupCreate, openFriendSearch, sidebarCollapsed: c, toggleSidebar, nickname, logout } = useAppStore()
   // 펼침이 기본 상태 — 화면 폭 대응은 #root zoom 분기가 하므로 자동 접힘 없음
 
   const items = [
     { key: 'home', label: '홈', icon: <HomeIcon />, active: view === 'home', onClick: () => setView('home') },
     { key: 'todo', label: '할 일', icon: <TodoIcon />, active: view === 'todo', onClick: () => setView('todo') },
     { key: 'calendar', label: '캘린더', icon: <CalIcon />, active: view === 'calendar', onClick: () => setView('calendar') },
-    { key: 'kanban', label: '칸반보드', icon: <BoardIcon />, active: view === 'kanban', onClick: () => setView('kanban') },
     { key: 'meetup', label: '약속', icon: <MeetIcon />, active: view === 'meetup', onClick: () => setView('meetup') },
     { key: 'map', label: '지도', icon: <MapIcon />, active: false, onClick: openMap },
     { key: 'routine', label: '루틴', icon: <RoutineIcon />, active: false, onClick: openRoutine },
   ]
+
+  // 현재 화면에 맞는 추가 버튼 (약속=약속 만들기, 마이페이지=친구 추가, 그 외=일정 추가)
+  const cta =
+    view === 'meetup'
+      ? { label: '새 약속 만들기', onClick: openMeetupCreate }
+      : view === 'mypage'
+        ? { label: '친구 추가', onClick: openFriendSearch }
+        : { label: '새 일정 추가', onClick: openAdd }
 
   return (
     <aside
@@ -80,17 +84,16 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* CTA — 약속 화면에선 숨김(할 일 추가는 맥락상 맞지 않음) */}
-      {view !== 'meetup' && (
-        <div
-          onClick={openAdd}
-          className="lift"
-          style={{ marginTop: 26, height: 50, borderRadius: 15, background: '#17150F', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', flexShrink: 0 }}
-        >
-          <PlusIcon w={17} />
-          {!c && <div style={{ fontSize: 18, fontWeight: 700, whiteSpace: 'nowrap' }}>새 일정 추가</div>}
-        </div>
-      )}
+      {/* CTA — 현재 화면 맥락에 맞게 동작 (일정/약속/친구 추가) */}
+      <div
+        onClick={cta.onClick}
+        className="lift"
+        title={cta.label}
+        style={{ marginTop: 26, height: 50, borderRadius: 15, background: '#17150F', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', flexShrink: 0 }}
+      >
+        <PlusIcon w={17} />
+        {!c && <div style={{ fontSize: 18, fontWeight: 700, whiteSpace: 'nowrap' }}>{cta.label}</div>}
+      </div>
 
       {/* 내비게이션 */}
       {!c && <div style={{ marginTop: 30, marginBottom: 10, paddingLeft: 8, fontSize: 13, fontWeight: 800, color: '#C0BAAD', letterSpacing: '1.2px' }}>메뉴</div>}

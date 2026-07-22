@@ -31,23 +31,12 @@ export interface ChatTurn {
   content: string
 }
 
-// ── 클라이언트 도메인 모델 (프로토타입 상태) ───────────────────────────
+// ── 클라이언트 도메인 모델 (be todo 계약 대응) ───────────────────────────
 
 export type TaskGroup = 'routine' | 'personal'
 
-/** 칸반 상태 (기존 done과 매핑: done=true ↔ 'done') */
-export type TaskStatus = 'todo' | 'doing' | 'done'
-
-/** 칸반 우선순위 (지라식). 미지정은 '보통' 취급 */
-export type TaskPriority = 'high' | 'mid' | 'low'
-
-export interface Subtask {
-  id: string
-  title: string
-  done: boolean // status와 동기 유지 (status==='done')
-  status?: TaskStatus // 진행현황 (미지정 시 done으로 유추)
-  due?: string // 일정 (YYYY-MM-DD)
-}
+/** 할 일 상태 — be todo_status(TODO/DONE) 2상태. done=true ↔ 'done' */
+export type TaskStatus = 'todo' | 'done'
 
 /** 공유 권한 (PRD SHARE/PERM: owner ⊃ editor ⊃ viewer) */
 export type ShareRole = 'owner' | 'editor' | 'viewer'
@@ -63,19 +52,20 @@ export interface TaskParticipant {
 export interface Task {
   id: string
   title: string
-  time?: string
-  meta?: string
-  group: TaskGroup
+  time?: string // 시작 시각 (be todo.start_time)
+  meta?: string // 표시용 보조 텍스트 (레거시, 미설정 시 time 폴백)
+  group: TaskGroup // routine/personal → be todo_source(ROUTINE/MANUAL), ai=AI
   done: boolean
-  status?: TaskStatus // 미지정 시 done 값으로 유추
-  subtasks?: Subtask[]
-  key?: string // 지라식 이슈 키 (HAE-N)
-  priority?: TaskPriority
-  desc?: string
-  labels?: string[]
+  status?: TaskStatus // todo/done (미지정 시 done 값으로 유추)
+  category?: Category | null // be todo.category (6종). 추천에서 실어옴 — 행동학습(DONE→가중치)용, 수동은 null
+  placeName?: string | null // be todo.place_name (추천 장소명)
+  placeUrl?: string | null // be todo.place_url (지도 딥링크)
+  lat?: number | null // be todo.lat (지도 마커)
+  lng?: number | null // be todo.lng
+  pinned?: boolean // be todo.pinned — 최상단 고정(우선순위 대체)
+  sortOrder?: number // be todo.sort_order — 드래그 수동 순서
   ai?: boolean
-  category?: Category | null // 추천(RecommendedTodo)에서 실어온 6종 카테고리 — 행동학습(DONE→가중치)용. 수동 생성은 null 허용
-  participants?: TaskParticipant[] // 공유 대상(친구). 비어있으면 개인 할 일
+  participants?: TaskParticipant[] // be todo_participant (공유). 비어있으면 개인 할 일
 }
 
 /** 날짜 id('20'~'26') → 할 일 목록 */
@@ -98,7 +88,6 @@ export interface WeekDay {
 export interface AppUser {
   id: string
   nickname: string
-  intro: string
   vibe: string // 대표 분위기 (usePrefStore vibe와 같은 값 집합)
   cats: Category[] // 선호 카테고리
 }

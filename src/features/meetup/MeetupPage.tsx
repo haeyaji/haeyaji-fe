@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { longDate, hhmm } from './meetupShared'
 import { userById } from '@/store/useFriendStore'
+import { useAppStore } from '@/store/useAppStore'
 import { useMeetupStore, type Meetup } from '@/store/useMeetupStore'
 import { AvatarStack, friendEntered } from './meetupShared'
 import { MC } from './tokens'
@@ -10,7 +11,9 @@ import { MeetupDetailPage } from './MeetupDetailPage'
 
 export function MeetupPage() {
   const meetups = useMeetupStore((s) => s.meetups)
-  const [creating, setCreating] = useState(false)
+  const creating = useAppStore((s) => s.meetupCreateOpen)
+  const openMeetupCreate = useAppStore((s) => s.openMeetupCreate)
+  const closeMeetupCreate = useAppStore((s) => s.closeMeetupCreate)
   const [openId, setOpenId] = useState<string | null>(null)
 
   if (openId && meetups.some((m) => m.id === openId)) {
@@ -21,7 +24,7 @@ export function MeetupPage() {
   const confirmed = meetups.filter((m) => m.confirmed)
 
   const newBtn = (big?: boolean) => (
-    <div onClick={() => setCreating(true)} className="lift" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: MC.ink, color: '#fff', fontSize: 15, fontWeight: 700, padding: big ? '13px 24px' : '13px 20px', borderRadius: 15, cursor: 'pointer' }}>
+    <div onClick={openMeetupCreate} className="lift" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: MC.ink, color: '#fff', fontSize: 15, fontWeight: 700, padding: big ? '13px 24px' : '13px 20px', borderRadius: 15, cursor: 'pointer' }}>
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg> 새 약속 잡기
     </div>
   )
@@ -55,7 +58,7 @@ export function MeetupPage() {
         )}
       </div>
 
-      {creating && <CreateMeetupModal onClose={() => setCreating(false)} onCreated={(id) => { setCreating(false); setOpenId(id) }} />}
+      {creating && <CreateMeetupModal onClose={closeMeetupCreate} onCreated={(id) => { closeMeetupCreate(); setOpenId(id) }} />}
     </div>
   )
 }

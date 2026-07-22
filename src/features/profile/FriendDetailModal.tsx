@@ -26,7 +26,7 @@ export function FriendDetailModal({ user, onClose }: { user: AppUser; onClose: (
             {user.nickname.slice(0, 1)}
           </div>
           <div style={{ fontSize: 23, fontWeight: 800, marginTop: 14 }}>{user.nickname}</div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#8B8579', marginTop: 4 }}>{user.intro}</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#8B8579', marginTop: 4 }}>{user.vibe}</div>
         </div>
 
         {/* 취향 칩 */}
