@@ -108,6 +108,28 @@ export function normalizeTime(raw: string): string | null {
 }
 
 /** 시간대별 인사말 */
+/** fe 표시용 시각("오후 02:00") → be LocalTime("HH:mm"). 빈값/파싱실패 → null */
+export function toApiTime(display?: string | null): string | null {
+  if (!display || !display.trim()) return null
+  const m = /(오전|오후)?\s*(\d{1,2}):(\d{2})/.exec(display.trim())
+  if (!m) return null
+  let h = parseInt(m[2], 10)
+  if (m[1] === '오후' && h !== 12) h += 12
+  if (m[1] === '오전' && h === 12) h = 0
+  return `${String(h).padStart(2, '0')}:${m[3]}`
+}
+
+/** be LocalTime("14:00[:ss]") → fe 표시용("오후 02:00"). null → "" */
+export function fromApiTime(hhmm?: string | null): string {
+  if (!hhmm) return ''
+  const m = /(\d{1,2}):(\d{2})/.exec(hhmm)
+  if (!m) return ''
+  const h = parseInt(m[1], 10)
+  const mer = h < 12 ? '오전' : '오후'
+  const h12 = h % 12 === 0 ? 12 : h % 12
+  return `${mer} ${String(h12).padStart(2, '0')}:${m[2]}`
+}
+
 export function greeting(hour = new Date().getHours()): string {
   if (hour >= 5 && hour < 11) return '좋은 아침이에요'
   if (hour >= 11 && hour < 14) return '점심시간이에요'

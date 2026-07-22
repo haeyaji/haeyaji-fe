@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useAppStore } from '@/store/useAppStore'
 import { useLocationStore } from '@/store/useLocationStore'
 import { useWeatherStore } from '@/store/useWeatherStore'
+import { useTodoStore } from '@/store/useTodoStore'
+import { todayKey } from '@/lib/dates'
 import { timeOfDay } from '@/lib/weather'
 import { usePrefStore } from '@/store/usePrefStore'
 import { LoginScreen } from '@/features/auth/LoginScreen'
@@ -15,6 +17,7 @@ import { AiDrawer } from '@/features/recommend/AiDrawer'
 import { WeatherDrawer } from '@/features/weather/WeatherDrawer'
 import { RoutineDrawer } from '@/features/routine/RoutineDrawer'
 import { AddTaskModal } from '@/features/todo/AddTaskModal'
+import { LabelManagerModal } from '@/features/todo/LabelManagerModal'
 import { MapModal } from '@/features/map/MapModal'
 import { Sidebar } from '@/components/Sidebar'
 import { Fab } from '@/components/Fab'
@@ -25,6 +28,14 @@ export default function App() {
   const surveyDone = usePrefStore((s) => s.surveyDone)
   const lat = useLocationStore((s) => s.lat)
   const lng = useLocationStore((s) => s.lng)
+  const selId = useAppStore((s) => s.selId)
+
+  // 로그인 후 선택 날짜 + 오늘 할 일 로드 (be GET /todos?date=)
+  useEffect(() => {
+    if (!authed) return
+    useTodoStore.getState().loadDate(selId)
+    useTodoStore.getState().loadDate(todayKey())
+  }, [authed, selId])
 
   // 위치 1회 획득 (거부/미지원 시 기본값 강남)
   useEffect(() => {
@@ -80,6 +91,7 @@ export default function App() {
       <WeatherDrawer />
       <RoutineDrawer />
       <AddTaskModal />
+      <LabelManagerModal />
       <MapModal />
       <Toast />
     </>

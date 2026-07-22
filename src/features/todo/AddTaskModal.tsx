@@ -3,8 +3,8 @@ import { CloseIcon } from '@/lib/icons'
 import { normalizeTime } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
 import { useTodoStore } from '@/store/useTodoStore'
-import { CATEGORY_OPTIONS } from '@/store/usePrefStore'
-import type { Category, TaskGroup } from '@/types'
+import { LabelPicker } from './LabelPicker'
+import type { TaskGroup } from '@/types'
 
 const fieldLabel = { fontSize: 13.5, fontWeight: 800, color: '#8B8579', marginBottom: 9 } as const
 const inputStyle = { width: '100%', border: '1px solid #E1E5EC', outline: 'none', background: '#F6F8FA', borderRadius: 13, padding: '15px 17px', fontFamily: 'inherit', fontSize: 16, fontWeight: 600, color: '#17150F' } as const
@@ -17,7 +17,7 @@ export function AddTaskModal() {
   const [time, setTime] = useState('')
   const [timeErr, setTimeErr] = useState(false)
   const [group, setGroup] = useState<TaskGroup>('personal')
-  const [category, setCategory] = useState<Category | null>(null)
+  const [labelId, setLabelId] = useState<string | null>(null)
 
   // 열릴 때 선택 날짜로 동기화
   useEffect(() => {
@@ -31,7 +31,7 @@ export function AddTaskModal() {
     setTime('')
     setTimeErr(false)
     setGroup('personal')
-    setCategory(null)
+    setLabelId(null)
   }
   // 자유 입력을 "오전/오후 HH:MM"으로 정규화. 형식 못 알아보면 힌트 후 저장 차단.
   const normTime = () => {
@@ -44,7 +44,7 @@ export function AddTaskModal() {
   const submit = () => {
     const n = normTime()
     if (n === null) return
-    if (submitTask({ dateKey: date, title, time: n, group, category })) {
+    if (submitTask({ dateKey: date, title, time: n, group, labelId })) {
       reset()
       closeAdd()
     }
@@ -95,17 +95,10 @@ export function AddTaskModal() {
           </div>
           {timeErr && <div style={{ fontSize: 12, fontWeight: 700, color: '#D9614F', marginTop: 7 }}>시간 형식을 알아볼 수 없어요. 예: 오후 2시, 14:00, 2:30</div>}
 
-          {/* 카테고리 (선택) */}
+          {/* 분류 (사용자 라벨, 선택) */}
           <div style={{ marginTop: 22 }}>
-            <div style={fieldLabel}>카테고리 (선택)</div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {CATEGORY_OPTIONS.map((c) => {
-                const on = category === c
-                return (
-                  <div key={c} onClick={() => setCategory(on ? null : c)} className="hbtn" style={{ fontSize: 14, fontWeight: 800, padding: '9px 16px', borderRadius: 20, cursor: 'pointer', background: on ? '#15795A' : '#F0F2F6', color: on ? '#fff' : '#8B8579' }}>{c}</div>
-                )
-              })}
-            </div>
+            <div style={fieldLabel}>분류 (선택)</div>
+            <LabelPicker value={labelId} onChange={setLabelId} />
           </div>
 
           {/* 유형 */}

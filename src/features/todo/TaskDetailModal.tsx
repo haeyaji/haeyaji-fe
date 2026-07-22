@@ -4,10 +4,11 @@ import { useState } from 'react'
 import { CloseIcon, PlusIcon, TrashIcon } from '@/lib/icons'
 import { useTodoStore, statusOf } from '@/store/useTodoStore'
 import { useFriendStore, userById } from '@/store/useFriendStore'
-import { CATEGORY_OPTIONS } from '@/store/usePrefStore'
+import { useLabelStore } from '@/store/useLabelStore'
 import { Avatar } from '@/features/meetup/meetupShared'
+import { LabelPicker } from './LabelPicker'
 import { COLUMNS, dateBadge } from './taskMeta'
-import type { Category, ShareRole } from '@/types'
+import type { ShareRole } from '@/types'
 
 const ROLE_LABEL: Record<ShareRole, string> = { owner: '소유자', editor: '편집', viewer: '보기' }
 const label = { fontSize: 14, fontWeight: 800, color: '#8B8579', marginBottom: 11 } as const
@@ -25,6 +26,8 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
   const tasksByDate = useTodoStore((s) => s.tasksByDate)
   const { updateTitle, setStatus, removeTask, patchTask, togglePin } = useTodoStore()
   const friendIds = useFriendStore((s) => s.friendIds)
+  const assignments = useLabelStore((s) => s.assignments) // 라벨 변경 리렌더용
+  const setTodoLabel = useLabelStore((s) => s.setTodoLabel)
   const [inviteRole, setInviteRole] = useState<ShareRole>('editor')
 
   // 스토어 최신 상태 반영 (수정 즉시 리렌더)
@@ -46,7 +49,7 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
   const unshare = (userId: string) => setParticipants(participants.filter((p) => p.userId !== userId))
   const setRole = (userId: string, role: ShareRole) => setParticipants(participants.map((p) => (p.userId === userId ? { ...p, role } : p)))
 
-  const toggleCategory = (c: Category) => patchTask(dateKey, taskId, { category: task.category === c ? null : c })
+  const labelId = assignments[taskId] ?? null
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(24,21,15,.42)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'rb-fade .16s ease' }}>
@@ -55,6 +58,7 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
           <span style={{ fontSize: 12.5, fontWeight: 800, color: badge.color, background: badge.bg, padding: '4px 11px', borderRadius: 20, flexShrink: 0 }}>{badge.label}</span>
           {task.ai && <span style={{ fontSize: 11.5, fontWeight: 800, color: '#15795A', background: '#E4F2EC', padding: '4px 10px', borderRadius: 20 }}>AI 추천</span>}
+          {task.category && <span title="AI·개인화 카테고리" style={{ fontSize: 11.5, fontWeight: 800, color: '#5A554B', background: '#F0F2F6', padding: '4px 10px', borderRadius: 20 }}>{task.category}</span>}
           <div style={{ flex: 1 }} />
           <div onClick={() => togglePin(dateKey, task.id)} className="hbtn" title={task.pinned ? '고정 해제' : '최상단 고정'} style={{ width: 32, height: 32, borderRadius: 10, background: task.pinned ? '#FDF0E3' : '#F0F2F6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <PinIcon filled={!!task.pinned} c={task.pinned ? '#C2702A' : '#A39C8E'} />
@@ -100,17 +104,10 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
           </div>}
         </div>
 
-        {/* 카테고리 (6종, be todo.category) */}
+        {/* 분류 (사용자 라벨, be todo.label_id) */}
         <div style={{ marginTop: 20 }}>
-          <div style={label}>카테고리</div>
-          <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-            {CATEGORY_OPTIONS.map((c) => {
-              const on = task.category === c
-              return (
-                <div key={c} onClick={() => toggleCategory(c)} className="hbtn" style={{ fontSize: 13, fontWeight: 800, padding: '7px 13px', borderRadius: 20, cursor: 'pointer', background: on ? '#15795A' : '#F0F2F6', color: on ? '#fff' : '#8B8579' }}>{c}</div>
-              )
-            })}
-          </div>
+          <div style={label}>분류</div>
+          <LabelPicker value={labelId} onChange={(lid) => setTodoLabel(taskId, lid)} />
         </div>
 
         {/* 장소 (추천에서 온 경우만) */}
