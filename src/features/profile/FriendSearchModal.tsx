@@ -87,7 +87,7 @@ function Row({ user, action, onClick }: { user: AppUser; action: React.ReactNode
       <Avatar name={user.nickname} size={44} font={19} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 16, fontWeight: 800 }}>{user.nickname}</div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: MC.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.intro}</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: MC.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.vibe}</div>
       </div>
       {action}
     </div>

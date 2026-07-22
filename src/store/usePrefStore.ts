@@ -18,14 +18,12 @@ interface PrefState {
   vibe: string | null
   intensity: string | null
   surveyDone: boolean
-  intro: string // 마이페이지 한줄소개
   toggleCategory: (c: Category) => void
   toggleAvoid: (a: string) => void
   setVibe: (v: string | null) => void
   setIntensity: (v: string | null) => void
   finishSurvey: () => void
   reopenSurvey: () => void // 마이페이지 "다시 설정" → 온보딩 위저드 재진입
-  setIntro: (v: string) => void
 }
 
 const toggle = <T,>(arr: T[], v: T): T[] => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v])
@@ -38,7 +36,6 @@ export const usePrefStore = create<PrefState>()(
       vibe: null,
       intensity: null,
       surveyDone: false,
-      intro: '',
       toggleCategory: (c) => set((s) => ({ preferredCategories: toggle(s.preferredCategories, c) })),
       toggleAvoid: (a) => set((s) => ({ avoid: toggle(s.avoid, a) })),
       setVibe: (vibe) => set({ vibe }),
@@ -50,7 +47,6 @@ export const usePrefStore = create<PrefState>()(
         fireSignal(savePreferences({ preferredCategories, avoid, vibe, intensity }))
       },
       reopenSurvey: () => set({ surveyDone: false }),
-      setIntro: (intro) => set({ intro }),
     }),
     { name: 'haeyaji-pref' },
   ),

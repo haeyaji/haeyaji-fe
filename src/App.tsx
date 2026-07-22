@@ -8,7 +8,6 @@ import { LoginScreen } from '@/features/auth/LoginScreen'
 import { OnboardingSurvey } from '@/features/auth/OnboardingSurvey'
 import { HomeDashboard } from '@/features/home/HomeDashboard'
 import { CalendarPage } from '@/features/calendar/CalendarPage'
-import { KanbanPage } from '@/features/kanban/KanbanPage'
 import { TodoListPage } from '@/features/todo/TodoListPage'
 import { MyPage } from '@/features/profile/MyPage'
 import { MeetupPage } from '@/features/meetup/MeetupPage'
@@ -72,7 +71,7 @@ export default function App() {
     <>
       <div style={{ display: 'flex', alignItems: 'stretch', minHeight: 'var(--full-vh)' }}>
         <Sidebar />
-        <main style={{ flex: 1, minWidth: 0 }}>{view === 'home' ? <HomeDashboard /> : view === 'todo' ? <TodoListPage /> : view === 'kanban' ? <KanbanPage /> : view === 'mypage' ? <MyPage /> : view === 'meetup' ? <MeetupPage /> : <CalendarPage />}</main>
+        <main style={{ flex: 1, minWidth: 0 }}>{view === 'home' ? <HomeDashboard /> : view === 'todo' ? <TodoListPage /> : view === 'mypage' ? <MyPage /> : view === 'meetup' ? <MeetupPage /> : <CalendarPage />}</main>
       </div>
 
       {/* overlays */}

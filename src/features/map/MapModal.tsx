@@ -317,7 +317,7 @@ export function MapModal() {
                         )}
                       </div>
                       <div style={{ display: 'flex', gap: 8, marginTop: 11 }}>
-                        <div onClick={(e) => { e.stopPropagation(); addPlaceTask(p.name) }} className="lift" style={{ flex: 1, textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#fff', background: '#17150F', borderRadius: 11, padding: 10, cursor: 'pointer' }}>
+                        <div onClick={(e) => { e.stopPropagation(); addPlaceTask({ title: p.name, placeName: p.name, lat: p.lat, lng: p.lng }) }} className="lift" style={{ flex: 1, textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#fff', background: '#17150F', borderRadius: 11, padding: 10, cursor: 'pointer' }}>
                           일정에 추가
                         </div>
                         <div onClick={(e) => { e.stopPropagation(); setMapDetail(p) }} style={{ textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#5A554B', background: '#E9EDF3', borderRadius: 11, padding: '10px 14px', cursor: 'pointer' }}>
@@ -391,7 +391,7 @@ export function MapModal() {
           isDest={mapSelId === mapDetail.id}
           onClose={() => setMapDetail(null)}
           onAdd={() => {
-            addPlaceTask(mapDetail.name)
+            addPlaceTask({ title: mapDetail.name, placeName: mapDetail.name, lat: mapDetail.lat, lng: mapDetail.lng })
             setMapDetail(null)
           }}
           onSetOrigin={() => setAsOrigin(mapDetail)}

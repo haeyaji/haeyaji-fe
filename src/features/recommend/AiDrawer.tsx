@@ -132,7 +132,7 @@ export function AiDrawer() {
                     {todos.map((t, j) => {
                       const key = `${i}-${j}`
                       if (dismissed.has(key)) return null
-                      return <TodoCard key={j} todo={t} onAdd={() => addPlaceTask(t.placeName || t.title, t.category)} onIgnore={() => ignore(key, t.category)} />
+                      return <TodoCard key={j} todo={t} onAdd={() => addPlaceTask({ title: t.placeName || t.title, placeName: t.placeName, placeUrl: t.placeUrl, lat: t.y, lng: t.x, category: t.category })} onIgnore={() => ignore(key, t.category)} />
                     })}
                   </div>
                 )}
