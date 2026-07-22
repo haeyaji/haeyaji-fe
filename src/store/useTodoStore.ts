@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import type { Category, Task, TaskGroup, TaskStatus, TasksByDate } from '@/types'
+import { fetchTodos, createTodo, updateTodo, deleteTodo } from '@/api/todoApi'
 import { useAppStore } from './useAppStore'
+import { useLabelStore } from './useLabelStore'
 
 /** 상태 유추: status 미지정 구데이터는 done 값으로 (be todo_status TODO/DONE) */
 export const statusOf = (t: Task): TaskStatus => t.status ?? (t.done ? 'done' : 'todo')
@@ -22,6 +24,7 @@ export interface SubmitTaskInput {
   time?: string
   group: TaskGroup
   category?: Category | null
+  labelId?: string | null // 사용자 라벨 (생성 후 서버 id에 매핑)
 }
 
 /** 리스트 드래그 정렬용 참조 */
@@ -32,6 +35,8 @@ export interface TaskRef {
 
 interface TodoState {
   tasksByDate: TasksByDate
+  /** GET /todos?date= 로 해당 날짜 로드 */
+  loadDate: (dateKey: string) => Promise<void>
   toggleTask: (id: string) => void
   deleteTask: (id: string) => void
   addPlaceTask: (input: PlaceTaskInput) => void
@@ -40,12 +45,9 @@ interface TodoState {
   updateTitle: (dateKey: string, id: string, title: string) => void
   removeTask: (dateKey: string, id: string) => void
   patchTask: (dateKey: string, id: string, patch: Partial<Task>) => void
-  /** 특정 날짜에 할 일 생성 (약속 확정 → MEETING todo 등, 토스트 없음) */
   addTaskAt: (dateKey: string, title: string, status: TaskStatus) => void
   togglePin: (dateKey: string, id: string) => void
-  /** 드래그 수동 정렬 — 전달된 순서대로 sortOrder 재부여 (be todo.sort_order) */
   reorderTasks: (ordered: TaskRef[]) => void
-  /** 루틴 일괄 등록 — (date,title,time) 중복은 스킵하고 실제 생성 건수 반환 */
   bulkAddRoutine: (entries: { dateKey: string; title: string; time: string }[]) => number
 }
 
@@ -58,109 +60,160 @@ function mapTask(m: TasksByDate, dateKey: string, id: string, fn: (t: Task) => T
 const nextSort = (list: Task[]) => list.reduce((mx, t) => Math.max(mx, t.sortOrder ?? 0), 0) + 1
 
 const sel = () => useAppStore.getState().selId
+const find = (dateKey: string, id: string) => (useTodoStore.getState().tasksByDate[dateKey] ?? []).find((t) => t.id === id)
 
-export const useTodoStore = create<TodoState>((set) => ({
-  tasksByDate: {}, // TODO(be): GET /todos 로 채움 (현재는 빈 상태로 시작)
-  toggleTask: (id) =>
-    set((s) => {
-      const selId = sel()
-      const m = { ...s.tasksByDate }
-      m[selId] = (m[selId] ?? []).map((t) => (t.id === id ? { ...t, done: !t.done, status: (!t.done ? 'done' : 'todo') as TaskStatus } : t))
-      return { tasksByDate: m }
-    }),
+// ── be 동기화 헬퍼 (낙관적 업데이트 이후 호출) ──
+// 수정 실패 시 서버 기준으로 그 날짜 재동기화
+function rollback(dateKey: string) {
+  useAppStore.getState().toast('저장에 실패했어요')
+  void useTodoStore.getState().loadDate(dateKey)
+}
+// 생성 성공: 임시 task를 서버 발급 task(실 UUID)로 교체
+function reconcile(dateKey: string, tempId: string, saved: Task) {
+  useTodoStore.setState((s) => ({ tasksByDate: { ...s.tasksByDate, [dateKey]: (s.tasksByDate[dateKey] ?? []).map((t) => (t.id === tempId ? saved : t)) } }))
+}
+// 생성 실패: 임시 task 제거 + 토스트
+function failCreate(dateKey: string, tempId: string) {
+  useTodoStore.setState((s) => ({ tasksByDate: { ...s.tasksByDate, [dateKey]: (s.tasksByDate[dateKey] ?? []).filter((t) => t.id !== tempId) } }))
+  useAppStore.getState().toast('저장에 실패했어요')
+}
+// 제목 입력 디바운스 PATCH (키 입력마다 저장 방지)
+const titleTimers = new Map<string, ReturnType<typeof setTimeout>>()
+
+export const useTodoStore = create<TodoState>((set, get) => ({
+  tasksByDate: {},
+  loadDate: async (dateKey) => {
+    try {
+      const tasks = await fetchTodos(dateKey)
+      set((s) => ({ tasksByDate: { ...s.tasksByDate, [dateKey]: tasks } }))
+    } catch {
+      /* be 미기동/오류 — 기존 상태 유지 (조용히 무시) */
+    }
+  },
+  toggleTask: (id) => {
+    const dateKey = sel()
+    const cur = find(dateKey, id)
+    if (!cur) return
+    const done = !cur.done
+    const updated: Task = { ...cur, done, status: done ? 'done' : 'todo' }
+    set((s) => ({ tasksByDate: mapTask(s.tasksByDate, dateKey, id, () => updated) }))
+    updateTodo(updated).catch(() => rollback(dateKey))
+  },
   deleteTask: (id) => {
-    set((s) => {
-      const selId = sel()
-      const m = { ...s.tasksByDate }
-      m[selId] = (m[selId] ?? []).filter((t) => t.id !== id)
-      return { tasksByDate: m }
-    })
+    const dateKey = sel()
+    set((s) => ({ tasksByDate: { ...s.tasksByDate, [dateKey]: (s.tasksByDate[dateKey] ?? []).filter((t) => t.id !== id) } }))
     useAppStore.getState().toast('할 일을 삭제했어요')
+    deleteTodo(id).catch(() => rollback(dateKey))
   },
   addPlaceTask: (input) => {
-    set((s) => {
-      const selId = sel()
-      const m = { ...s.tasksByDate }
-      const list = m[selId] ?? []
-      // ai:true=source AI, category/place=추천 원본 유지(be todo.place_*/category)
-      m[selId] = [
-        ...list,
-        {
-          id: 'a' + Date.now(),
-          title: input.title,
-          time: '',
-          group: 'personal',
-          done: false,
-          ai: true,
-          category: input.category ?? null,
-          placeName: input.placeName ?? null,
-          placeUrl: input.placeUrl ?? null,
-          lat: input.lat ?? null,
-          lng: input.lng ?? null,
-          pinned: false,
-          sortOrder: nextSort(list),
-        },
-      ]
-      return { tasksByDate: m }
-    })
+    const dateKey = sel()
+    const list = get().tasksByDate[dateKey] ?? []
+    const temp: Task = { id: 'tmp' + Date.now(), title: input.title, time: '', group: 'personal', done: false, ai: true, category: input.category ?? null, placeName: input.placeName ?? null, placeUrl: input.placeUrl ?? null, lat: input.lat ?? null, lng: input.lng ?? null, pinned: false, sortOrder: nextSort(list) }
+    set((s) => ({ tasksByDate: { ...s.tasksByDate, [dateKey]: [...(s.tasksByDate[dateKey] ?? []), temp] } }))
     useAppStore.getState().toast(`'${input.title}' 일정에 추가됨`)
+    createTodo(dateKey, temp, 'AI').then((saved) => reconcile(dateKey, temp.id, saved)).catch(() => failCreate(dateKey, temp.id))
   },
-  submitTask: ({ dateKey, title, time, group, category }) => {
+  submitTask: ({ dateKey, title, time, group, category, labelId }) => {
     const t = title.trim()
     if (!t) return false
-    set((s) => {
-      const m = { ...s.tasksByDate }
-      const list = m[dateKey] ?? []
-      m[dateKey] = [...list, { id: 'n' + Date.now(), title: t, time: time || '', group, done: false, category: category ?? null, pinned: false, sortOrder: nextSort(list) }]
-      return { tasksByDate: m }
-    })
+    const list = get().tasksByDate[dateKey] ?? []
+    const temp: Task = { id: 'tmp' + Date.now(), title: t, time: time || '', group, done: false, category: category ?? null, pinned: false, sortOrder: nextSort(list) }
+    set((s) => ({ tasksByDate: { ...s.tasksByDate, [dateKey]: [...(s.tasksByDate[dateKey] ?? []), temp] } }))
     useAppStore.getState().toast(`'${t}' 추가됨`)
+    createTodo(dateKey, temp)
+      .then((saved) => {
+        reconcile(dateKey, temp.id, saved)
+        if (labelId) useLabelStore.getState().setTodoLabel(saved.id, labelId) // 서버 발급 id에 라벨 매핑
+      })
+      .catch(() => failCreate(dateKey, temp.id))
     return true
   },
-  setStatus: (dateKey, id, status) =>
-    set((s) => ({ tasksByDate: mapTask(s.tasksByDate, dateKey, id, (t) => ({ ...t, status, done: status === 'done' })) })),
-  updateTitle: (dateKey, id, title) =>
-    set((s) => ({ tasksByDate: mapTask(s.tasksByDate, dateKey, id, (t) => ({ ...t, title })) })),
+  setStatus: (dateKey, id, status) => {
+    const cur = find(dateKey, id)
+    if (!cur) return
+    const updated: Task = { ...cur, status, done: status === 'done' }
+    set((s) => ({ tasksByDate: mapTask(s.tasksByDate, dateKey, id, () => updated) }))
+    updateTodo(updated).catch(() => rollback(dateKey))
+  },
+  updateTitle: (dateKey, id, title) => {
+    set((s) => ({ tasksByDate: mapTask(s.tasksByDate, dateKey, id, (t) => ({ ...t, title })) }))
+    const prev = titleTimers.get(id)
+    if (prev) clearTimeout(prev)
+    titleTimers.set(id, setTimeout(() => {
+      const cur = find(dateKey, id)
+      if (cur) updateTodo(cur).catch(() => rollback(dateKey))
+    }, 600))
+  },
   removeTask: (dateKey, id) => {
     set((s) => ({ tasksByDate: { ...s.tasksByDate, [dateKey]: (s.tasksByDate[dateKey] ?? []).filter((t) => t.id !== id) } }))
     useAppStore.getState().toast('할 일을 삭제했어요')
+    deleteTodo(id).catch(() => rollback(dateKey))
   },
-  patchTask: (dateKey, id, patch) =>
-    set((s) => ({ tasksByDate: mapTask(s.tasksByDate, dateKey, id, (t) => ({ ...t, ...patch })) })),
+  patchTask: (dateKey, id, patch) => {
+    const cur = find(dateKey, id)
+    if (!cur) return
+    const updated = { ...cur, ...patch }
+    set((s) => ({ tasksByDate: mapTask(s.tasksByDate, dateKey, id, () => updated) }))
+    // participants(공유)는 별도 todo_participant 기능 — 이 todo CRUD로는 저장 안 함
+    const keys = Object.keys(patch)
+    if (keys.length === 1 && keys[0] === 'participants') return
+    updateTodo(updated).catch(() => rollback(dateKey))
+  },
   addTaskAt: (dateKey, title, status) => {
     const t = title.trim()
     if (!t) return
-    set((s) => {
-      const list = s.tasksByDate[dateKey] ?? []
-      return { tasksByDate: { ...s.tasksByDate, [dateKey]: [...list, { id: 'k' + Date.now(), title: t, group: 'personal' as const, done: status === 'done', status, pinned: false, sortOrder: nextSort(list) }] } }
-    })
+    const list = get().tasksByDate[dateKey] ?? []
+    const temp: Task = { id: 'tmp' + Date.now(), title: t, group: 'personal', done: status === 'done', status, pinned: false, sortOrder: nextSort(list) }
+    set((s) => ({ tasksByDate: { ...s.tasksByDate, [dateKey]: [...(s.tasksByDate[dateKey] ?? []), temp] } }))
+    createTodo(dateKey, temp, 'MEETING').then((saved) => reconcile(dateKey, temp.id, saved)).catch(() => failCreate(dateKey, temp.id))
   },
-  togglePin: (dateKey, id) =>
-    set((s) => ({ tasksByDate: mapTask(s.tasksByDate, dateKey, id, (t) => ({ ...t, pinned: !t.pinned })) })),
-  reorderTasks: (ordered) =>
+  togglePin: (dateKey, id) => {
+    const cur = find(dateKey, id)
+    if (!cur) return
+    const updated: Task = { ...cur, pinned: !cur.pinned }
+    set((s) => ({ tasksByDate: mapTask(s.tasksByDate, dateKey, id, () => updated) }))
+    updateTodo(updated).catch(() => rollback(dateKey))
+  },
+  reorderTasks: (ordered) => {
+    const idx = new Map(ordered.map((r, i) => [`${r.dateKey}:${r.id}`, i]))
+    const changed: Task[] = []
     set((s) => {
-      const idx = new Map(ordered.map((r, i) => [`${r.dateKey}:${r.id}`, i]))
       const m: TasksByDate = {}
       for (const dk of Object.keys(s.tasksByDate)) {
         m[dk] = (s.tasksByDate[dk] ?? []).map((t) => {
           const i = idx.get(`${dk}:${t.id}`)
-          return i === undefined ? t : { ...t, sortOrder: i }
+          if (i === undefined || i === (t.sortOrder ?? 0)) return t
+          const nt = { ...t, sortOrder: i }
+          changed.push(nt)
+          return nt
         })
       }
       return { tasksByDate: m }
-    }),
+    })
+    if (!changed.length) return
+    Promise.all(changed.map((t) => updateTodo(t))).catch(() => {
+      useAppStore.getState().toast('정렬 저장에 실패했어요')
+      new Set(ordered.map((r) => r.dateKey)).forEach((d) => void get().loadDate(d))
+    })
+  },
   bulkAddRoutine: (entries) => {
     let created = 0
+    const temps: { dateKey: string; task: Task }[] = []
     set((s) => {
       const m = { ...s.tasksByDate }
       entries.forEach((e, i) => {
         const list = m[e.dateKey] ?? []
         // 이미 같은 루틴(제목·시간)이 그 날에 있으면 스킵 (ROUT-5 중복 미생성)
         if (list.some((t) => t.group === 'routine' && t.title === e.title && t.time === e.time)) return
-        m[e.dateKey] = [...list, { id: `rt${Date.now()}_${i}`, title: e.title, time: e.time, group: 'routine', done: false, pinned: false, sortOrder: nextSort(list) }]
+        const temp: Task = { id: `tmp${Date.now()}_${i}`, title: e.title, time: e.time, group: 'routine', done: false, pinned: false, sortOrder: nextSort(list) }
+        m[e.dateKey] = [...list, temp]
+        temps.push({ dateKey: e.dateKey, task: temp })
         created++
       })
       return { tasksByDate: m }
+    })
+    temps.forEach(({ dateKey, task }) => {
+      createTodo(dateKey, task, 'ROUTINE').then((saved) => reconcile(dateKey, task.id, saved)).catch(() => failCreate(dateKey, task.id))
     })
     return created
   },

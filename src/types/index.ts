@@ -38,6 +38,13 @@ export type TaskGroup = 'routine' | 'personal'
 /** 할 일 상태 — be todo_status(TODO/DONE) 2상태. done=true ↔ 'done' */
 export type TaskStatus = 'todo' | 'done'
 
+/** 사용자 커스텀 분류 라벨 (be label 테이블 대응 — 지금은 로컬 persist). category(6종·AI)와 별개 */
+export interface Label {
+  id: string
+  name: string
+  color: string
+}
+
 /** 공유 권한 (PRD SHARE/PERM: owner ⊃ editor ⊃ viewer) */
 export type ShareRole = 'owner' | 'editor' | 'viewer'
 /** 초대 수락 상태 (GitHub/Jira식: 초대→pending→상대 수락→accepted) */
@@ -64,6 +71,7 @@ export interface Task {
   lng?: number | null // be todo.lng
   pinned?: boolean // be todo.pinned — 최상단 고정(우선순위 대체)
   sortOrder?: number // be todo.sort_order — 드래그 수동 순서
+  labelId?: string | null // be todo.label_id (사용자 라벨) — 생성흐름 캐리어. 표시는 useLabelStore로 해석
   ai?: boolean
   participants?: TaskParticipant[] // be todo_participant (공유). 비어있으면 개인 할 일
 }

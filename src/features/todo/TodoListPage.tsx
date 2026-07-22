@@ -7,6 +7,7 @@ import { todayKey } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
 import { useTodoStore, statusOf } from '@/store/useTodoStore'
 import { userById } from '@/store/useFriendStore'
+import { useLabelStore } from '@/store/useLabelStore'
 import { MC, cardStyle } from '@/features/meetup/tokens'
 import { AvatarStack } from '@/features/meetup/meetupShared'
 import { TaskDetailModal } from './TaskDetailModal'
@@ -25,9 +26,13 @@ export function TodoListPage() {
   const togglePin = useTodoStore((s) => s.togglePin)
   const reorderTasks = useTodoStore((s) => s.reorderTasks)
   const openAdd = useAppStore((s) => s.openAdd)
+  const openLabelManager = useAppStore((s) => s.openLabelManager)
+  const labels = useLabelStore((s) => s.labels)
+  const assignments = useLabelStore((s) => s.assignments)
   const [detail, setDetail] = useState<Row | null>(null)
   const [query, setQuery] = useState('')
   const [hideDone, setHideDone] = useState(false)
+  const [filterLabel, setFilterLabel] = useState<string | null>(null)
   const [dragKey, setDragKey] = useState<string | null>(null)
 
   const all: Row[] = Object.keys(tasksByDate).flatMap((dateKey) => (tasksByDate[dateKey] ?? []).map((task) => ({ dateKey, task })))
@@ -35,6 +40,7 @@ export function TodoListPage() {
   const visible = all
     .filter(({ task }) => !q || task.title.toLowerCase().includes(q))
     .filter(({ task }) => !hideDone || statusOf(task) !== 'done')
+    .filter(({ task }) => !filterLabel || assignments[task.id] === filterLabel)
 
   // 완료는 아래로 → 핀 먼저 → 수동정렬(sort_order) → 날짜
   const rank = (t: Task) => (statusOf(t) === 'done' ? 1 : 0)
@@ -88,6 +94,26 @@ export function TodoListPage() {
           </div>
           <div onClick={() => setHideDone((v) => !v)} className="hbtn" style={{ display: 'flex', alignItems: 'center', gap: 8, background: hideDone ? MC.ink : '#fff', color: hideDone ? '#fff' : MC.muted, border: `1.5px solid ${hideDone ? MC.ink : MC.border}`, borderRadius: 12, padding: '9px 14px', fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>
             완료 숨기기
+          </div>
+        </div>
+
+        {/* 분류(라벨) 필터 + 관리 — 할일 관리 안에서 라벨 운영 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 18, flexWrap: 'wrap' }}>
+          <div onClick={() => setFilterLabel(null)} className="hbtn" style={{ fontSize: 12.5, fontWeight: 800, padding: '6px 13px', borderRadius: 20, cursor: 'pointer', background: filterLabel === null ? MC.ink : '#fff', color: filterLabel === null ? '#fff' : MC.muted, border: `1.5px solid ${filterLabel === null ? MC.ink : MC.border}` }}>전체</div>
+          {labels.map((l) => {
+            const on = filterLabel === l.id
+            const cnt = all.filter(({ task }) => assignments[task.id] === l.id).length
+            return (
+              <div key={l.id} onClick={() => setFilterLabel(on ? null : l.id)} className="hbtn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 800, padding: '6px 13px', borderRadius: 20, cursor: 'pointer', background: on ? l.color : l.color + '1F', color: on ? '#fff' : l.color, border: `1.5px solid ${on ? l.color : 'transparent'}` }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: on ? '#fff' : l.color }} />
+                {l.name}
+                {cnt > 0 && <span style={{ fontSize: 11, fontWeight: 800, opacity: 0.75 }}>{cnt}</span>}
+              </div>
+            )
+          })}
+          <div onClick={openLabelManager} className="hbtn" title="분류 관리" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 700, padding: '6px 12px', borderRadius: 20, cursor: 'pointer', color: MC.muted, border: `1.5px dashed ${MC.border}` }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
+            분류 관리
           </div>
         </div>
 
@@ -150,6 +176,7 @@ function TaskItem({ row, rows, onOpen, onToggle, onPin, dragKey, setDragKey, reo
   const { dateKey, task } = row
   const done = statusOf(task) === 'done'
   const badge = dateBadge(dateKey)
+  const label = useLabelStore((s) => { const lid = s.assignments[task.id]; return lid ? s.labels.find((l) => l.id === lid) : undefined })
   const parts = (task.participants ?? []).filter((p) => p.status === 'accepted').map((p) => userById(p.userId)?.nickname).filter(Boolean) as string[]
   const pendingCount = (task.participants ?? []).filter((p) => p.status === 'pending').length
   const k = keyOf(row)
@@ -181,6 +208,7 @@ function TaskItem({ row, rows, onOpen, onToggle, onPin, dragKey, setDragKey, reo
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 15.5, fontWeight: 700, color: done ? MC.faint : MC.ink, textDecoration: done ? 'line-through' : 'none' }}>{task.title}</span>
+          {label && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: label.color, background: label.color + '1F', padding: '2.5px 9px', borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: label.color }} />{label.name}</span>}
           {task.ai && <span style={{ fontSize: 11, fontWeight: 800, color: '#15795A', background: '#E4F2EC', padding: '2.5px 8px', borderRadius: 20 }}>AI</span>}
           {task.category && <span style={{ fontSize: 11, fontWeight: 800, color: '#5A554B', background: '#F0F2F6', padding: '2.5px 8px', borderRadius: 20 }}>{task.category}</span>}
         </div>
