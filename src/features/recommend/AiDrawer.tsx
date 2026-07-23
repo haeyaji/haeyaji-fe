@@ -47,6 +47,11 @@ export function AiDrawer() {
     setDismissed((prev) => new Set(prev).add(key))
     toast('관심없음으로 표시했어요')
   }
+  // 추천을 '일정에 추가'할 때 긍정 신호 → 개인화 가중치 반영
+  const select = (t: RecommendedTodo) => {
+    addPlaceTask({ title: t.placeName || t.title, placeName: t.placeName, placeUrl: t.placeUrl, lat: t.y, lng: t.x })
+    fireSignal(sendRecommendFeedback(t.category, 'SELECTED'))
+  }
 
   // 플로팅 위젯 크기 (좌상단 그립 드래그로 조절 — 우하단 앵커 고정)
   const [size, setSize] = useState({ w: 404, h: 640 })
@@ -133,7 +138,7 @@ export function AiDrawer() {
                     {todos.map((t, j) => {
                       const key = `${i}-${j}`
                       if (dismissed.has(key)) return null
-                      return <TodoCard key={key} todo={t} onAdd={() => addPlaceTask({ title: t.placeName || t.title, placeName: t.placeName, placeUrl: t.placeUrl, lat: t.y, lng: t.x })} onIgnore={() => ignore(key, t.category)} />
+                      return <TodoCard key={key} todo={t} onAdd={() => select(t)} onIgnore={() => ignore(key, t.category)} />
                     })}
                   </div>
                 )}
