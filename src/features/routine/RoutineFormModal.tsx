@@ -1,17 +1,13 @@
 // 루틴 생성·수정 모달 — 이름·시간·카테고리·반복 요일 지정. (RoutineDrawer의 + 새 루틴 / 카드 편집)
 import { useState } from 'react'
-import { CloseIcon, RoutineIcon } from '@/lib/icons'
+import { CloseIcon } from '@/lib/icons'
 import { normalizeTime } from '@/lib/dates'
 import { useRoutineStore } from '@/store/useRoutineStore'
 import { useAppStore } from '@/store/useAppStore'
 import { DayPicker } from './DayPicker'
-import type { Routine, RoutineCat } from '@/types'
+import { LabelPicker } from '@/features/todo/LabelPicker'
+import type { Routine } from '@/types'
 
-const CATS: { key: RoutineCat; label: string }[] = [
-  { key: 'yoga', label: '운동' },
-  { key: 'shop', label: '생활' },
-  { key: 'code', label: '작업' },
-]
 const label = { fontSize: 12.5, fontWeight: 800, color: '#8B8579', marginBottom: 9 } as const
 const input = { width: '100%', border: '1px solid #E1E5EC', outline: 'none', background: '#F6F8FA', borderRadius: 13, padding: '14px 16px', fontFamily: 'inherit', fontSize: 15.5, fontWeight: 600, color: '#17150F' } as const
 
@@ -22,7 +18,7 @@ export function RoutineFormModal({ routine, onClose }: { routine: Routine | null
   const [title, setTitle] = useState(routine?.title ?? '')
   const [time, setTime] = useState(routine?.time ?? '오전 09:00')
   const [timeErr, setTimeErr] = useState(false)
-  const [cat, setCat] = useState<RoutineCat>(routine?.cat ?? 'code')
+  const [labelId, setLabelId] = useState<string | null>(routine?.labelId ?? null)
   const [days, setDays] = useState<boolean[]>(routine?.days ?? [true, true, true, true, true, false, false])
 
   const normTime = () => {
@@ -37,10 +33,10 @@ export function RoutineFormModal({ routine, onClose }: { routine: Routine | null
     const n = normTime()
     if (n === null) return
     if (editing && routine) {
-      updateRoutine(routine.id, { title: title.trim(), time: n || '', cat, days })
+      updateRoutine(routine.id, { title: title.trim(), time: n || '', labelId, days })
       toast('루틴을 수정했어요')
     } else {
-      createRoutine({ title, time: n || '', cat, days })
+      createRoutine({ title, time: n || '', labelId, days })
       toast('루틴을 추가했어요')
     }
     onClose()
@@ -63,18 +59,9 @@ export function RoutineFormModal({ routine, onClose }: { routine: Routine | null
         </div>
 
         <div style={{ marginTop: 18 }}>
-          <div style={label}>카테고리</div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {CATS.map((c) => {
-              const on = cat === c.key
-              return (
-                <div key={c.key} onClick={() => setCat(c.key)} className="hbtn" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px 0', borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: 'pointer', background: on ? '#15795A' : '#F0F2F6', color: on ? '#fff' : '#8B8579' }}>
-                  <span style={{ width: 17, height: 17, display: 'inline-flex' }}><RoutineIcon cat={c.key} c={on ? '#fff' : '#8B8579'} /></span>
-                  {c.label}
-                </div>
-              )
-            })}
-          </div>
+          <div style={label}>분류 (선택)</div>
+          <LabelPicker value={labelId} onChange={setLabelId} />
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#A39C8E', marginTop: 8 }}>이 루틴으로 생성되는 할 일에 라벨이 자동 적용돼요</div>
         </div>
 
         <div style={{ marginTop: 18 }}>

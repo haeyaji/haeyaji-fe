@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Category, Task, TaskGroup, TaskStatus, TasksByDate } from '@/types'
+import type { Task, TaskGroup, TaskStatus, TasksByDate } from '@/types'
 import { fetchTodos, createTodo, updateTodo, deleteTodo } from '@/api/todoApi'
 import { useAppStore } from './useAppStore'
 import { useLabelStore } from './useLabelStore'
@@ -7,14 +7,13 @@ import { useLabelStore } from './useLabelStore'
 /** 상태 유추: status 미지정 구데이터는 done 값으로 (be todo_status TODO/DONE) */
 export const statusOf = (t: Task): TaskStatus => t.status ?? (t.done ? 'done' : 'todo')
 
-/** 추천 → 할 일 추가 입력 (be todo.place_* / category 배관) */
+/** 추천 → 할 일 추가 입력 (be todo.place_* 배관) */
 export interface PlaceTaskInput {
   title: string
   placeName?: string | null
   placeUrl?: string | null
   lat?: number | null
   lng?: number | null
-  category?: Category | null
 }
 
 /** 수동 추가 입력 (AddTaskModal) */
@@ -23,7 +22,6 @@ export interface SubmitTaskInput {
   title: string
   time?: string
   group: TaskGroup
-  category?: Category | null
   labelId?: string | null // 사용자 라벨 (생성 후 서버 id에 매핑)
 }
 
@@ -48,7 +46,7 @@ interface TodoState {
   addTaskAt: (dateKey: string, title: string, status: TaskStatus) => void
   togglePin: (dateKey: string, id: string) => void
   reorderTasks: (ordered: TaskRef[]) => void
-  bulkAddRoutine: (entries: { dateKey: string; title: string; time: string }[]) => number
+  bulkAddRoutine: (entries: { dateKey: string; title: string; time: string; labelId?: string | null }[]) => number
 }
 
 // 특정 날짜의 특정 task를 변환하는 헬퍼
@@ -108,16 +106,16 @@ export const useTodoStore = create<TodoState>((set, get) => ({
   addPlaceTask: (input) => {
     const dateKey = sel()
     const list = get().tasksByDate[dateKey] ?? []
-    const temp: Task = { id: 'tmp' + Date.now(), title: input.title, time: '', group: 'personal', done: false, ai: true, category: input.category ?? null, placeName: input.placeName ?? null, placeUrl: input.placeUrl ?? null, lat: input.lat ?? null, lng: input.lng ?? null, pinned: false, sortOrder: nextSort(list) }
+    const temp: Task = { id: 'tmp' + Date.now(), title: input.title, time: '', group: 'personal', done: false, ai: true, placeName: input.placeName ?? null, placeUrl: input.placeUrl ?? null, lat: input.lat ?? null, lng: input.lng ?? null, pinned: false, sortOrder: nextSort(list) }
     set((s) => ({ tasksByDate: { ...s.tasksByDate, [dateKey]: [...(s.tasksByDate[dateKey] ?? []), temp] } }))
     useAppStore.getState().toast(`'${input.title}' 일정에 추가됨`)
     createTodo(dateKey, temp, 'AI').then((saved) => reconcile(dateKey, temp.id, saved)).catch(() => failCreate(dateKey, temp.id))
   },
-  submitTask: ({ dateKey, title, time, group, category, labelId }) => {
+  submitTask: ({ dateKey, title, time, group, labelId }) => {
     const t = title.trim()
     if (!t) return false
     const list = get().tasksByDate[dateKey] ?? []
-    const temp: Task = { id: 'tmp' + Date.now(), title: t, time: time || '', group, done: false, category: category ?? null, pinned: false, sortOrder: nextSort(list) }
+    const temp: Task = { id: 'tmp' + Date.now(), title: t, time: time || '', group, done: false, pinned: false, sortOrder: nextSort(list) }
     set((s) => ({ tasksByDate: { ...s.tasksByDate, [dateKey]: [...(s.tasksByDate[dateKey] ?? []), temp] } }))
     useAppStore.getState().toast(`'${t}' 추가됨`)
     createTodo(dateKey, temp)
@@ -198,7 +196,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
   },
   bulkAddRoutine: (entries) => {
     let created = 0
-    const temps: { dateKey: string; task: Task }[] = []
+    const temps: { dateKey: string; task: Task; labelId?: string | null }[] = []
     set((s) => {
       const m = { ...s.tasksByDate }
       entries.forEach((e, i) => {
@@ -207,13 +205,18 @@ export const useTodoStore = create<TodoState>((set, get) => ({
         if (list.some((t) => t.group === 'routine' && t.title === e.title && t.time === e.time)) return
         const temp: Task = { id: `tmp${Date.now()}_${i}`, title: e.title, time: e.time, group: 'routine', done: false, pinned: false, sortOrder: nextSort(list) }
         m[e.dateKey] = [...list, temp]
-        temps.push({ dateKey: e.dateKey, task: temp })
+        temps.push({ dateKey: e.dateKey, task: temp, labelId: e.labelId })
         created++
       })
       return { tasksByDate: m }
     })
-    temps.forEach(({ dateKey, task }) => {
-      createTodo(dateKey, task, 'ROUTINE').then((saved) => reconcile(dateKey, task.id, saved)).catch(() => failCreate(dateKey, task.id))
+    temps.forEach(({ dateKey, task, labelId }) => {
+      createTodo(dateKey, task, 'ROUTINE')
+        .then((saved) => {
+          reconcile(dateKey, task.id, saved)
+          if (labelId) useLabelStore.getState().setTodoLabel(saved.id, labelId) // 루틴 라벨 상속
+        })
+        .catch(() => failCreate(dateKey, task.id))
     })
     return created
   },

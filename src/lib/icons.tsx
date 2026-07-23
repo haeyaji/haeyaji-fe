@@ -1,6 +1,6 @@
 // 시안의 인라인 SVG들을 React 컴포넌트로 포팅. (dangerouslySetInnerHTML 대신 JSX)
 import type { CSSProperties } from 'react'
-import type { PlaceCat, RoutineCat, WeatherCond } from '@/types'
+import type { PlaceCat, WeatherCond } from '@/types'
 
 interface SvgProps {
   c?: string
@@ -82,29 +82,6 @@ export function CategoryIcon({ cat, c = '#15795A', style }: { cat: PlaceCat; c?:
   return (
     <svg viewBox="0 0 24 24" {...full} {...p} style={style}>
       <path d="M3 21V8l9-5 9 5v13M3 21h18M9 21v-6h6v6" />
-    </svg>
-  )
-}
-
-export function RoutineIcon({ cat, c = '#15795A', style }: { cat: RoutineCat; c?: string; style?: CSSProperties }) {
-  const p = { fill: 'none', stroke: c, strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
-  if (cat === 'yoga')
-    return (
-      <svg viewBox="0 0 24 24" {...full} {...p} style={style}>
-        <circle cx="12" cy="5" r="2" />
-        <path d="M5 9l7 2 7-2M12 11v5M12 16l-4 5M12 16l4 5" />
-      </svg>
-    )
-  if (cat === 'shop')
-    return (
-      <svg viewBox="0 0 24 24" {...full} {...p} style={style}>
-        <path d="M6 8h12l-1 12H7z" />
-        <path d="M9 8a3 3 0 0 1 6 0" />
-      </svg>
-    )
-  return (
-    <svg viewBox="0 0 24 24" {...full} {...p} style={style}>
-      <path d="M9 8l-4 4 4 4M15 8l4 4-4 4" />
     </svg>
   )
 }

@@ -58,7 +58,6 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
           <span style={{ fontSize: 12.5, fontWeight: 800, color: badge.color, background: badge.bg, padding: '4px 11px', borderRadius: 20, flexShrink: 0 }}>{badge.label}</span>
           {task.ai && <span style={{ fontSize: 11.5, fontWeight: 800, color: '#15795A', background: '#E4F2EC', padding: '4px 10px', borderRadius: 20 }}>AI 추천</span>}
-          {task.category && <span title="AI·개인화 카테고리" style={{ fontSize: 11.5, fontWeight: 800, color: '#5A554B', background: '#F0F2F6', padding: '4px 10px', borderRadius: 20 }}>{task.category}</span>}
           <div style={{ flex: 1 }} />
           <div onClick={() => togglePin(dateKey, task.id)} className="hbtn" title={task.pinned ? '고정 해제' : '최상단 고정'} style={{ width: 32, height: 32, borderRadius: 10, background: task.pinned ? '#FDF0E3' : '#F0F2F6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <PinIcon filled={!!task.pinned} c={task.pinned ? '#C2702A' : '#A39C8E'} />

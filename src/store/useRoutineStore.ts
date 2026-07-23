@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Routine, RoutineCat } from '@/types'
+import type { Routine } from '@/types'
 import { dowIndexOf } from '@/lib/weather'
 import { fmtKey } from '@/lib/dates'
 import { useAppStore } from './useAppStore'
@@ -17,7 +17,7 @@ export interface RoutineInput {
   title: string
   time: string
   days: boolean[]
-  cat?: RoutineCat
+  labelId?: string | null
 }
 
 interface RoutineState {
@@ -34,17 +34,17 @@ interface RoutineState {
   batchApply: () => void
 }
 
-// 활성/지정 루틴들을 이번 달 잔여일(오늘~말일)의 해당 요일 항목으로 펼침
-function monthEntries(routines: Routine[]): { dateKey: string; title: string; time: string }[] {
+// 활성/지정 루틴들을 이번 달 잔여일(오늘~말일)의 해당 요일 항목으로 펼침 (라벨 상속)
+function monthEntries(routines: Routine[]): { dateKey: string; title: string; time: string; labelId?: string | null }[] {
   const now = new Date()
   const y = now.getFullYear()
   const mo = now.getMonth()
   const lastDay = new Date(y, mo + 1, 0).getDate()
-  const entries: { dateKey: string; title: string; time: string }[] = []
+  const entries: { dateKey: string; title: string; time: string; labelId?: string | null }[] = []
   routines.forEach((r) => {
     for (let d = now.getDate(); d <= lastDay; d++) {
       const date = new Date(y, mo, d)
-      if (r.days[dowIndexOf(date)]) entries.push({ dateKey: fmtKey(date), title: r.title, time: r.time })
+      if (r.days[dowIndexOf(date)]) entries.push({ dateKey: fmtKey(date), title: r.title, time: r.time, labelId: r.labelId })
     }
   })
   return entries
@@ -67,8 +67,8 @@ export const useRoutineStore = create<RoutineState>((set, get) => ({
     set((s) => ({ routines: s.routines.filter((r) => r.id !== id) }))
     useAppStore.getState().toast('루틴을 삭제했어요')
   },
-  createRoutine: ({ title, time, days, cat = 'code' }) => {
-    const routine: Routine = { id: 'nr' + Date.now(), title: title.trim() || '새 루틴', cat, time, days, active: true }
+  createRoutine: ({ title, time, days, labelId = null }) => {
+    const routine: Routine = { id: 'nr' + Date.now(), title: title.trim() || '새 루틴', time, days, active: true, labelId }
     set((s) => ({ routines: [...s.routines, routine] }))
     return routine
   },

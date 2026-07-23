@@ -1,7 +1,7 @@
 // be 할 일 CRUD (FR-1). be는 ApiResponse<T> envelope로 감싸 내려주므로 data.data 로 언랩한다.
 // 인증(JWT) 전 단계라 member 스코프 없음 — 붙는 순간 be가 member_id 필터 추가(fe 계약 불변).
 // 리뷰 대응: PATCH가 전체 덮어쓰기라 항상 "현재 전체 상태"를 실어 보낸다(toUpdateBody).
-import type { Category, Task, TaskStatus } from '@/types'
+import type { Task, TaskStatus } from '@/types'
 import { toApiTime, fromApiTime } from '@/lib/dates'
 import { be } from './client'
 
@@ -25,7 +25,6 @@ interface TodoResponse {
   placeUrl: string | null
   lat: number | null
   lng: number | null
-  category: string | null
   source: 'MANUAL' | 'AI' | 'ROUTINE' | 'MEETING' | string
   sourceRefId: string | null
   completed: boolean
@@ -53,7 +52,6 @@ function toTask(r: TodoResponse): Task {
     group: r.source === 'ROUTINE' ? 'routine' : 'personal',
     done: r.completed,
     status,
-    category: (r.category as Category) ?? null,
     placeName: r.placeName,
     placeUrl: r.placeUrl,
     lat: r.lat,
@@ -74,7 +72,6 @@ function toCreateBody(dateKey: string, t: Task, source?: TodoSource) {
     placeUrl: t.placeUrl ?? null,
     lat: t.lat ?? null,
     lng: t.lng ?? null,
-    category: t.category ?? null,
     source: source ?? sourceOf(t),
     pinned: t.pinned ?? false,
     sortOrder: t.sortOrder ?? 0,
@@ -90,7 +87,6 @@ function toUpdateBody(t: Task) {
     placeUrl: t.placeUrl ?? null,
     lat: t.lat ?? null,
     lng: t.lng ?? null,
-    category: t.category ?? null,
     pinned: t.pinned ?? false,
     sortOrder: t.sortOrder ?? 0,
     completed: (t.status ?? (t.done ? 'done' : 'todo')) === 'done',
