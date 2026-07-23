@@ -71,7 +71,7 @@ export function TodoListPage() {
   const secProps = { onOpen: setDetail, onToggle: setStatus, onPin: togglePin, dragKey, setDragKey, reorderWithin }
 
   return (
-    <div className="mp-pad" style={{ minHeight: 'var(--full-vh)', width: '100%', color: MC.ink, background: MC.canvas }}>
+    <div className="mp-pad" style={{ minHeight: 'var(--full-vh)', width: '100%', color: MC.ink, background: 'var(--canvas)' }}>
       <div className="mp-wrap">
         {/* 헤더 */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
