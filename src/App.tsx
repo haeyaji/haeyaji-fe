@@ -16,7 +16,7 @@ import { MeetupPage } from '@/features/meetup/MeetupPage'
 import { AiDrawer } from '@/features/recommend/AiDrawer'
 import { WeatherDrawer } from '@/features/weather/WeatherDrawer'
 import { RoutineDrawer } from '@/features/routine/RoutineDrawer'
-import { NotificationDrawer } from '@/features/notification/NotificationDrawer'
+import { NotificationBell } from '@/features/notification/NotificationBell'
 import { AddTaskModal } from '@/features/todo/AddTaskModal'
 import { LabelManagerModal } from '@/features/todo/LabelManagerModal'
 import { MapModal } from '@/features/map/MapModal'
@@ -83,7 +83,13 @@ export default function App() {
     <>
       <div style={{ display: 'flex', alignItems: 'stretch', minHeight: 'var(--full-vh)' }}>
         <Sidebar />
-        <main style={{ flex: 1, minWidth: 0 }}>{view === 'home' ? <HomeDashboard /> : view === 'todo' ? <TodoListPage /> : view === 'mypage' ? <MyPage /> : view === 'meetup' ? <MeetupPage /> : <CalendarPage />}</main>
+        <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+          {/* 상단 바 — 우측 알림 벨 */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '16px 28px 0', flexShrink: 0 }}>
+            <NotificationBell />
+          </div>
+          <div style={{ flex: 1, minWidth: 0, marginTop: -18 }}>{view === 'home' ? <HomeDashboard /> : view === 'todo' ? <TodoListPage /> : view === 'mypage' ? <MyPage /> : view === 'meetup' ? <MeetupPage /> : <CalendarPage />}</div>
+        </main>
       </div>
 
       {/* overlays */}
@@ -91,7 +97,6 @@ export default function App() {
       <AiDrawer />
       <WeatherDrawer />
       <RoutineDrawer />
-      <NotificationDrawer />
       <AddTaskModal />
       <LabelManagerModal />
       <MapModal />
