@@ -1,5 +1,6 @@
 // 약속 만들기 — 정보(종류·이름·친구 선택) → 날짜 → 내 되는시간. 친구는 선택사항(나중에 추가 가능).
 import { useMemo, useState } from 'react'
+import { useOverlay } from '@/lib/useOverlay'
 import { CloseIcon, WeatherIcon } from '@/lib/icons'
 import { todayKey, dayNum, parseKey, fmtKey, addDays } from '@/lib/dates'
 import { useWeatherStore } from '@/store/useWeatherStore'
@@ -194,6 +195,7 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
 // fill=true: 세로를 뷰포트 기준(92vh)으로 꽉 채우는 flex 컬럼. 자식 중 flex:1 요소가 남는 높이를 차지.
 // fill=false: 내용 높이만큼(최대 90vh) 자라는 기본 모달.
 export function Shell({ children, onClose, title, width = 640, fill = false }: { children: React.ReactNode; onClose: () => void; title: string; width?: number | string; fill?: boolean }) {
+  useOverlay(true, onClose)
   // fill 높이는 #root zoom을 보정한 실제 화면 기준(--full-vh)으로 잡아야 진짜 90%가 됨.
   const box: React.CSSProperties = fill
     ? { width, maxWidth: '100%', height: 'calc(var(--full-vh, 100vh) * 0.92)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }

@@ -2,6 +2,8 @@
 // 분류(라벨)·장소·핀·반복(루틴) + 공유(todo_participant: 역할·초대수락)를 다룬다. (칸반/지라 필드는 제거됨)
 import { useState } from 'react'
 import { CloseIcon, PlusIcon, TrashIcon } from '@/lib/icons'
+import { safeUrl } from '@/lib/dom'
+import { useOverlay } from '@/lib/useOverlay'
 import { useTodoStore, statusOf } from '@/store/useTodoStore'
 import { useFriendStore, userById } from '@/store/useFriendStore'
 import { useLabelStore } from '@/store/useLabelStore'
@@ -36,6 +38,7 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
   const [inviteRole, setInviteRole] = useState<ShareRole>('editor')
   const [expand, setExpand] = useState(false)
   const [days, setDays] = useState<boolean[]>([true, true, true, true, true, false, false])
+  useOverlay(true, onClose)
 
   // 스토어 최신 상태 반영 (수정 즉시 리렌더)
   const task = (tasksByDate[dateKey] ?? []).find((t) => t.id === taskId)
@@ -142,7 +145,7 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
               </div>
               <div style={{ flex: 1, minWidth: 0, fontSize: 14.5, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.placeName}</div>
               {task.placeUrl && (
-                <div onClick={() => window.open(task.placeUrl!, '_blank', 'noopener')} className="hbtn" style={{ fontSize: 12.5, fontWeight: 800, color: '#15795A', background: '#E4F2EC', padding: '7px 12px', borderRadius: 20, cursor: 'pointer', flexShrink: 0 }}>지도</div>
+                <div onClick={() => { const u = safeUrl(task.placeUrl); if (u) window.open(u, '_blank', 'noopener') }} className="hbtn" style={{ fontSize: 12.5, fontWeight: 800, color: '#15795A', background: '#E4F2EC', padding: '7px 12px', borderRadius: 20, cursor: 'pointer', flexShrink: 0 }}>지도</div>
               )}
             </div>
           </div>

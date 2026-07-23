@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useOverlay } from '@/lib/useOverlay'
 import { CloseIcon, TrashIcon } from '@/lib/icons'
 import { DOW } from '@/lib/mockData'
 import { useAppStore } from '@/store/useAppStore'
@@ -21,6 +22,7 @@ export function RoutineDrawer() {
   const { routineOpen, closeRoutine } = useAppStore()
   const { routines, toggleActive, deleteRoutine } = useRoutineStore()
   const [form, setForm] = useState<Routine | 'new' | null>(null)
+  useOverlay(routineOpen, closeRoutine)
   if (!routineOpen) return null
 
   return (

@@ -5,11 +5,13 @@ export function Toast() {
   if (!showToast) return null
   return (
     <div
+      role="status"
+      aria-live="polite"
       style={{
         position: 'fixed',
         bottom: 30,
         left: '50%',
-        zIndex: 60,
+        zIndex: 90, // 모든 모달/드로어 위 (LabelManager 70 등)
         background: '#17150F',
         color: '#fff',
         padding: '13px 24px',

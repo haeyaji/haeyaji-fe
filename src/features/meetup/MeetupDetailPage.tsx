@@ -2,6 +2,7 @@
 // 가능한 시간대 리스트는 버튼→모달. 내 되는/안되는 시간은 "내 시간 수정" 모달에서 편집.
 import { useMemo, useState } from 'react'
 import { WeatherIcon } from '@/lib/icons'
+import { randomToken } from '@/lib/dom'
 import { longDate, mdLabel, hhmm, dur, candidateSlots, friendFree, friendEntered, taskTick, meetTypeLabel, type Slot } from './meetupShared'
 import { MC, cardStyle } from './tokens'
 import { useTodoStore } from '@/store/useTodoStore'
@@ -42,7 +43,7 @@ export function MeetupDetailPage({ id, onBack }: { id: string; onBack: () => voi
   const shareInvite = () => {
     let token = meetup.shareToken
     if (!token) {
-      token = Array.from({ length: 4 }, () => Math.random().toString(36).slice(2, 8)).join('')
+      token = randomToken(24) // crypto 기반 추측불가 토큰 (be 발급 전 임시)
       update(id, { shareToken: token })
     }
     const url = `${location.origin}/invite/${token}`

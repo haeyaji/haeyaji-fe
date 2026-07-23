@@ -60,7 +60,7 @@ export function HomeDashboard() {
 
   return (
     <div className="page-pad" style={{ minHeight: 'var(--full-vh)', width: '100%', color: '#17150F', background: 'var(--canvas)' }}>
-      {/* 스케일은 index.css .home-wrap zoom 미디어쿼리에서 (데탑 .8 / 노트북 .64) */}
+      {/* 스케일은 index.css .home-wrap zoom 미디어쿼리에서 (데탑 .8 / 노트북 .77) */}
       <div className="home-wrap">
         {/* header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, gap: 16, flexWrap: 'wrap' }}>

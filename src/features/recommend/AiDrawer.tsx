@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { CategoryIcon, CloseIcon } from '@/lib/icons'
+import { safeUrl } from '@/lib/dom'
 import { useDayWeather } from '@/lib/weather'
 import { dateShortLabel } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
@@ -132,7 +133,7 @@ export function AiDrawer() {
                     {todos.map((t, j) => {
                       const key = `${i}-${j}`
                       if (dismissed.has(key)) return null
-                      return <TodoCard key={j} todo={t} onAdd={() => addPlaceTask({ title: t.placeName || t.title, placeName: t.placeName, placeUrl: t.placeUrl, lat: t.y, lng: t.x })} onIgnore={() => ignore(key, t.category)} />
+                      return <TodoCard key={key} todo={t} onAdd={() => addPlaceTask({ title: t.placeName || t.title, placeName: t.placeName, placeUrl: t.placeUrl, lat: t.y, lng: t.x })} onIgnore={() => ignore(key, t.category)} />
                     })}
                   </div>
                 )}
@@ -214,7 +215,7 @@ function TodoCard({ todo, onAdd, onIgnore }: { todo: RecommendedTodo; onAdd: () 
       <div style={{ display: 'flex', gap: 8, marginTop: 13 }}>
         <div onClick={onAdd} style={{ flex: 1, textAlign: 'center', fontSize: 14.5, fontWeight: 700, color: '#fff', background: '#17150F', borderRadius: 12, padding: 12, cursor: 'pointer' }}>일정에 추가</div>
         {todo.placeUrl && (
-          <div onClick={() => window.open(todo.placeUrl!, '_blank', 'noopener')} style={{ textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#5A554B', background: '#E9EDF3', borderRadius: 11, padding: '10px 14px', cursor: 'pointer' }}>지도</div>
+          <div onClick={() => { const u = safeUrl(todo.placeUrl); if (u) window.open(u, '_blank', 'noopener') }} style={{ textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#5A554B', background: '#E9EDF3', borderRadius: 11, padding: '10px 14px', cursor: 'pointer' }}>지도</div>
         )}
         {/* 구멍2 — 부정 피드백(관심없음). 클릭 시 카드 숨김 + be로 IGNORED 신호 전송 */}
         <div onClick={onIgnore} title="관심없음" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, fontSize: 13, fontWeight: 700, color: '#A39C8E', background: '#F0F2F6', borderRadius: 11, padding: '10px 13px', cursor: 'pointer' }}>

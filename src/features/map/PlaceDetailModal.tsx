@@ -1,5 +1,7 @@
 import { CategoryIcon, CloseIcon } from '@/lib/icons'
+import { useOverlay } from '@/lib/useOverlay'
 import { KakaoMap } from './KakaoMap'
+import { safeUrl } from '@/lib/dom'
 import type { PlaceCat } from '@/types'
 
 export interface DetailPlace {
@@ -31,7 +33,8 @@ export function PlaceDetailModal({
   onSetOrigin: () => void
   onSetDest: () => void
 }) {
-  const embedUrl = place.placeUrl ? place.placeUrl.replace(/^http:/, 'https:') : null
+  useOverlay(true, onClose)
+  const embedUrl = safeUrl(place.placeUrl ? place.placeUrl.replace(/^http:/, 'https:') : null)
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(24,21,15,.5)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'rb-fade .16s ease' }}>
@@ -75,7 +78,7 @@ export function PlaceDetailModal({
           <div style={{ display: 'flex', gap: 8 }}>
             <div onClick={onAdd} className="lift" style={{ flex: 1, textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#fff', background: '#17150F', borderRadius: 12, padding: 13, cursor: 'pointer' }}>일정에 추가</div>
             {embedUrl && (
-              <div onClick={() => window.open(embedUrl, '_blank', 'noopener')} style={{ textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#5A554B', background: '#E9EDF3', borderRadius: 12, padding: '13px 16px', cursor: 'pointer' }}>새 탭</div>
+              <div onClick={() => embedUrl && window.open(embedUrl, '_blank', 'noopener')} style={{ textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#5A554B', background: '#E9EDF3', borderRadius: 12, padding: '13px 16px', cursor: 'pointer' }}>새 탭</div>
             )}
           </div>
         </div>

@@ -1,5 +1,6 @@
 // 루틴 생성·수정 모달 — 이름·시간·분류(라벨)·반복 요일 지정. (RoutineDrawer의 + 새 루틴 / 카드 편집)
 import { useState } from 'react'
+import { useOverlay } from '@/lib/useOverlay'
 import { CloseIcon } from '@/lib/icons'
 import { normalizeTime } from '@/lib/dates'
 import { useRoutineStore } from '@/store/useRoutineStore'
@@ -20,6 +21,7 @@ export function RoutineFormModal({ routine, onClose }: { routine: Routine | null
   const [timeErr, setTimeErr] = useState(false)
   const [labelId, setLabelId] = useState<string | null>(routine?.labelId ?? null)
   const [days, setDays] = useState<boolean[]>(routine?.days ?? [true, true, true, true, true, false, false])
+  useOverlay(true, onClose)
 
   const normTime = () => {
     const n = normalizeTime(time)
