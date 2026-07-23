@@ -8,11 +8,22 @@ import { useAppStore } from '@/store/useAppStore'
 import { useTodoStore, statusOf } from '@/store/useTodoStore'
 import { userById } from '@/store/useFriendStore'
 import { useLabelStore } from '@/store/useLabelStore'
+import { useRoutineStore } from '@/store/useRoutineStore'
 import { MC, cardStyle } from '@/features/meetup/tokens'
 import { AvatarStack } from '@/features/meetup/meetupShared'
 import { TaskDetailModal } from './TaskDetailModal'
 import { dateBadge } from './taskMeta'
-import type { Task } from '@/types'
+import { DOW } from '@/lib/mockData'
+import type { Task, Routine } from '@/types'
+
+// 반복 요일 요약 (매일/평일/주말/요일목록)
+function daysLabel(days: boolean[]): string {
+  const n = days.filter(Boolean).length
+  if (n === 7) return '매일'
+  if (days.slice(0, 5).every(Boolean) && !days[5] && !days[6]) return '평일'
+  if (!days.slice(0, 5).some(Boolean) && days[5] && days[6]) return '주말'
+  return DOW.filter((_, i) => days[i]).join('·') || '없음'
+}
 
 interface Row {
   dateKey: string
@@ -27,8 +38,11 @@ export function TodoListPage() {
   const reorderTasks = useTodoStore((s) => s.reorderTasks)
   const openAdd = useAppStore((s) => s.openAdd)
   const openLabelManager = useAppStore((s) => s.openLabelManager)
+  const openRoutine = useAppStore((s) => s.openRoutine)
   const labels = useLabelStore((s) => s.labels)
   const assignments = useLabelStore((s) => s.assignments)
+  const routineDefs = useRoutineStore((s) => s.routines)
+  const toggleRoutineActive = useRoutineStore((s) => s.toggleActive)
   const [detail, setDetail] = useState<Row | null>(null)
   const [query, setQuery] = useState('')
   const [hideDone, setHideDone] = useState(false)
@@ -48,9 +62,9 @@ export function TodoListPage() {
   const sortRows = (rows: Row[]) =>
     [...rows].sort((a, b) => rank(a.task) - rank(b.task) || pin(a.task) - pin(b.task) || (a.task.sortOrder ?? 0) - (b.task.sortOrder ?? 0) || a.dateKey.localeCompare(b.dateKey))
 
-  const routines = sortRows(visible.filter(({ task }) => task.group === 'routine'))
-  const shared = sortRows(visible.filter(({ task }) => task.group !== 'routine' && (task.participants?.length ?? 0) > 0))
-  const mine = sortRows(visible.filter(({ task }) => task.group !== 'routine' && (task.participants?.length ?? 0) === 0))
+  // 루틴이 생성한 todo도 일반 할 일로 취급(내 할 일에서 체크). 루틴 "정의"는 별도 섹션.
+  const shared = sortRows(visible.filter(({ task }) => (task.participants?.length ?? 0) > 0))
+  const mine = sortRows(visible.filter(({ task }) => (task.participants?.length ?? 0) === 0))
 
   const total = all.length
   const todayCount = all.filter(({ dateKey }) => dateKey === todayKey()).length
@@ -117,13 +131,13 @@ export function TodoListPage() {
           </div>
         </div>
 
-        {total === 0 ? (
+        {total === 0 && routineDefs.length === 0 ? (
           <div style={{ ...cardStyle, padding: '54px 26px', textAlign: 'center' }}>
             <div style={{ width: 60, height: 60, borderRadius: 18, background: MC.tintBg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke={MC.primary} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
             </div>
             <div style={{ fontSize: 17, fontWeight: 800 }}>아직 할 일이 없어요</div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: MC.muted, marginTop: 6, marginBottom: 20 }}>할 일을 추가하거나, 루틴을 등록해 이번 달에 일괄 적용해보세요</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: MC.muted, marginTop: 6, marginBottom: 20 }}>할 일을 추가하거나, 루틴을 등록해보세요</div>
             <div onClick={openAdd} className="lift" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: MC.ink, color: '#fff', fontSize: 15, fontWeight: 700, padding: '13px 24px', borderRadius: 15, cursor: 'pointer' }}>
               <PlusIcon c="#fff" w={17} /> 할 일 추가
             </div>
@@ -131,8 +145,8 @@ export function TodoListPage() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <Section label="내 할 일" dot={MC.muted} rows={mine} empty="할 일이 없어요" {...secProps} />
-            <Section label="루틴" dot={MC.primary} rows={routines} empty="등록된 루틴 일정이 없어요 · 루틴 메뉴에서 추가" {...secProps} />
             {shared.length > 0 && <Section label="공유 중" dot={MC.amber} rows={shared} empty="" {...secProps} />}
+            <RoutineDefsCard routines={routineDefs} onToggle={toggleRoutineActive} onManage={openRoutine} />
           </div>
         )}
       </div>
@@ -210,6 +224,7 @@ function TaskItem({ row, rows, onOpen, onToggle, onPin, dragKey, setDragKey, reo
           <span style={{ fontSize: 15.5, fontWeight: 700, color: done ? MC.faint : MC.ink, textDecoration: done ? 'line-through' : 'none' }}>{task.title}</span>
           {label && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: label.color, background: label.color + '1F', padding: '2.5px 9px', borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: label.color }} />{label.name}</span>}
           {task.ai && <span style={{ fontSize: 11, fontWeight: 800, color: '#15795A', background: '#E4F2EC', padding: '2.5px 8px', borderRadius: 20 }}>AI</span>}
+          {task.group === 'routine' && <span style={{ fontSize: 11, fontWeight: 800, color: '#3F82C2', background: '#E7F0F8', padding: '2.5px 8px', borderRadius: 20 }}>루틴</span>}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
           <span style={{ fontSize: 11.5, fontWeight: 800, color: badge.color, background: badge.bg, padding: '3px 9px', borderRadius: 20 }}>{badge.label}</span>
@@ -228,6 +243,49 @@ function TaskItem({ row, rows, onOpen, onToggle, onPin, dragKey, setDragKey, reo
       >
         <svg width="15" height="15" viewBox="0 0 24 24" fill={task.pinned ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 4h6l-1 5 3 3v2H7v-2l3-3-1-5z" /><path d="M12 14v6" /></svg>
       </span>
+    </div>
+  )
+}
+
+// 루틴 "정의" 카드 — 완료 체크가 아니라 활성/비활성 토글. 실제 할 일은 be 스케줄러가 생성해 위 목록에서 체크.
+function RoutineDefsCard({ routines, onToggle, onManage }: { routines: Routine[]; onToggle: (id: string) => void; onManage: () => void }) {
+  const labelsById = useLabelStore((s) => s.labels)
+  return (
+    <div style={cardStyle}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: routines.length ? 8 : 0 }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: MC.primary }} />
+        <span style={{ fontSize: 16, fontWeight: 800 }}>루틴</span>
+        <span style={{ fontSize: 14, fontWeight: 700, color: MC.faint }}>{routines.length}</span>
+        <div style={{ flex: 1 }} />
+        <div onClick={onManage} className="hbtn" style={{ fontSize: 12.5, fontWeight: 800, color: MC.tintText, background: MC.tintBg, padding: '6px 12px', borderRadius: 20, cursor: 'pointer' }}>관리</div>
+      </div>
+      {routines.length > 0 ? (
+        <div>
+          {routines.map((r) => {
+            const lab = r.labelId ? labelsById.find((l) => l.id === r.labelId) : undefined
+            const accent = lab?.color ?? MC.primary
+            return (
+              <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 6px', borderTop: '1px solid #F0EEE7', opacity: r.active ? 1 : 0.5 }}>
+                <div style={{ width: 34, height: 34, borderRadius: 11, background: accent + '1F', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 2l4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="M7 22l-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.title}</span>
+                    {lab && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: lab.color, background: lab.color + '1F', padding: '2px 8px', borderRadius: 20, flexShrink: 0 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: lab.color }} />{lab.name}</span>}
+                  </div>
+                  <div style={{ fontSize: 12.5, fontWeight: 700, color: MC.muted, marginTop: 2 }}>{r.time || '시간 미정'} · {daysLabel(r.days)}</div>
+                </div>
+                <div onClick={() => onToggle(r.id)} title={r.active ? '활성' : '비활성'} style={{ width: 44, height: 26, borderRadius: 20, cursor: 'pointer', position: 'relative', background: r.active ? MC.primary : '#CCD2DC', flexShrink: 0 }}>
+                  <div style={{ position: 'absolute', top: 2.5, left: r.active ? 21 : 2, width: 21, height: 21, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'left .15s' }} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <div style={{ fontSize: 13.5, fontWeight: 600, color: MC.faint, padding: '10px 2px 2px' }}>등록된 루틴이 없어요 · 루틴 메뉴에서 추가</div>
+      )}
     </div>
   )
 }
