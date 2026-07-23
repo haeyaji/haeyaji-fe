@@ -5,8 +5,11 @@ import { CloseIcon, PlusIcon, TrashIcon } from '@/lib/icons'
 import { useTodoStore, statusOf } from '@/store/useTodoStore'
 import { useFriendStore, userById } from '@/store/useFriendStore'
 import { useLabelStore } from '@/store/useLabelStore'
+import { useRoutineStore } from '@/store/useRoutineStore'
+import { useAppStore } from '@/store/useAppStore'
 import { Avatar } from '@/features/meetup/meetupShared'
 import { LabelPicker } from './LabelPicker'
+import { DayPicker } from '@/features/routine/DayPicker'
 import { COLUMNS, dateBadge } from './taskMeta'
 import type { ShareRole } from '@/types'
 
@@ -28,7 +31,11 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
   const friendIds = useFriendStore((s) => s.friendIds)
   const assignments = useLabelStore((s) => s.assignments) // 라벨 변경 리렌더용
   const setTodoLabel = useLabelStore((s) => s.setTodoLabel)
+  const { createRoutine, applyRoutine } = useRoutineStore()
+  const toast = useAppStore((s) => s.toast)
   const [inviteRole, setInviteRole] = useState<ShareRole>('editor')
+  const [routineOpen, setRoutineOpen] = useState(false)
+  const [days, setDays] = useState<boolean[]>([true, true, true, true, true, false, false])
 
   // 스토어 최신 상태 반영 (수정 즉시 리렌더)
   const task = (tasksByDate[dateKey] ?? []).find((t) => t.id === taskId)
@@ -51,6 +58,15 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
   const setRole = (userId: string, role: ShareRole) => setParticipants(participants.map((p) => (p.userId === userId ? { ...p, role } : p)))
 
   const labelId = assignments[taskId] ?? null
+
+  // 이 할 일을 반복 루틴으로 등록 (루틴 ↔ 투두: 라벨 상속해 이번 달 자동 생성)
+  const registerRoutine = () => {
+    if (!days.some(Boolean)) { toast('반복 요일을 하나 이상 선택해주세요'); return }
+    const r = createRoutine({ title: task.title, time: task.time || '', days, labelId })
+    const cnt = applyRoutine(r)
+    toast(cnt > 0 ? `루틴으로 등록 · 이번 달 ${cnt}개 적용됨` : '루틴으로 등록했어요')
+    setRoutineOpen(false)
+  }
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(24,21,15,.42)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'rb-fade .16s ease' }}>
@@ -125,6 +141,26 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
             </div>
           </div>
         )}
+
+        {/* 반복 — 이 할 일을 루틴으로 (루틴 ↔ 투두) */}
+        <div style={{ marginTop: 22 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#8B8579' }}>루틴으로 반복</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#A39C8E', marginTop: 3 }}>반복 요일로 등록하면 이번 달에 자동으로 할 일이 생겨요</div>
+            </div>
+            <div onClick={() => setRoutineOpen((v) => !v)} title="루틴 반복" style={{ width: 46, height: 27, borderRadius: 20, cursor: 'pointer', position: 'relative', background: routineOpen ? '#15795A' : '#CCD2DC', flexShrink: 0 }}>
+              <div style={{ position: 'absolute', top: 2.5, left: routineOpen ? 22 : 2, width: 22, height: 22, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'left .15s' }} />
+            </div>
+          </div>
+          {routineOpen && (
+            <div style={{ marginTop: 12, background: '#F9FAFB', border: '1px solid #EEF0F4', borderRadius: 14, padding: 15, animation: 'rb-fade .16s ease' }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#8B8579', marginBottom: 9 }}>반복 요일</div>
+              <DayPicker days={days} onChange={setDays} />
+              <div onClick={registerRoutine} className="lift" style={{ marginTop: 14, textAlign: 'center', fontSize: 14.5, fontWeight: 800, color: '#fff', background: '#17150F', borderRadius: 13, padding: 13, cursor: 'pointer' }}>루틴으로 등록</div>
+            </div>
+          )}
+        </div>
 
         {/* 공유 (todo_participant: 역할 먼저 지정 → 초대 → 상대 수락) */}
         <div style={{ marginTop: 22 }}>
