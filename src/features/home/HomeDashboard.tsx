@@ -1,5 +1,5 @@
 import { PlusIcon, WeatherIcon, CategoryIcon, SparkleIcon } from '@/lib/icons'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { PLACES } from '@/lib/mockData'
 import { aiHint, catGrad, useDayWeather, recsFor, pseudoCond, isLightInk } from '@/lib/weather'
 import { addDays, dateFullLabel, dateShortLabel, dowLabel, greeting, next7Days, todayKey } from '@/lib/dates'
@@ -9,6 +9,8 @@ import { useMapStore } from '@/store/useMapStore'
 import { useLocationStore } from '@/store/useLocationStore'
 import { useDayTasks } from '@/features/todo/useDayTasks'
 import { TaskRow, EmptyTasks } from '@/features/todo/TaskRow'
+import { TaskDetailModal } from '@/features/todo/TaskDetailModal'
+import type { Task } from '@/types'
 import { WeatherScene } from '@/features/weather/WeatherScene'
 import { WeatherStatsStrip } from './WeatherStatsStrip'
 import { MonthCalendarCard } from './MonthCalendarCard'
@@ -18,6 +20,7 @@ export function HomeDashboard() {
   const { selId, setSelId, weatherSelId, setWeatherSelId, openWeather, openAdd, openAi, openMap, nickname } = useAppStore()
   const setMapSel = useMapStore((s) => s.setMapSel)
   const { tasks, done, total, progPct, frac } = useDayTasks()
+  const [detail, setDetail] = useState<Task | null>(null)
 
   const region = useLocationStore((s) => s.region) || '현재 위치'
   const w = useDayWeather(weatherSelId)
@@ -131,7 +134,7 @@ export function HomeDashboard() {
             </div>
             <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflowY: 'auto', marginRight: -8, paddingRight: 8 }}>
               {tasks.map((t) => (
-                <TaskRow key={t.id} task={t} variant="home" />
+                <TaskRow key={t.id} task={t} variant="home" onOpen={setDetail} />
               ))}
               {total === 0 && <EmptyTasks />}
             </div>
@@ -186,6 +189,8 @@ export function HomeDashboard() {
           <AdherenceCard />
         </div>
       </div>
+
+      {detail && <TaskDetailModal dateKey={selId} taskId={detail.id} onClose={() => setDetail(null)} />}
     </div>
   )
 }

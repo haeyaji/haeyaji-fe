@@ -4,8 +4,8 @@ import type { Task } from '@/types'
 
 const ellipsis = { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } as const
 
-/** variant 'home' = 우측 meta / 'aside' = 제목 아래 meta */
-export function TaskRow({ task, variant }: { task: Task; variant: 'home' | 'aside' }) {
+/** variant 'home' = 우측 meta / 'aside' = 제목 아래 meta. onOpen 지정 시 행 클릭으로 상세 열림 */
+export function TaskRow({ task, variant, onOpen }: { task: Task; variant: 'home' | 'aside'; onOpen?: (task: Task) => void }) {
   const toggleTask = useTodoStore((s) => s.toggleTask)
   const deleteTask = useTodoStore((s) => s.deleteTask)
   const meta = task.meta || task.time || ''
@@ -14,9 +14,9 @@ export function TaskRow({ task, variant }: { task: Task; variant: 'home' | 'asid
   const home = variant === 'home'
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: home ? 13 : 12, padding: '12px 0' }}>
+    <div onClick={() => onOpen?.(task)} className={onOpen ? 'hbtn' : undefined} style={{ display: 'flex', alignItems: 'center', gap: home ? 13 : 12, padding: '12px 0', cursor: onOpen ? 'pointer' : 'default' }}>
       <div
-        onClick={() => toggleTask(task.id)}
+        onClick={(e) => { e.stopPropagation(); toggleTask(task.id) }}
         style={{
           width: 22,
           height: 22,
@@ -53,7 +53,7 @@ export function TaskRow({ task, variant }: { task: Task; variant: 'home' | 'asid
 
       {home && <div style={{ fontSize: 18, fontWeight: 600, color: metaColor, flexShrink: 0 }}>{meta}</div>}
 
-      <div onClick={() => deleteTask(task.id)} className="hbtn" style={{ display: 'flex', cursor: 'pointer', color: '#CAD0DA', flexShrink: 0 }}>
+      <div onClick={(e) => { e.stopPropagation(); deleteTask(task.id) }} className="hbtn" style={{ display: 'flex', cursor: 'pointer', color: '#CAD0DA', flexShrink: 0 }}>
         <TrashIcon />
       </div>
     </div>
