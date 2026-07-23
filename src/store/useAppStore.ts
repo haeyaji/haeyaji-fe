@@ -10,6 +10,7 @@ interface AppState {
   view: View
   selId: string // 할일·캘린더용 선택 날짜
   weatherSelId: string // 날씨(히어로·지표·주간예보)용 — 할일 이동과 독립
+  pendingInvite: string | null // /invite/{shareToken} 진입 시 약속 화면이 자동으로 열 토큰
   // drawers / modals
   aiOpen: boolean
   weatherOpen: boolean
@@ -59,6 +60,7 @@ export const useAppStore = create<AppState>((set) => ({
   view: 'home',
   selId: todayKey(),
   weatherSelId: todayKey(),
+  pendingInvite: null,
   aiOpen: false,
   weatherOpen: false,
   routineOpen: false,

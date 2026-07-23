@@ -46,7 +46,8 @@ export default function App() {
     document.cookie = 'XSRF-TOKEN=; path=/api; max-age=0; SameSite=Lax'
     const isCallback = window.location.pathname === '/oauth/callback'
     const isNewMember = new URLSearchParams(window.location.search).get('isNewMember') === 'true'
-    if (isCallback) history.replaceState(null, '', '/') // 콜백 쿼리 URL 정리
+    const inviteToken = window.location.pathname.match(/^\/invite\/([^/]+)/)?.[1] ?? null // 초대 링크 진입
+    if (isCallback || inviteToken) history.replaceState(null, '', '/') // 콜백/초대 쿼리 URL 정리
     ;(async () => {
       try {
         const me = await fetchMe() // 쿠키로 세션 확인 (401이면 client 인터셉터가 reissue 시도)
@@ -70,6 +71,7 @@ export default function App() {
         if (cancelled) return
         useAppStore.getState().login(isCallback ? '로그인했어요' : undefined)
         if (isCallback && isNewMember) usePrefStore.setState({ surveyDone: false }) // 신규 → 온보딩
+        if (inviteToken) useAppStore.setState({ pendingInvite: inviteToken, view: 'meetup' }) // 초대 링크 → 약속 화면 자동 열기
       } catch {
         /* 미인증 → 로그인 화면 */
       } finally {
