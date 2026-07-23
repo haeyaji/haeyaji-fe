@@ -133,23 +133,26 @@ export function AiDrawer() {
                   </div>
                 )}
                 {cats.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, maxWidth: '94%' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
                     {cats.map((c) => (
                       <div
                         key={c.code}
                         onClick={() => chipsActive && chooseCategory(c, cats.map((x) => x.code), ctx)}
                         className={chipsActive ? 'lift' : undefined}
                         style={{
-                          display: 'flex', alignItems: 'center', gap: 7, padding: '11px 15px', borderRadius: 14, fontSize: 14.5, fontWeight: 800,
-                          color: chipsActive ? '#17150F' : '#B6BCC7',
-                          background: chipsActive ? '#fff' : '#F0F2F6',
+                          display: 'flex', alignItems: 'center', gap: 12, padding: '13px 15px', borderRadius: 14,
+                          background: chipsActive ? '#fff' : '#F5F6F8',
                           border: `1.5px solid ${chipsActive ? '#CDE8DC' : '#E4E7EE'}`,
-                          boxShadow: chipsActive ? '0 2px 8px rgba(21,121,90,.08)' : 'none',
-                          cursor: chipsActive ? 'pointer' : 'default',
+                          boxShadow: chipsActive ? '0 2px 10px rgba(21,121,90,.08)' : 'none',
+                          cursor: chipsActive ? 'pointer' : 'default', opacity: chipsActive ? 1 : 0.6,
                         }}
                       >
-                        <span style={{ fontSize: 16 }}>{REC_CATEGORY_EMOJI[c.code] ?? '·'}</span>
-                        {REC_CATEGORY_LABEL[c.code] ?? c.code}
+                        <div style={{ width: 38, height: 38, borderRadius: 11, background: '#E4F2EC', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0 }}>{REC_CATEGORY_EMOJI[c.code] ?? '·'}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 15.5, fontWeight: 800, color: '#17150F' }}>{c.label || REC_CATEGORY_LABEL[c.code] || c.code}</div>
+                          {c.reason && <div style={{ fontSize: 13, fontWeight: 600, color: '#A39C8E', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.reason}</div>}
+                        </div>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={chipsActive ? '#15795A' : '#C4C9D2'} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
                       </div>
                     ))}
                   </div>
