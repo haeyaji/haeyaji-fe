@@ -16,8 +16,9 @@ export async function savePreferences(payload: PreferencePayload): Promise<void>
   await be.post('/preferences', payload)
 }
 
-/** 구멍2 — 추천 카드 부정 피드백. category는 그 카드의 RecommendedTodo.category. */
-export type FeedbackSignal = 'IGNORED'
+/** 구멍2 — 추천 카드 피드백. category는 그 카드의 RecommendedTodo.category.
+ *  IGNORED=무시(부정), SELECTED='일정에 추가'(긍정) → be가 개인화 가중치에 반영. */
+export type FeedbackSignal = 'IGNORED' | 'SELECTED'
 
 export async function sendRecommendFeedback(category: Category, signal: FeedbackSignal): Promise<void> {
   await be.post('/recommend/feedback', { category, signal })

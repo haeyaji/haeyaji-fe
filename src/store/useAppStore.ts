@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { todayKey } from '@/lib/dates'
+import { setAuthTokens } from '@/api/client'
 
 type View = 'home' | 'todo' | 'calendar' | 'mypage' | 'meetup'
 
@@ -24,7 +25,7 @@ interface AppState {
   toastText: string
   showToast: boolean
 
-  login: (msg: string) => void
+  login: (msg: string, token?: string) => void // token = OAuth access token (be 연동 시)
   logout: () => void
   toggleSidebar: () => void
   setView: (v: View) => void
@@ -72,12 +73,15 @@ export const useAppStore = create<AppState>((set) => ({
   toastText: '',
   showToast: false,
 
-  login: (msg) => {
+  login: (msg, token) => {
+    if (token) setAuthTokens({ access: token }) // OAuth 콜백에서 be access token 전달 시 저장 (mock 로그인은 미전달)
     set({ authed: true, view: 'home' })
     useAppStore.getState().toast(msg)
   },
-  logout: () =>
-    set({ authed: false, aiOpen: false, weatherOpen: false, routineOpen: false, addOpen: false, mapOpen: false, meetupCreateOpen: false, friendSearchOpen: false, labelManagerOpen: false, view: 'home' }),
+  logout: () => {
+    setAuthTokens(null)
+    set({ authed: false, aiOpen: false, weatherOpen: false, routineOpen: false, addOpen: false, mapOpen: false, meetupCreateOpen: false, friendSearchOpen: false, labelManagerOpen: false, view: 'home' })
+  },
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
   setView: (view) => set({ view }),
   setSelId: (selId) => set({ selId }),
