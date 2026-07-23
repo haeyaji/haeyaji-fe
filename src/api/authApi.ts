@@ -16,6 +16,8 @@ export function oauthLoginUrl(provider: Provider): string {
 export interface Me {
   memberId: string
   role: unknown // be는 authorities 배열로 반환. 현재는 사용처 없음.
+  nickname?: string // be가 /me에 nickname 넣어주면 표시에 사용(현재 미제공 → FE 로컬 닉네임 폴백)
+  email?: string
 }
 
 /** 현재 세션 확인. accessToken 쿠키 없거나 만료면 401(→ client 인터셉터가 reissue 시도). */

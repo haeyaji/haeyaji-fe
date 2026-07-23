@@ -14,8 +14,8 @@ function OptIcon({ name, on }: { name: string; on: boolean }) {
 export function OnboardingSurvey() {
   const [step, setStep] = useState(0)
   const toast = useAppStore((s) => s.toast)
-  const nickname = useAppStore((s) => s.nickname)
   const pref = usePrefStore()
+  const nickname = pref.nickname
 
   const steps = [
     {

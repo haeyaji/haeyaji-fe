@@ -2,6 +2,7 @@
 // 홈/캘린더=view 전환, 루틴=드로어, 지도=모달, CTA=할일 추가. (AI 추천은 우하단 말풍선 FAB 전담)
 import { BrandLogo, PlusIcon } from '@/lib/icons'
 import { useAppStore } from '@/store/useAppStore'
+import { usePrefStore } from '@/store/usePrefStore'
 
 const NAV_ICON = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
 
@@ -25,7 +26,8 @@ function TodoIcon() {
 }
 
 export function Sidebar() {
-  const { view, setView, openMap, openRoutine, openAdd, openMeetupCreate, openFriendSearch, sidebarCollapsed: c, toggleSidebar, nickname, logout } = useAppStore()
+  const { view, setView, openMap, openRoutine, openAdd, openMeetupCreate, openFriendSearch, sidebarCollapsed: c, toggleSidebar, logout } = useAppStore()
+  const nickname = usePrefStore((s) => s.nickname)
   // 펼침이 기본 상태 — 화면 폭 대응은 #root zoom 분기가 하므로 자동 접힘 없음
 
   const items = [

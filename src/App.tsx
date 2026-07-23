@@ -8,6 +8,7 @@ import { timeOfDay } from '@/lib/weather'
 import { usePrefStore } from '@/store/usePrefStore'
 import { fetchMe } from '@/api/authApi'
 import { LoginScreen } from '@/features/auth/LoginScreen'
+import { ProfileSetup } from '@/features/auth/ProfileSetup'
 import { OnboardingSurvey } from '@/features/auth/OnboardingSurvey'
 import { HomeDashboard } from '@/features/home/HomeDashboard'
 import { CalendarPage } from '@/features/calendar/CalendarPage'
@@ -28,6 +29,7 @@ import { Toast } from '@/components/Toast'
 export default function App() {
   const { authed, view } = useAppStore()
   const surveyDone = usePrefStore((s) => s.surveyDone)
+  const nickname = usePrefStore((s) => s.nickname)
   const lat = useLocationStore((s) => s.lat)
   const lng = useLocationStore((s) => s.lng)
   const selId = useAppStore((s) => s.selId)
@@ -44,8 +46,9 @@ export default function App() {
     if (isCallback) history.replaceState(null, '', '/') // 콜백 쿼리 URL 정리
     ;(async () => {
       try {
-        await fetchMe() // 쿠키로 세션 확인 (401이면 client 인터셉터가 reissue 시도)
+        const me = await fetchMe() // 쿠키로 세션 확인 (401이면 client 인터셉터가 reissue 시도)
         if (cancelled) return
+        if (me.nickname) usePrefStore.setState({ nickname: me.nickname }) // be가 nickname 주면 그 값으로
         useAppStore.getState().login(isCallback ? '로그인했어요' : undefined)
         if (isCallback && isNewMember) usePrefStore.setState({ surveyDone: false }) // 신규 → 온보딩
       } catch {
@@ -102,6 +105,16 @@ export default function App() {
     return (
       <>
         <LoginScreen />
+        <Toast />
+      </>
+    )
+  }
+
+  // 신규(또는 닉네임 미설정) 회원: 표시 이름부터 입력 (ERD member.nickname 대응)
+  if (!nickname) {
+    return (
+      <>
+        <ProfileSetup />
         <Toast />
       </>
     )

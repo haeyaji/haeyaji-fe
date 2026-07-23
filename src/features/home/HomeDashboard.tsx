@@ -5,6 +5,7 @@ import { aiHint, catGrad, useDayWeather, recsFor, pseudoCond, isLightInk } from 
 import { addDays, dateFullLabel, dateShortLabel, dowLabel, greeting, next7Days, todayKey } from '@/lib/dates'
 import { useWeatherStore } from '@/store/useWeatherStore'
 import { useAppStore } from '@/store/useAppStore'
+import { usePrefStore } from '@/store/usePrefStore'
 import { useMapStore } from '@/store/useMapStore'
 import { useLocationStore } from '@/store/useLocationStore'
 import { useDayTasks } from '@/features/todo/useDayTasks'
@@ -17,7 +18,8 @@ import { MonthCalendarCard } from './MonthCalendarCard'
 import { AdherenceCard } from './AdherenceCard'
 
 export function HomeDashboard() {
-  const { selId, setSelId, weatherSelId, setWeatherSelId, openWeather, openAdd, openAi, openMap, nickname } = useAppStore()
+  const { selId, setSelId, weatherSelId, setWeatherSelId, openWeather, openAdd, openAi, openMap } = useAppStore()
+  const nickname = usePrefStore((s) => s.nickname)
   const setMapSel = useMapStore((s) => s.setMapSel)
   const { tasks, done, total, progPct, frac } = useDayTasks()
   const [detail, setDetail] = useState<Task | null>(null)

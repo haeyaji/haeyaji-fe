@@ -13,11 +13,13 @@ export const VIBE_OPTIONS = ['조용한', '활기찬', '감성적인', '트렌�
 export const INTENSITY_OPTIONS = ['가볍게', '적당히', '적극적으로']
 
 interface PrefState {
+  nickname: string // 회원 표시 이름. ERD member.nickname(NOT NULL) 대응. be가 /me로 주면 그 값으로 덮음.
   preferredCategories: Category[]
   avoid: string[]
   vibe: string | null
   intensity: string | null
   surveyDone: boolean
+  setNickname: (v: string) => void
   toggleCategory: (c: Category) => void
   toggleAvoid: (a: string) => void
   setVibe: (v: string | null) => void
@@ -31,11 +33,13 @@ const toggle = <T,>(arr: T[], v: T): T[] => (arr.includes(v) ? arr.filter((x) =>
 export const usePrefStore = create<PrefState>()(
   persist(
     (set, get) => ({
+      nickname: '',
       preferredCategories: [],
       avoid: [],
       vibe: null,
       intensity: null,
       surveyDone: false,
+      setNickname: (nickname) => set({ nickname: nickname.trim() }),
       toggleCategory: (c) => set((s) => ({ preferredCategories: toggle(s.preferredCategories, c) })),
       toggleAvoid: (a) => set((s) => ({ avoid: toggle(s.avoid, a) })),
       setVibe: (vibe) => set({ vibe }),
