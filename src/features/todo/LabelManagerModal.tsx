@@ -1,8 +1,20 @@
 // 분류(사용자 라벨) 관리 — 생성·이름수정·색 변경·삭제. be label 테이블 대응(현재 로컬 persist).
 import { useState } from 'react'
+import { useOverlay } from '@/lib/useOverlay'
 import { CloseIcon, TrashIcon } from '@/lib/icons'
 import { useAppStore } from '@/store/useAppStore'
 import { useLabelStore, LABEL_COLORS } from '@/store/useLabelStore'
+
+// 색 스와치 (모듈 스코프 — 렌더마다 재정의 방지)
+function Swatches({ onPick }: { onPick: (c: string) => void }) {
+  return (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', padding: '4px 0' }}>
+      {LABEL_COLORS.map((c) => (
+        <div key={c} onClick={() => onPick(c)} className="hbtn" style={{ width: 22, height: 22, borderRadius: '50%', background: c, cursor: 'pointer', border: '2px solid #fff', boxShadow: '0 0 0 1.5px #E7EAEF' }} />
+      ))}
+    </div>
+  )
+}
 
 export function LabelManagerModal() {
   const open = useAppStore((s) => s.labelManagerOpen)
@@ -13,17 +25,10 @@ export function LabelManagerModal() {
   const [newColor, setNewColor] = useState(LABEL_COLORS[0])
   const [colorFor, setColorFor] = useState<string | null>(null)
 
+  useOverlay(open, close)
   if (!open) return null
 
   const create = () => { if (addLabel(name, newColor)) setName('') }
-
-  const Swatches = ({ onPick }: { onPick: (c: string) => void }) => (
-    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', padding: '4px 0' }}>
-      {LABEL_COLORS.map((c) => (
-        <div key={c} onClick={() => onPick(c)} className="hbtn" style={{ width: 22, height: 22, borderRadius: '50%', background: c, cursor: 'pointer', border: '2px solid #fff', boxShadow: '0 0 0 1.5px #E7EAEF' }} />
-      ))}
-    </div>
-  )
 
   return (
     <div onClick={close} style={{ position: 'fixed', inset: 0, zIndex: 70, background: 'rgba(24,21,15,.42)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'rb-fade .16s ease' }}>

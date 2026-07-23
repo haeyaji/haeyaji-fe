@@ -1,6 +1,7 @@
 // 친구 관리 — 닉네임 검색 → 친구 요청 → (데모)수락. 보낸 요청·내 친구 목록.
 // TODO(be): searchUsers→GET /users?q=, request/accept/reject→POST·PATCH /friends
 import { useState } from 'react'
+import { useOverlay } from '@/lib/useOverlay'
 import { CloseIcon, TrashIcon } from '@/lib/icons'
 import { useAppStore } from '@/store/useAppStore'
 import { useFriendStore, searchUsers, userById } from '@/store/useFriendStore'
@@ -12,6 +13,7 @@ export function FriendSearchModal({ onClose, onOpenDetail }: { onClose: () => vo
   const [query, setQuery] = useState('')
   const { friendIds, pending, requestFriend, acceptFriend, rejectFriend, removeFriend, isFriend, isPending } = useFriendStore()
   const toast = useAppStore((s) => s.toast)
+  useOverlay(true, onClose)
   const q = query.trim()
   const results = searchUsers(q)
   const friends = friendIds.map(userById).filter((u): u is AppUser => !!u)

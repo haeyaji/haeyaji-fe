@@ -1,5 +1,6 @@
 // 친구 상세 — 프로필·취향·약속잡기 진입·친구 삭제.
 import { CloseIcon, TrashIcon } from '@/lib/icons'
+import { useOverlay } from '@/lib/useOverlay'
 import { useAppStore } from '@/store/useAppStore'
 import { useFriendStore } from '@/store/useFriendStore'
 import { PrefIcon } from './prefIcons'
@@ -8,6 +9,7 @@ import type { AppUser } from '@/types'
 export function FriendDetailModal({ user, onClose }: { user: AppUser; onClose: () => void }) {
   const removeFriend = useFriendStore((s) => s.removeFriend)
   const toast = useAppStore((s) => s.toast)
+  useOverlay(true, onClose)
   const chips = [user.vibe, ...user.cats]
 
   return (

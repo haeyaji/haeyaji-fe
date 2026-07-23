@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useOverlay } from '@/lib/useOverlay'
 import { CloseIcon } from '@/lib/icons'
 import { normalizeTime, todayKey } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
@@ -29,6 +30,7 @@ export function AddTaskModal() {
     if (addOpen) setDate(selId < todayKey() ? todayKey() : selId)
   }, [addOpen, selId])
 
+  useOverlay(addOpen, closeAdd)
   if (!addOpen) return null
 
   const reset = () => {

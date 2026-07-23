@@ -1,4 +1,5 @@
 import { CloseIcon, DetailIcon, WeatherIcon, type DetailKey } from '@/lib/icons'
+import { useOverlay } from '@/lib/useOverlay'
 import { useDayWeather } from '@/lib/weather'
 import { dateShortLabel } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
@@ -10,6 +11,7 @@ export function WeatherDrawer() {
   const region = useLocationStore((s) => s.region) || '현재 위치'
   const w = useDayWeather(selId) // 훅은 early return보다 먼저
 
+  useOverlay(weatherOpen, closeWeather)
   if (!weatherOpen) return null
 
   const dateShort = dateShortLabel(selId)

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { loadKakaoMaps } from '@/lib/kakaoLoader'
+import { escapeHtml } from '@/lib/dom'
 import type { PlaceCat } from '@/types'
 
 export interface MapPoint {
@@ -38,7 +39,7 @@ function pinEl(p: MapPoint, hover: { in: (p: MapPoint) => void; out: () => void 
   const el = document.createElement('div')
   if (p.selected) {
     el.style.cssText = `display:flex;align-items:center;gap:7px;padding:7px 13px 7px 8px;border-radius:22px;cursor:pointer;white-space:nowrap;transform:translateY(-6px);font-family:'Pretendard',sans-serif;background:#17150F;box-shadow:0 6px 16px rgba(24,21,15,.28)`
-    el.innerHTML = `<div style="width:25px;height:25px;border-radius:50%;background:#15795A;display:flex;align-items:center;justify-content:center">${catSvg(p.cat, '#fff')}</div><div style="font-size:12.5px;font-weight:800;color:#fff">${p.name}</div>`
+    el.innerHTML = `<div style="width:25px;height:25px;border-radius:50%;background:#15795A;display:flex;align-items:center;justify-content:center">${catSvg(p.cat, '#fff')}</div><div style="font-size:12.5px;font-weight:800;color:#fff">${escapeHtml(p.name)}</div>`
   } else {
     el.style.cssText = `width:34px;height:34px;border-radius:50%;background:#fff;border:2px solid #15795A;display:flex;align-items:center;justify-content:center;cursor:pointer;transform:translateY(-4px);box-shadow:0 4px 12px rgba(24,21,15,.2)`
     el.innerHTML = catSvg(p.cat, '#15795A', 16)
@@ -53,7 +54,7 @@ function hoverCardEl(p: MapPoint): HTMLElement {
   const el = document.createElement('div')
   el.style.cssText = `background:#fff;border-radius:12px;box-shadow:0 8px 22px rgba(24,21,15,.2);padding:9px 13px;white-space:nowrap;transform:translateY(-12px);font-family:'Pretendard',sans-serif;pointer-events:none`
   const meta = [p.type, p.dist].filter(Boolean).join(' · ')
-  el.innerHTML = `<div style="font-size:13px;font-weight:800;color:#17150F">${p.name}</div>${meta ? `<div style="font-size:11.5px;font-weight:600;color:#A39C8E;margin-top:2px">${meta}</div>` : ''}`
+  el.innerHTML = `<div style="font-size:13px;font-weight:800;color:#17150F">${escapeHtml(p.name)}</div>${meta ? `<div style="font-size:11.5px;font-weight:600;color:#A39C8E;margin-top:2px">${escapeHtml(meta)}</div>` : ''}`
   return el
 }
 
@@ -82,7 +83,7 @@ function clusterEl(members: MapPoint[], onOpen: () => void): HTMLElement {
 function originEl(label: string): HTMLElement {
   const el = document.createElement('div')
   el.style.cssText = `display:flex;align-items:center;gap:7px;padding:6px 13px 6px 6px;border-radius:22px;white-space:nowrap;font-family:'Pretendard',sans-serif;background:#15795A;box-shadow:0 6px 16px rgba(24,21,15,.24)`
-  el.innerHTML = `<div style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.24);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.4A2.4 2.4 0 1 1 12 6.6a2.4 2.4 0 0 1 0 4.8z"/></svg></div><div style="font-size:12px;font-weight:800;color:#fff">${label}</div>`
+  el.innerHTML = `<div style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.24);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.4A2.4 2.4 0 1 1 12 6.6a2.4 2.4 0 0 1 0 4.8z"/></svg></div><div style="font-size:12px;font-weight:800;color:#fff">${escapeHtml(label)}</div>`
   return el
 }
 
@@ -95,7 +96,7 @@ function popupEl(members: MapPoint[], onPick: (p: MapPoint) => void): HTMLElemen
     row.addEventListener('mouseenter', () => (row.style.background = '#F0F2F6'))
     row.addEventListener('mouseleave', () => (row.style.background = 'transparent'))
     const meta = [m.type, m.dist].filter(Boolean).join(' · ')
-    row.innerHTML = `<div style="width:26px;height:26px;border-radius:8px;background:#E4F2EC;display:flex;align-items:center;justify-content:center;flex-shrink:0">${catSvg(m.cat, '#15795A', 14)}</div><div style="min-width:0"><div style="font-size:13px;font-weight:700;color:#17150F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.name}</div>${meta ? `<div style="font-size:11px;font-weight:600;color:#A39C8E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${meta}</div>` : ''}</div>`
+    row.innerHTML = `<div style="width:26px;height:26px;border-radius:8px;background:#E4F2EC;display:flex;align-items:center;justify-content:center;flex-shrink:0">${catSvg(m.cat, '#15795A', 14)}</div><div style="min-width:0"><div style="font-size:13px;font-weight:700;color:#17150F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(m.name)}</div>${meta ? `<div style="font-size:11px;font-weight:600;color:#A39C8E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(meta)}</div>` : ''}</div>`
     row.addEventListener('click', (e) => {
       e.stopPropagation()
       onPick(m)

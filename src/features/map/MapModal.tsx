@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useOverlay } from '@/lib/useOverlay'
 import { CategoryIcon, CloseIcon } from '@/lib/icons'
 import { PLACES } from '@/lib/mockData'
 import { useDayWeather, recsFor } from '@/lib/weather'
@@ -189,6 +190,7 @@ export function MapModal() {
   // 훅은 early return보다 항상 먼저 (훅 순서 위반 방지)
   const w = useDayWeather(selId)
 
+  useOverlay(mapOpen, closeMap)
   if (!mapOpen) return null
 
   const mapHint = `${dowLabel(selId)}요일 · ${w.condKo} 기준 · 내 주변`

@@ -1,5 +1,6 @@
 // 상단 우측 알림 벨 + 드롭다운 패널 (be notification 대응, 현재 로컬). 누르면 그 자리에서 열림.
 import { useAppStore } from '@/store/useAppStore'
+import { useOverlay } from '@/lib/useOverlay'
 import { useNotificationStore, timeAgo, type AppNotification, type NotiCategory } from '@/store/useNotificationStore'
 
 const CAT_STYLE: Record<NotiCategory, { bg: string; color: string }> = {
@@ -18,6 +19,7 @@ function NotiIcon({ n }: { n: AppNotification }) {
 
 export function NotificationBell() {
   const { authed, notiOpen, openNoti, closeNoti } = useAppStore()
+  useOverlay(notiOpen, closeNoti)
   const { notifications, markRead, markAllRead, remove } = useNotificationStore()
   if (!authed) return null
   const unread = notifications.filter((n) => !n.isRead).length
