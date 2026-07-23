@@ -47,8 +47,8 @@ export interface Label {
 
 /** 공유 권한 (PRD SHARE/PERM: owner ⊃ editor ⊃ viewer) */
 export type ShareRole = 'owner' | 'editor' | 'viewer'
-/** 초대 수락 상태 (GitHub/Jira식: 초대→pending→상대 수락→accepted) */
-export type ShareStatus = 'pending' | 'accepted'
+/** 초대 수락 상태 (be todo_participant.invite_status: PENDING/ACCEPTED/REJECTED) */
+export type ShareStatus = 'pending' | 'accepted' | 'rejected'
 /** 할 일 공유 참여자 (be todo_participant 대응 — 지금은 friend userId 로컬) */
 export interface TaskParticipant {
   userId: string
@@ -95,6 +95,7 @@ export interface WeekDay {
 export interface AppUser {
   id: string
   nickname: string
+  friendCode: string // be member.friend_code — 친구추가용 코드
   vibe: string // 대표 분위기 (usePrefStore vibe와 같은 값 집합)
   cats: Category[] // 선호 카테고리
 }

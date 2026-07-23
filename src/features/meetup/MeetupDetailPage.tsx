@@ -38,6 +38,16 @@ export function MeetupDetailPage({ id, onBack }: { id: string; onBack: () => voi
   const slotCount = candidateSlots(meetup.dates, meetup.myCells, enteredIds).length
 
   const heroBg = meetup.confirmed ? MC.confGrad : MC.slateGrad
+  // 초대 링크: 토큰 없으면 발급(be meeting.share_token 대응) 후 URL 복사. 조인 화면은 be 대기
+  const shareInvite = () => {
+    let token = meetup.shareToken
+    if (!token) {
+      token = Array.from({ length: 4 }, () => Math.random().toString(36).slice(2, 8)).join('')
+      update(id, { shareToken: token })
+    }
+    const url = `${location.origin}/invite/${token}`
+    navigator.clipboard?.writeText(url).then(() => toast('초대 링크를 복사했어요')).catch(() => toast(url))
+  }
   const openSlots = (preselect?: Slot) => { setInitialSel(preselect ?? null); setSlotOpen(true) }
   const pickByTick = (date: string, tick: number) => {
     const s = candidateSlots(meetup.dates, meetup.myCells, enteredIds).find((x) => x.date === date && tick >= x.startH && tick < x.endH)
@@ -60,6 +70,12 @@ export function MeetupDetailPage({ id, onBack }: { id: string; onBack: () => voi
           </div>
           <div style={{ fontSize: 28, fontWeight: 800, marginTop: 4 }}>{meetup.title}</div>
           {meetup.dates.length > 0 && <div style={{ fontSize: 14.5, fontWeight: 600, opacity: 0.92, marginTop: 6 }}>{longDate(meetup.dates[0])}{meetup.dates.length > 1 ? ` 외 ${meetup.dates.length - 1}일` : ''} 후보</div>}
+          {!meetup.confirmed && (
+            <div onClick={shareInvite} className="hbtn" title="초대 링크 복사" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginTop: 12, background: 'rgba(255,255,255,.2)', borderRadius: 20, padding: '8px 15px', fontSize: 13.5, fontWeight: 800, cursor: 'pointer' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5" /><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5" /></svg>
+              초대 링크 복사
+            </div>
+          )}
           {meetup.confirmed && (
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 12, background: 'rgba(255,255,255,.22)', borderRadius: 20, padding: '6px 14px', fontSize: 14, fontWeight: 800 }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l4.5 4.5L19 7" /></svg>

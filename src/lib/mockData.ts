@@ -3,16 +3,19 @@
 // (데모 시드였던 할일·루틴·친구 시드·닉네임은 제거됨 → 각 store는 빈 상태로 시작)
 import type { AppUser, Place } from '@/types'
 
+// 내 친구추가 코드 (be member.friend_code — 로그인 붙으면 내 계정 값으로 대체)
+export const MY_FRIEND_CODE = 'HAEYAJI9'
+
 // 친구 검색용 mock 유저. TODO(be): GET /users?nickname= 검색 응답으로 대체.
 export const MOCK_USERS: AppUser[] = [
-  { id: 'u1', nickname: '민지', vibe: '활기찬', cats: ['야외', '맛집/카페'] },
-  { id: 'u2', nickname: '지훈', vibe: '조용한', cats: ['생산성', '맛집/카페'] },
-  { id: 'u3', nickname: '수연', vibe: '감성적인', cats: ['실내', '사람만나기'] },
-  { id: 'u4', nickname: '도윤', vibe: '트렌디한', cats: ['맛집/카페', '사람만나기'] },
-  { id: 'u5', nickname: '서영', vibe: '편안한', cats: ['휴식', '실내'] },
-  { id: 'u6', nickname: '현우', vibe: '활기찬', cats: ['야외'] },
-  { id: 'u7', nickname: '예린', vibe: '조용한', cats: ['맛집/카페', '휴식'] },
-  { id: 'u8', nickname: '준서', vibe: '트렌디한', cats: ['맛집/카페', '사람만나기'] },
+  { id: 'u1', nickname: '민지', friendCode: 'MINJI7X', vibe: '활기찬', cats: ['야외', '맛집/카페'] },
+  { id: 'u2', nickname: '지훈', friendCode: 'JIHUN22', vibe: '조용한', cats: ['생산성', '맛집/카페'] },
+  { id: 'u3', nickname: '수연', friendCode: 'SUYN90A', vibe: '감성적인', cats: ['실내', '사람만나기'] },
+  { id: 'u4', nickname: '도윤', friendCode: 'DOYUN31', vibe: '트렌디한', cats: ['맛집/카페', '사람만나기'] },
+  { id: 'u5', nickname: '서영', friendCode: 'SEOY55K', vibe: '편안한', cats: ['휴식', '실내'] },
+  { id: 'u6', nickname: '현우', friendCode: 'HYUNW08', vibe: '활기찬', cats: ['야외'] },
+  { id: 'u7', nickname: '예린', friendCode: 'YERIN42', vibe: '조용한', cats: ['맛집/카페', '휴식'] },
+  { id: 'u8', nickname: '준서', friendCode: 'JUNSE17', vibe: '트렌디한', cats: ['맛집/카페', '사람만나기'] },
 ]
 
 // 날씨→추천 장소 mock (강남권 실좌표). Home·Calendar·Map 상단 추천 배너용.

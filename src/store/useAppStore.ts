@@ -19,6 +19,7 @@ interface AppState {
   meetupCreateOpen: boolean // 약속 만들기 모달 (사이드바 컨텍스트 추가 버튼에서 열림)
   friendSearchOpen: boolean // 친구 추가/검색 모달 (마이페이지 컨텍스트 추가 버튼에서 열림)
   labelManagerOpen: boolean // 분류(라벨) 관리 모달
+  notiOpen: boolean // 알림 드로어
   // toast
   toastText: string
   showToast: boolean
@@ -45,6 +46,8 @@ interface AppState {
   closeFriendSearch: () => void
   openLabelManager: () => void
   closeLabelManager: () => void
+  openNoti: () => void
+  closeNoti: () => void
   toast: (msg: string) => void
 }
 
@@ -65,6 +68,7 @@ export const useAppStore = create<AppState>((set) => ({
   meetupCreateOpen: false,
   friendSearchOpen: false,
   labelManagerOpen: false,
+  notiOpen: false,
   toastText: '',
   showToast: false,
 
@@ -94,6 +98,8 @@ export const useAppStore = create<AppState>((set) => ({
   closeFriendSearch: () => set({ friendSearchOpen: false }),
   openLabelManager: () => set({ labelManagerOpen: true }),
   closeLabelManager: () => set({ labelManagerOpen: false }),
+  openNoti: () => set({ notiOpen: true }),
+  closeNoti: () => set({ notiOpen: false }),
   toast: (msg) => {
     set({ toastText: msg, showToast: true })
     if (toastTimer) clearTimeout(toastTimer)

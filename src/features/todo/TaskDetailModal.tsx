@@ -42,10 +42,11 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
   const friends = friendIds.map(userById).filter((u): u is NonNullable<typeof u> => !!u)
   const addable = friends.filter((f) => !sharedIds.has(f.id))
   const acceptedCount = participants.filter((p) => p.status === 'accepted').length
-  const pendingCount = participants.length - acceptedCount
+  const pendingCount = participants.filter((p) => p.status === 'pending').length
   const setParticipants = (next: typeof participants) => patchTask(dateKey, taskId, { participants: next })
   const invite = (userId: string) => setParticipants([...participants, { userId, role: inviteRole, status: 'pending' }])
   const accept = (userId: string) => setParticipants(participants.map((p) => (p.userId === userId ? { ...p, status: 'accepted' } : p)))
+  const reject = (userId: string) => setParticipants(participants.map((p) => (p.userId === userId ? { ...p, status: 'rejected' } : p)))
   const unshare = (userId: string) => setParticipants(participants.filter((p) => p.userId !== userId))
   const setRole = (userId: string, role: ShareRole) => setParticipants(participants.map((p) => (p.userId === userId ? { ...p, role } : p)))
 
@@ -145,19 +146,25 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
               const u = userById(p.userId)
               if (!u) return null
               const pending = p.status === 'pending'
+              const rejected = p.status === 'rejected'
+              const dot = pending ? '#E0883A' : rejected ? '#D9614F' : null
               return (
-                <div key={p.userId} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 13px', borderTop: '1px solid #EEF0F4', background: pending ? '#FEFBF6' : '#fff' }}>
-                  <div style={{ position: 'relative', flexShrink: 0, opacity: pending ? 0.85 : 1 }}>
+                <div key={p.userId} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 13px', borderTop: '1px solid #EEF0F4', background: pending ? '#FEFBF6' : rejected ? '#FCF3F1' : '#fff' }}>
+                  <div style={{ position: 'relative', flexShrink: 0, opacity: pending || rejected ? 0.8 : 1 }}>
                     <Avatar name={u.nickname} size={34} font={15} />
-                    {pending && <span style={{ position: 'absolute', right: -2, bottom: -2, width: 13, height: 13, borderRadius: '50%', background: '#E0883A', border: '2px solid #fff' }} />}
+                    {dot && <span style={{ position: 'absolute', right: -2, bottom: -2, width: 13, height: 13, borderRadius: '50%', background: dot, border: '2px solid #fff' }} />}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14.5, fontWeight: 700, color: pending ? '#8B8579' : '#17150F', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.nickname}</div>
+                    <div style={{ fontSize: 14.5, fontWeight: 700, color: pending || rejected ? '#8B8579' : '#17150F', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textDecoration: rejected ? 'line-through' : 'none' }}>{u.nickname}</div>
                     {pending && <div style={{ fontSize: 11.5, fontWeight: 800, color: '#C2702A', marginTop: 1 }}>수락 대기 · {ROLE_LABEL[p.role]}</div>}
+                    {rejected && <div style={{ fontSize: 11.5, fontWeight: 800, color: '#C24A3A', marginTop: 1 }}>초대 거절됨</div>}
                   </div>
                   {pending ? (
-                    <div onClick={() => accept(p.userId)} className="lift" title="데모: 상대가 수락한 것으로 처리" style={{ fontSize: 12, fontWeight: 800, color: '#fff', background: '#15795A', padding: '6px 13px', borderRadius: 20, cursor: 'pointer', flexShrink: 0 }}>수락(데모)</div>
-                  ) : (
+                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                      <div onClick={() => accept(p.userId)} className="lift" title="데모: 상대가 수락" style={{ fontSize: 12, fontWeight: 800, color: '#fff', background: '#15795A', padding: '6px 12px', borderRadius: 20, cursor: 'pointer' }}>수락</div>
+                      <div onClick={() => reject(p.userId)} className="hbtn" title="데모: 상대가 거절" style={{ fontSize: 12, fontWeight: 800, color: '#C24A3A', background: '#FBEBE7', padding: '6px 12px', borderRadius: 20, cursor: 'pointer' }}>거절</div>
+                    </div>
+                  ) : rejected ? null : (
                     <select
                       value={p.role}
                       onChange={(e) => setRole(p.userId, e.target.value as ShareRole)}
@@ -167,7 +174,7 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
                       <option value="viewer">보기</option>
                     </select>
                   )}
-                  <div onClick={() => unshare(p.userId)} className="hbtn" title={pending ? '초대 취소' : '공유 해제'} style={{ color: '#CAD0DA', cursor: 'pointer', display: 'flex', flexShrink: 0 }}>
+                  <div onClick={() => unshare(p.userId)} className="hbtn" title={pending ? '초대 취소' : rejected ? '목록에서 제거' : '공유 해제'} style={{ color: '#CAD0DA', cursor: 'pointer', display: 'flex', flexShrink: 0 }}>
                     <CloseIcon w={14} c="currentColor" />
                   </div>
                 </div>

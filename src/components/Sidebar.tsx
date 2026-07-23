@@ -2,6 +2,7 @@
 // 홈/캘린더=view 전환, 루틴=드로어, 지도=모달, CTA=할일 추가. (AI 추천은 우하단 말풍선 FAB 전담)
 import { BrandLogo, PlusIcon } from '@/lib/icons'
 import { useAppStore } from '@/store/useAppStore'
+import { useNotificationStore } from '@/store/useNotificationStore'
 
 const NAV_ICON = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
 
@@ -23,18 +24,23 @@ function MeetIcon() {
 function TodoIcon() {
   return <svg width="18" height="18" viewBox="0 0 24 24" {...NAV_ICON}><path d="M9 6h11M9 12h11M9 18h11" /><path d="M4.5 6l.9.9 1.6-1.8M4.5 12l.9.9 1.6-1.8M4.5 18l.9.9 1.6-1.8" /></svg>
 }
+function BellIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" {...NAV_ICON}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
+}
 
 export function Sidebar() {
-  const { view, setView, openMap, openRoutine, openAdd, openMeetupCreate, openFriendSearch, sidebarCollapsed: c, toggleSidebar, nickname, logout } = useAppStore()
+  const { view, setView, openMap, openRoutine, openAdd, openMeetupCreate, openFriendSearch, openNoti, sidebarCollapsed: c, toggleSidebar, nickname, logout } = useAppStore()
+  const unread = useNotificationStore((s) => s.notifications.filter((n) => !n.isRead).length)
   // 펼침이 기본 상태 — 화면 폭 대응은 #root zoom 분기가 하므로 자동 접힘 없음
 
   const items = [
-    { key: 'home', label: '홈', icon: <HomeIcon />, active: view === 'home', onClick: () => setView('home') },
-    { key: 'todo', label: '할 일', icon: <TodoIcon />, active: view === 'todo', onClick: () => setView('todo') },
-    { key: 'calendar', label: '캘린더', icon: <CalIcon />, active: view === 'calendar', onClick: () => setView('calendar') },
-    { key: 'meetup', label: '약속', icon: <MeetIcon />, active: view === 'meetup', onClick: () => setView('meetup') },
-    { key: 'map', label: '지도', icon: <MapIcon />, active: false, onClick: openMap },
-    { key: 'routine', label: '루틴', icon: <RoutineIcon />, active: false, onClick: openRoutine },
+    { key: 'home', label: '홈', icon: <HomeIcon />, active: view === 'home', onClick: () => setView('home'), badge: 0 },
+    { key: 'todo', label: '할 일', icon: <TodoIcon />, active: view === 'todo', onClick: () => setView('todo'), badge: 0 },
+    { key: 'calendar', label: '캘린더', icon: <CalIcon />, active: view === 'calendar', onClick: () => setView('calendar'), badge: 0 },
+    { key: 'meetup', label: '약속', icon: <MeetIcon />, active: view === 'meetup', onClick: () => setView('meetup'), badge: 0 },
+    { key: 'noti', label: '알림', icon: <BellIcon />, active: false, onClick: openNoti, badge: unread },
+    { key: 'map', label: '지도', icon: <MapIcon />, active: false, onClick: openMap, badge: 0 },
+    { key: 'routine', label: '루틴', icon: <RoutineIcon />, active: false, onClick: openRoutine, badge: 0 },
   ]
 
   // 현재 화면에 맞는 추가 버튼 (약속=약속 만들기, 마이페이지=친구 추가, 그 외=일정 추가)
@@ -119,9 +125,13 @@ export function Sidebar() {
               fontWeight: 700,
             }}
           >
-            {it.icon}
+            <span style={{ position: 'relative', display: 'inline-flex' }}>
+              {it.icon}
+              {c && it.badge > 0 && <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 8, height: 8, borderRadius: 20, background: '#D9614F' }} />}
+            </span>
             {!c && <span style={{ whiteSpace: 'nowrap' }}>{it.label}</span>}
-            {!c && it.active && <span style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,.85)' }} />}
+            {!c && it.badge > 0 && <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 800, color: '#fff', background: '#D9614F', minWidth: 20, textAlign: 'center', padding: '1px 6px', borderRadius: 20 }}>{it.badge}</span>}
+            {!c && it.active && it.badge === 0 && <span style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,.85)' }} />}
           </div>
         ))}
       </nav>

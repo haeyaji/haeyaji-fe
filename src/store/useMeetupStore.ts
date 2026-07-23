@@ -14,6 +14,7 @@ export interface Meetup {
   dates: string[] // 후보 날짜 (YYYY-MM-DD)
   myCells: Record<string, MeetCell> // "date|hour" → 내 가용
   confirmed?: { date: string; startH: number; endH: number } // 확정 시간 범위 (endH 배타)
+  shareToken?: string // be meeting.share_token — 초대 URL 토큰(생성 시 발급). 조인 화면은 be 대기
   createdAt: number
 }
 

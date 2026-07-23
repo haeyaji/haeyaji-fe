@@ -16,6 +16,7 @@ import { MeetupPage } from '@/features/meetup/MeetupPage'
 import { AiDrawer } from '@/features/recommend/AiDrawer'
 import { WeatherDrawer } from '@/features/weather/WeatherDrawer'
 import { RoutineDrawer } from '@/features/routine/RoutineDrawer'
+import { NotificationDrawer } from '@/features/notification/NotificationDrawer'
 import { AddTaskModal } from '@/features/todo/AddTaskModal'
 import { LabelManagerModal } from '@/features/todo/LabelManagerModal'
 import { MapModal } from '@/features/map/MapModal'
@@ -90,6 +91,7 @@ export default function App() {
       <AiDrawer />
       <WeatherDrawer />
       <RoutineDrawer />
+      <NotificationDrawer />
       <AddTaskModal />
       <LabelManagerModal />
       <MapModal />
