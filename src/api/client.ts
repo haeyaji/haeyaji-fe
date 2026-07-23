@@ -3,8 +3,14 @@
 // - gateway: 추천 nlp 게이트웨이. be nlp 게이트웨이 생기면 be로 통합 예정.
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 
-const BE_BASE = import.meta.env.VITE_BE_BASE ?? 'http://localhost:8090/api'
+// be는 dev에서 Vite 프록시(/api → :8090)를 타서 same-origin. (prod도 같은 도메인 /api 전제)
+const BE_BASE = import.meta.env.VITE_BE_BASE ?? '/api'
 const GATEWAY_BASE = import.meta.env.VITE_API_BASE ?? '/api'
+
+/** 쿠키 값 읽기 (XSRF-TOKEN은 httpOnly=false라 JS 접근 가능 — 프록시로 path=/ 리라이트됨) */
+function readCookie(name: string): string | undefined {
+  return document.cookie.split('; ').find((r) => r.startsWith(name + '='))?.split('=')[1]
+}
 
 // be 인증 = HttpOnly 쿠키(accessToken/refreshToken) 방식.
 // - 토큰은 JS가 읽을 수 없으므로 withCredentials로 브라우저가 자동 전송한다.
@@ -26,6 +32,17 @@ export const gateway = axios.create({
   baseURL: GATEWAY_BASE,
   timeout: 20_000, // LLM 추론이라 여유 있게
   headers: { 'Content-Type': 'application/json' },
+})
+
+// CSRF: 비-GET 요청에 XSRF-TOKEN 쿠키값을 X-XSRF-TOKEN 헤더로 실어 보낸다(Spring double-submit).
+// axios가 withXSRFToken로 자동 처리하기도 하지만, 확실히 하기 위해 명시적으로도 세팅.
+be.interceptors.request.use((cfg) => {
+  const method = (cfg.method ?? 'get').toLowerCase()
+  if (method !== 'get' && method !== 'head') {
+    const token = readCookie('XSRF-TOKEN')
+    if (token) cfg.headers['X-XSRF-TOKEN'] = decodeURIComponent(token)
+  }
+  return cfg
 })
 
 // 에러 메시지 정규화 (호출부에서 err.message로 일관 처리)

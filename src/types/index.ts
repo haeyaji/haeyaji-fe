@@ -72,6 +72,7 @@ export interface Task {
   sortOrder?: number // be todo.sort_order — 드래그 수동 순서
   labelId?: string | null // be todo.label_id (사용자 라벨) — 생성흐름 캐리어. 표시는 useLabelStore로 해석
   ai?: boolean
+  category?: Category // 추천 카드에서 추가 시 그 카드 6종 카테고리. 개인화 positive 신호로 be에 전송(저장 X, 학습용)
   participants?: TaskParticipant[] // be todo_participant (공유). 비어있으면 개인 할 일
 }
 
