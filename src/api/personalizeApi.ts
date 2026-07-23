@@ -1,7 +1,7 @@
 // 개인화 신호 be 전송 (be 담당 요청서: docs/fe-personalization-signal-request.md).
 // be 엔드포인트는 아직 미구현 — 계약(형태)만 확정. 실제 착지 전까지 호출은 fire-and-forget로
 // 감싸 쓴다(signalOr Ignore). be `/api` 베이스라 경로는 /preferences, /recommend/feedback.
-import type { Category } from '@/types'
+import type { Category, RecCategory } from '@/types'
 import { be } from './client'
 
 /** 구멍1 — 설문 4축 저장. 값은 온보딩 선택지 문자열 그대로(변환 X). */
@@ -28,13 +28,11 @@ export async function getPreferences(): Promise<PreferenceData> {
   return res.data.data
 }
 
-/** 구멍2 — 추천 카드 피드백. category는 그 카드의 RecommendedTodo.category 그대로.
- *  SELECTED='일정에 추가'(강한 긍정 +2) / ADD=장소 약한 긍정(+1) / IGNORED=무시(−0.5).
- *  todo.category는 ERD에서 제거됨(label_id 대체) → 긍정 신호는 todo 저장과 분리해 이 엔드포인트로 명시 전송. */
-export type FeedbackSignal = 'SELECTED' | 'ADD' | 'IGNORED'
-
-export async function sendRecommendFeedback(category: Category, signal: FeedbackSignal): Promise<void> {
-  await be.post('/recommend/feedback', { category, signal })
+/** 카테고리 선택 신호 (구 /recommend/feedback 단일 signal 폐기 → choice로 교체).
+ *  1단계 카테고리 칩에서 하나 선택 시 1회 전송. be가 분배: selected +2, shown 중 나머지 각 −0.05, keywords 각 +2.
+ *  shown/selected는 nlp가 준 10종 code 그대로. 인증(JWT 쿠키)+CSRF는 기존과 동일. fire-and-forget. */
+export async function sendChoice(shown: RecCategory[], selected: RecCategory, keywords: string[] = []): Promise<void> {
+  await be.post('/recommend/feedback/choice', { shown, selected, keywords })
 }
 
 /**

@@ -1,6 +1,8 @@
 import { create } from 'zustand'
-import type { ChatMessage, ChatTurn } from '@/types'
+import type { ChatMessage, ChatTurn, RecCategory, RecCategoryOption } from '@/types'
 import { sendMessage } from '@/api/recommendApi'
+import { sendChoice, fireSignal } from '@/api/personalizeApi'
+import { recCategoryLabel } from '@/features/recommend/recCategories'
 import { usePrefStore } from './usePrefStore'
 
 /** 추천 요청에 실을 맥락 (위치 필수, 날씨는 힌트) */
@@ -17,6 +19,8 @@ interface ChatState {
   setInput: (v: string) => void
   send: (ctx: SendCtx) => Promise<void>
   ask: (text: string, ctx: SendCtx) => Promise<void>
+  // 1단계 카테고리 칩 선택 → choice 신호 전송 + 그 카테고리로 2단계(장소) 호출
+  chooseCategory: (opt: RecCategoryOption, shown: RecCategory[], ctx: SendCtx) => Promise<void>
 }
 
 type SetFn = (partial: (s: ChatState) => Partial<ChatState>) => void
@@ -37,14 +41,14 @@ function buildHistory(chat: ChatMessage[]): ChatTurn[] {
   return chat.slice(-6).map((m) => ({ role: m.role, content: m.text }))
 }
 
-async function run(set: SetFn, get: GetFn, text: string, ctx: SendCtx) {
+async function run(set: SetFn, get: GetFn, text: string, ctx: SendCtx, category?: RecCategory) {
   const history = buildHistory(get().chat) // 이번 입력 이전까지의 맥락
   set((s) => ({ chat: [...s.chat, { role: 'user', text }], loading: true }))
   try {
     const mood = usePrefStore.getState().vibe ?? undefined // 온보딩 설문 vibe → 추천 분위기 힌트
-    const res = await sendMessage({ text, lat: ctx.lat, lng: ctx.lng, weather: ctx.weather, mood, ...timeContext(), history })
+    const res = await sendMessage({ text, lat: ctx.lat, lng: ctx.lng, weather: ctx.weather, mood, ...timeContext(), history, category })
     set((s) => ({
-      chat: [...s.chat, { role: 'assistant', text: res.reply, todos: res.todos, options: res.options }],
+      chat: [...s.chat, { role: 'assistant', text: res.reply, todos: res.todos, options: res.options, categories: res.categories }],
       loading: false,
     }))
   } catch {
@@ -69,5 +73,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
   ask: async (text, ctx) => {
     if (get().loading) return
     await run(set, get, text, ctx)
+  },
+  chooseCategory: async (opt, shown, ctx) => {
+    if (get().loading) return
+    fireSignal(sendChoice(shown, opt.code, opt.keywords ?? [])) // 개인화 신호(1회, fire-and-forget)
+    await run(set, get, recCategoryLabel(opt.code), ctx, opt.code) // 그 카테고리로 2단계(장소) 요청
   },
 }))

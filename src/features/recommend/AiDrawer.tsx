@@ -7,8 +7,8 @@ import { useAppStore } from '@/store/useAppStore'
 import { useChatStore, type SendCtx } from '@/store/useChatStore'
 import { useTodoStore } from '@/store/useTodoStore'
 import { useLocationStore } from '@/store/useLocationStore'
-import { sendRecommendFeedback, fireSignal } from '@/api/personalizeApi'
 import type { Category, PlaceCat, RecommendedTodo } from '@/types'
+import { REC_CATEGORY_LABEL, REC_CATEGORY_EMOJI } from './recCategories'
 
 const QUICK: { chip: string; text: string }[] = [
   { chip: '오늘 날씨에 맞는 곳', text: '오늘 날씨에 맞는 곳 추천해줘' },
@@ -34,23 +34,14 @@ function fmtDist(m: number | null): string | null {
 
 export function AiDrawer() {
   const { aiOpen, closeAi, weatherSelId: selId } = useAppStore()
-  const toast = useAppStore((s) => s.toast)
-  const { chat, input, loading, setInput, send, ask } = useChatStore()
+  const { chat, input, loading, setInput, send, ask, chooseCategory } = useChatStore()
   const addPlaceTask = useTodoStore((s) => s.addPlaceTask)
   const loc = useLocationStore()
   const w = useDayWeather(selId) // 훅은 early return보다 먼저
   const scrollRef = useRef<HTMLDivElement>(null)
-  // 구멍2 — "관심없음" 처리한 카드 키(`msgIdx-todoIdx`). 부정 피드백 전송 후 카드 숨김.
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set())
-  const ignore = (key: string, category: Category) => {
-    fireSignal(sendRecommendFeedback(category, 'IGNORED'))
-    setDismissed((prev) => new Set(prev).add(key))
-    toast('관심없음으로 표시했어요')
-  }
-  // 추천 '일정에 추가' = 강한 긍정. todo 생성과 별개로 SELECTED(+2) 신호를 명시 전송(fire-and-forget).
+  // 2단계 흐름: 개인화 신호는 1단계 카테고리 선택(chooseCategory)에서만 전송. 장소 카드는 순수 todo 추가.
   const select = (t: RecommendedTodo) => {
     addPlaceTask({ title: t.placeName || t.title, placeName: t.placeName, placeUrl: t.placeUrl, lat: t.y, lng: t.x })
-    fireSignal(sendRecommendFeedback(t.category, 'SELECTED'))
   }
 
   // 플로팅 위젯 크기 (좌상단 그립 드래그로 조절 — 우하단 앵커 고정)
@@ -113,7 +104,8 @@ export function AiDrawer() {
           {chat.map((m, i) => {
             const isU = m.role === 'user'
             const todos = m.todos ?? []
-            // 좁히기 칩: 항상 표시하되, 마지막 어시스턴트 메시지만 활성 (이전 턴은 비활성 — 다단계 좁히기 흐름 유지)
+            const cats = !isU ? (m.categories ?? []) : [] // 1단계 카테고리 후보
+            // 칩: 항상 표시하되, 마지막 어시스턴트 메시지만 활성 (이전 턴은 비활성 — 다단계 흐름 유지)
             const chips = !isU ? (m.options ?? []) : []
             const chipsActive = i === chat.length - 1 && !loading
             return (
@@ -135,11 +127,31 @@ export function AiDrawer() {
                 </div>
                 {todos.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
-                    {todos.map((t, j) => {
-                      const key = `${i}-${j}`
-                      if (dismissed.has(key)) return null
-                      return <TodoCard key={key} todo={t} onAdd={() => select(t)} onIgnore={() => ignore(key, t.category)} />
-                    })}
+                    {todos.map((t, j) => (
+                      <TodoCard key={`${i}-${j}`} todo={t} onAdd={() => select(t)} />
+                    ))}
+                  </div>
+                )}
+                {cats.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, maxWidth: '94%' }}>
+                    {cats.map((c) => (
+                      <div
+                        key={c.code}
+                        onClick={() => chipsActive && chooseCategory(c, cats.map((x) => x.code), ctx)}
+                        className={chipsActive ? 'lift' : undefined}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 7, padding: '11px 15px', borderRadius: 14, fontSize: 14.5, fontWeight: 800,
+                          color: chipsActive ? '#17150F' : '#B6BCC7',
+                          background: chipsActive ? '#fff' : '#F0F2F6',
+                          border: `1.5px solid ${chipsActive ? '#CDE8DC' : '#E4E7EE'}`,
+                          boxShadow: chipsActive ? '0 2px 8px rgba(21,121,90,.08)' : 'none',
+                          cursor: chipsActive ? 'pointer' : 'default',
+                        }}
+                      >
+                        <span style={{ fontSize: 16 }}>{REC_CATEGORY_EMOJI[c.code] ?? '·'}</span>
+                        {REC_CATEGORY_LABEL[c.code] ?? c.code}
+                      </div>
+                    ))}
                   </div>
                 )}
                 {chips.length > 0 && (
@@ -197,7 +209,7 @@ export function AiDrawer() {
   )
 }
 
-function TodoCard({ todo, onAdd, onIgnore }: { todo: RecommendedTodo; onAdd: () => void; onIgnore: () => void }) {
+function TodoCard({ todo, onAdd }: { todo: RecommendedTodo; onAdd: () => void }) {
   const headline = todo.placeName || todo.title
   const cat = CAT_ICON[todo.category] ?? 'culture'
   const dist = fmtDist(todo.distanceM)
@@ -222,11 +234,6 @@ function TodoCard({ todo, onAdd, onIgnore }: { todo: RecommendedTodo; onAdd: () 
         {todo.placeUrl && (
           <div onClick={() => { const u = safeUrl(todo.placeUrl); if (u) window.open(u, '_blank', 'noopener') }} style={{ textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#5A554B', background: '#E9EDF3', borderRadius: 11, padding: '10px 14px', cursor: 'pointer' }}>지도</div>
         )}
-        {/* 구멍2 — 부정 피드백(관심없음). 클릭 시 카드 숨김 + be로 IGNORED 신호 전송 */}
-        <div onClick={onIgnore} title="관심없음" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, fontSize: 13, fontWeight: 700, color: '#A39C8E', background: '#F0F2F6', borderRadius: 11, padding: '10px 13px', cursor: 'pointer' }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
-          관심없음
-        </div>
       </div>
     </div>
   )
