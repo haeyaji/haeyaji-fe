@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { todayKey } from '@/lib/dates'
 import { logoutApi } from '@/api/authApi'
-import { usePrefStore } from './usePrefStore'
 
 type View = 'home' | 'todo' | 'calendar' | 'mypage' | 'meetup'
 
@@ -78,7 +77,7 @@ export const useAppStore = create<AppState>((set) => ({
   },
   logout: () => {
     logoutApi().catch(() => {}) // 쿠키 만료는 be에 위임, 실패해도 클라는 정리
-    usePrefStore.setState({ nickname: '' }) // 로컬 표시이름 정리(다른 계정 재로그인 대비). be가 /me nickname 주면 무의미
+    // 로컬 데이터는 남겨둔다(같은 계정 재로그인 시 유지). 다른 계정으로 로그인하면 부팅의 계정단위 wipe가 정리.
     set({ authed: false, aiOpen: false, weatherOpen: false, routineOpen: false, addOpen: false, mapOpen: false, meetupCreateOpen: false, friendSearchOpen: false, labelManagerOpen: false, view: 'home' })
   },
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
