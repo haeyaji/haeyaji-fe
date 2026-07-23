@@ -12,7 +12,8 @@ import { useChatStore } from '@/store/useChatStore'
 import { searchPlaces } from '@/api/placeApi'
 import { KakaoMap } from './KakaoMap'
 import { PlaceDetailModal } from './PlaceDetailModal'
-import type { Category, PlaceCat } from '@/types'
+import type { PlaceCat } from '@/types'
+import { REC_CATEGORY_ICON, REC_CATEGORY_KEYWORD, REC_CATEGORY_LABEL } from '@/features/recommend/recCategories'
 
 // 지도/리스트 공통 장소 모델 (추천 mock + 카카오 검색결과 정규화)
 interface MapPlace {
@@ -41,14 +42,6 @@ const km = (s: string) => parseFloat(String(s).replace(/[^\d.]/g, '')) || 0
 const kmUnit = (s: string) => /km/i.test(s)
 const driveOf = (s: string) => `${Math.max(3, Math.round((kmUnit(s) ? km(s) : km(s) / 1000) * 3.4))}분`
 const fmtDist = (m: number) => (m >= 1000 ? `${(m / 1000).toFixed(1)}km` : `${m}m`)
-
-// nlp category → 지도 아이콘/검색 키워드
-const NLP_CAT_ICON: Record<Category, PlaceCat> = {
-  '맛집/카페': 'cafe', 야외: 'park', 실내: 'culture', 휴식: 'cafe', 생산성: 'culture', 사람만나기: 'food',
-}
-const NLP_CAT_KEYWORD: Record<Category, string> = {
-  '맛집/카페': '맛집', 야외: '공원', 실내: '전시', 휴식: '카페', 생산성: '카페', 사람만나기: '맛집',
-}
 
 function catOf(categoryName: string): PlaceCat {
   if (/카페|커피|디저트|베이커리|제과/.test(categoryName)) return 'cafe'
@@ -81,9 +74,9 @@ export function MapModal() {
           .map((t, j) => ({
             id: t.placeUrl?.split('/').pop() ?? `nlp-${j}`,
             name: t.placeName!,
-            type: t.category,
+            type: REC_CATEGORY_LABEL[t.category] ?? t.category,
             dist: t.distanceM != null ? fmtDist(t.distanceM) : '',
-            cat: NLP_CAT_ICON[t.category] ?? 'culture',
+            cat: REC_CATEGORY_ICON[t.category] ?? 'culture',
             lat: t.y!,
             lng: t.x!,
             placeUrl: t.placeUrl ?? undefined,
@@ -93,8 +86,17 @@ export function MapModal() {
     return []
   }, [chat])
 
+  // nlp 최신 추천의 첫 카테고리 code (지도 재검색 키워드용)
+  const nlpCatCode = useMemo(() => {
+    for (let i = chat.length - 1; i >= 0; i--) {
+      const m = chat[i]
+      const t = m.role === 'assistant' ? m.todos?.find((x) => x.x != null && x.y != null && x.placeName) : undefined
+      if (t) return t.category
+    }
+    return null
+  }, [chat])
   // 자동 재검색 키워드: 사용자 검색어 > nlp 추천 카테고리
-  const nlpKeyword = nlpPins.length > 0 ? (NLP_CAT_KEYWORD[nlpPins[0].type as Category] ?? '') : ''
+  const nlpKeyword = nlpCatCode ? (REC_CATEGORY_KEYWORD[nlpCatCode] ?? '') : ''
   const activeKeyword = mapSearch.trim() || nlpKeyword
   const [mapDetail, setMapDetail] = useState<MapPlace | null>(null) // 장소 상세 iframe 모달
 

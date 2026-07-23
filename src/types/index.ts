@@ -22,7 +22,7 @@ export interface RecCategoryOption {
 export interface RecommendedTodo {
   title: string
   reason: string
-  category: Category
+  category: RecCategory // nlp가 10종 code로 태깅 (구 6종 한글 아님)
   estimatedMinutes: number
   placeName: string | null
   placeUrl: string | null

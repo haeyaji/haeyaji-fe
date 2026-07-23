@@ -12,7 +12,7 @@ export interface RecommendRequest {
   timeOfDay?: string // 예: "오후 2시"
   weekday?: string // 예: "토요일"
   history?: ChatTurn[] // 최근 대화 턴 (멀티턴 좁히기 맥락)
-  category?: RecCategory // 2단계 호출: 1단계에서 유저가 고른 카테고리 code
+  selectedCategory?: RecCategory // 2단계: 1단계에서 고른 카테고리 code (be 계약: selectedCategory)
 }
 
 // nlp categories[] 정규화 — 문자열("CAFE_DESSERT") 또는 객체({code, label, reason, keywords}) 어느 쪽이어도 안전

@@ -7,8 +7,8 @@ import { useAppStore } from '@/store/useAppStore'
 import { useChatStore, type SendCtx } from '@/store/useChatStore'
 import { useTodoStore } from '@/store/useTodoStore'
 import { useLocationStore } from '@/store/useLocationStore'
-import type { Category, PlaceCat, RecommendedTodo } from '@/types'
-import { REC_CATEGORY_LABEL, REC_CATEGORY_EMOJI } from './recCategories'
+import type { RecommendedTodo } from '@/types'
+import { REC_CATEGORY_LABEL, REC_CATEGORY_EMOJI, REC_CATEGORY_ICON } from './recCategories'
 
 const QUICK: { chip: string; text: string }[] = [
   { chip: '오늘 날씨에 맞는 곳', text: '오늘 날씨에 맞는 곳 추천해줘' },
@@ -17,15 +17,6 @@ const QUICK: { chip: string; text: string }[] = [
   { chip: '카페', text: '집중 잘 되는 카페 추천' },
   { chip: '맛집', text: '근처 맛집 추천' },
 ]
-
-const CAT_ICON: Record<Category, PlaceCat> = {
-  '맛집/카페': 'cafe',
-  야외: 'park',
-  실내: 'culture',
-  휴식: 'cafe',
-  생산성: 'culture',
-  사람만나기: 'food',
-}
 
 function fmtDist(m: number | null): string | null {
   if (m == null) return null
@@ -214,9 +205,9 @@ export function AiDrawer() {
 
 function TodoCard({ todo, onAdd }: { todo: RecommendedTodo; onAdd: () => void }) {
   const headline = todo.placeName || todo.title
-  const cat = CAT_ICON[todo.category] ?? 'culture'
+  const cat = REC_CATEGORY_ICON[todo.category] ?? 'culture'
   const dist = fmtDist(todo.distanceM)
-  const metaParts = [todo.category, dist].filter(Boolean).join(' · ')
+  const metaParts = [REC_CATEGORY_LABEL[todo.category] ?? todo.category, dist].filter(Boolean).join(' · ')
   return (
     <div style={{ background: '#fff', border: '1px solid #E1E5EC', borderRadius: 16, padding: 15 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
