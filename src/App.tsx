@@ -36,6 +36,9 @@ export default function App() {
   // 부팅 시 세션 복원 + OAuth 콜백 처리 (be는 쿠키로 세션 유지 → 새로고침에도 로그인 유지)
   useEffect(() => {
     let cancelled = false
+    // 로그인 시 be가 직접 심은 XSRF-TOKEN(path=/api)은 SPA(page /)에서 못 읽음 → 제거.
+    // 이후 프록시 경유 요청이 path=/ 로 재발급하면 JS가 읽어 CSRF 헤더로 실어보낼 수 있다.
+    document.cookie = 'XSRF-TOKEN=; path=/api; max-age=0; SameSite=Lax'
     const isCallback = window.location.pathname === '/oauth/callback'
     const isNewMember = new URLSearchParams(window.location.search).get('isNewMember') === 'true'
     if (isCallback) history.replaceState(null, '', '/') // 콜백 쿼리 URL 정리

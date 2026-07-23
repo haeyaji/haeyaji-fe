@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Task, TaskGroup, TaskStatus, TasksByDate } from '@/types'
+import type { Task, TaskGroup, TaskStatus, TasksByDate, Category } from '@/types'
 import { fetchTodos, createTodo, updateTodo, deleteTodo } from '@/api/todoApi'
 import { useAppStore } from './useAppStore'
 import { useLabelStore } from './useLabelStore'
@@ -14,6 +14,7 @@ export interface PlaceTaskInput {
   placeUrl?: string | null
   lat?: number | null
   lng?: number | null
+  category?: Category // 추천 카드 추가 시 그 카드 카테고리(개인화 positive 신호)
 }
 
 /** 수동 추가 입력 (AddTaskModal) */
@@ -133,7 +134,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
   addPlaceTask: (input) => {
     const dateKey = sel()
     const list = get().tasksByDate[dateKey] ?? []
-    const temp: Task = { id: newTempId(), title: input.title, time: '', group: 'personal', done: false, ai: true, placeName: input.placeName ?? null, placeUrl: input.placeUrl ?? null, lat: input.lat ?? null, lng: input.lng ?? null, pinned: false, sortOrder: nextSort(list) }
+    const temp: Task = { id: newTempId(), title: input.title, time: '', group: 'personal', done: false, ai: true, placeName: input.placeName ?? null, placeUrl: input.placeUrl ?? null, lat: input.lat ?? null, lng: input.lng ?? null, category: input.category, pinned: false, sortOrder: nextSort(list) }
     set((s) => ({ tasksByDate: { ...s.tasksByDate, [dateKey]: [...(s.tasksByDate[dateKey] ?? []), temp] } }))
     useAppStore.getState().toast(`'${input.title}' 일정에 추가됨`)
     createTodo(dateKey, temp, 'AI').then((saved) => reconcile(dateKey, temp.id, saved)).catch((err) => failCreate(dateKey, temp.id, err))

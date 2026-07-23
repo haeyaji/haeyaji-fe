@@ -75,6 +75,8 @@ function toCreateBody(dateKey: string, t: Task, source?: TodoSource) {
     source: source ?? sourceOf(t),
     pinned: t.pinned ?? false,
     sortOrder: t.sortOrder ?? 0,
+    // 개인화 positive 신호: 추천 카드에서 추가 시 그 카테고리를 실어 보냄(be가 ADD +1 학습). 없으면 미전송.
+    category: t.category ?? null,
   }
 }
 
