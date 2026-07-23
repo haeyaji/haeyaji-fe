@@ -6,6 +6,7 @@ import { useTodoStore } from '@/store/useTodoStore'
 import { todayKey } from '@/lib/dates'
 import { timeOfDay } from '@/lib/weather'
 import { usePrefStore } from '@/store/usePrefStore'
+import { fetchMe } from '@/api/authApi'
 import { LoginScreen } from '@/features/auth/LoginScreen'
 import { OnboardingSurvey } from '@/features/auth/OnboardingSurvey'
 import { HomeDashboard } from '@/features/home/HomeDashboard'
@@ -30,6 +31,35 @@ export default function App() {
   const lat = useLocationStore((s) => s.lat)
   const lng = useLocationStore((s) => s.lng)
   const selId = useAppStore((s) => s.selId)
+  const [authChecked, setAuthChecked] = useState(false) // /me 확인 전엔 로그인화면 깜빡임 방지
+
+  // 부팅 시 세션 복원 + OAuth 콜백 처리 (be는 쿠키로 세션 유지 → 새로고침에도 로그인 유지)
+  useEffect(() => {
+    let cancelled = false
+    const isCallback = window.location.pathname === '/oauth/callback'
+    const isNewMember = new URLSearchParams(window.location.search).get('isNewMember') === 'true'
+    if (isCallback) history.replaceState(null, '', '/') // 콜백 쿼리 URL 정리
+    ;(async () => {
+      try {
+        await fetchMe() // 쿠키로 세션 확인 (401이면 client 인터셉터가 reissue 시도)
+        if (cancelled) return
+        useAppStore.getState().login(isCallback ? '로그인했어요' : undefined)
+        if (isCallback && isNewMember) usePrefStore.setState({ surveyDone: false }) // 신규 → 온보딩
+      } catch {
+        /* 미인증 → 로그인 화면 */
+      } finally {
+        if (!cancelled) setAuthChecked(true)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  // 세션 만료(refresh까지 실패) → 로그인 화면으로 (client 인터셉터가 dispatch)
+  useEffect(() => {
+    const onExpired = () => { if (useAppStore.getState().authed) useAppStore.getState().logout() }
+    window.addEventListener('haeyaji:auth-expired', onExpired)
+    return () => window.removeEventListener('haeyaji:auth-expired', onExpired)
+  }, [])
 
   // 로그인 후 선택 날짜 + 오늘 할 일 로드 (be GET /todos?date=)
   useEffect(() => {
@@ -59,6 +89,11 @@ export default function App() {
     }, 60_000)
     return () => clearInterval(t)
   }, [lat, lng, weatherSelId])
+
+  // 세션 확인 중엔 로그인화면/앱 대신 빈 캔버스 (깜빡임 방지)
+  if (!authChecked) {
+    return <div style={{ minHeight: 'var(--full-vh)', background: 'var(--canvas)' }} />
+  }
 
   if (!authed) {
     return (

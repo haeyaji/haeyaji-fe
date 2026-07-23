@@ -1,9 +1,10 @@
 import { BrandLogo } from '@/lib/icons'
-import { useAppStore } from '@/store/useAppStore'
+import { oauthLoginUrl, Provider } from '@/api/authApi'
+
+// 소셜 로그인 시작 — be authorization URL로 풀 이동(성공 시 be가 쿠키 세팅 후 /oauth/callback로 복귀)
+const startLogin = (provider: Provider) => { window.location.href = oauthLoginUrl(provider) }
 
 export function LoginScreen() {
-  const login = useAppStore((s) => s.login)
-
   return (
     <div
       style={{
@@ -31,9 +32,8 @@ export function LoginScreen() {
         </div>
 
         <div className="tile" style={{ padding: '26px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {/* TODO(be): 실제 OAuth는 window.location = `${BE}/oauth2/authorization/${provider}` 로 리다이렉트 후 /me로 세션 확인. 현재는 mock 로그인 */}
           <div
-            onClick={() => login('카카오 계정으로 로그인했어요')}
+            onClick={() => startLogin('kakao')}
             className="lift"
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: '#FEE500', borderRadius: 14, padding: 15, cursor: 'pointer' }}
           >
@@ -41,7 +41,7 @@ export function LoginScreen() {
             <div style={{ fontSize: 15, fontWeight: 800, color: '#3C1E1E' }}>카카오로 시작하기</div>
           </div>
           <div
-            onClick={() => login('네이버 계정으로 로그인했어요')}
+            onClick={() => startLogin('naver')}
             className="lift"
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: '#03C75A', borderRadius: 14, padding: 15, cursor: 'pointer' }}
           >
@@ -49,7 +49,7 @@ export function LoginScreen() {
             <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>네이버로 시작하기</div>
           </div>
           <div
-            onClick={() => login('구글 계정으로 로그인했어요')}
+            onClick={() => startLogin('google')}
             className="lift"
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: '#fff', border: '1px solid #E1E5EC', borderRadius: 14, padding: 15, cursor: 'pointer' }}
           >
