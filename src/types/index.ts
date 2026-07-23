@@ -10,10 +10,12 @@ export type RecCategory =
   | 'CAFE_DESSERT' | 'RESTAURANT' | 'NATURE_WALK' | 'SPORTS_ACTIVITY' | 'CULTURE_EXHIBIT'
   | 'INDOOR_PLAY' | 'REST_HEALING' | 'STUDY_WORK' | 'SOCIAL' | 'SHOPPING'
 
-/** nlp 1단계 응답의 카테고리 후보 (code + 선택 시 be로 넘길 세부 키워드). */
+/** nlp 1단계 응답의 카테고리 후보. code + 표시용 label/reason. (keywords는 2단계 장소에서 나옴 → 보통 미포함) */
 export interface RecCategoryOption {
   code: RecCategory
-  keywords?: string[]
+  label?: string // nlp가 준 표시 라벨(없으면 FE 10종 테이블 폴백)
+  reason?: string // 왜 이 카테고리인지(예: "비 오는 날 감성"), 없을 수 있음
+  keywords?: string[] // 선택 시 be choice로 넘길 세부 키워드(1단계엔 보통 없음)
 }
 
 /** nlp TodoItem (be 경유). 지도 마커용 좌표/거리 포함. */

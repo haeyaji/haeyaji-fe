@@ -15,14 +15,19 @@ export interface RecommendRequest {
   category?: RecCategory // 2단계 호출: 1단계에서 유저가 고른 카테고리 code
 }
 
-// nlp categories[] 정규화 — 문자열("CAFE_DESSERT") 또는 객체({code, keywords}) 어느 쪽이어도 안전
+// nlp categories[] 정규화 — 문자열("CAFE_DESSERT") 또는 객체({code, label, reason, keywords}) 어느 쪽이어도 안전
 function normalizeCategory(c: unknown): RecCategoryOption | null {
   if (typeof c === 'string') return { code: c as RecCategory }
   if (c && typeof c === 'object') {
     const o = c as Record<string, unknown>
     const code = (o.code ?? o.category) as RecCategory | undefined
     if (!code) return null
-    return { code, keywords: Array.isArray(o.keywords) ? (o.keywords as string[]) : undefined }
+    return {
+      code,
+      label: typeof o.label === 'string' ? o.label : undefined,
+      reason: typeof o.reason === 'string' ? o.reason : undefined,
+      keywords: Array.isArray(o.keywords) ? (o.keywords as string[]) : undefined,
+    }
   }
   return null
 }
