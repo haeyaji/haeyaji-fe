@@ -16,6 +16,18 @@ export async function savePreferences(payload: PreferencePayload): Promise<void>
   await be.post('/preferences', payload)
 }
 
+/** be 저장 설문 조회 (ApiResponse 래핑 → data.data 언랩). 미저장 유저는 빈 목록/null. */
+export interface PreferenceData {
+  preferredCategories: string[]
+  avoid: string[]
+  vibe: string | null
+  intensity: string | null
+}
+export async function getPreferences(): Promise<PreferenceData> {
+  const res = await be.get<{ data: PreferenceData }>('/preferences')
+  return res.data.data
+}
+
 /** 구멍2 — 추천 카드 부정 피드백. category는 그 카드의 RecommendedTodo.category.
  *  (긍정 신호는 별도 엔드포인트가 아니라 '일정에 추가' 시 todo 바디의 category로 be가 학습) */
 export type FeedbackSignal = 'IGNORED'
