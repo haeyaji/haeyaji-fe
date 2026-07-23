@@ -19,7 +19,7 @@ function daysLabel(days: boolean[]): string {
 
 export function RoutineDrawer() {
   const { routineOpen, closeRoutine } = useAppStore()
-  const { routines, toggleActive, toggleDay, setPreset, deleteRoutine, batchApply } = useRoutineStore()
+  const { routines, toggleActive, deleteRoutine, batchApply } = useRoutineStore()
   const [form, setForm] = useState<Routine | 'new' | null>(null)
   if (!routineOpen) return null
 
@@ -54,7 +54,7 @@ export function RoutineDrawer() {
 
         <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           {routines.map((r) => (
-            <RoutineCard key={r.id} r={r} onToggleActive={toggleActive} onToggleDay={toggleDay} onSetPreset={setPreset} onDelete={deleteRoutine} onEdit={() => setForm(r)} />
+            <RoutineCard key={r.id} r={r} onToggleActive={toggleActive} onDelete={deleteRoutine} onEdit={() => setForm(r)} />
           ))}
           <div onClick={() => setForm('new')} className="hbtn" style={{ border: '1.5px dashed #CCD2DC', borderRadius: 18, padding: 14, textAlign: 'center', fontSize: 13.5, fontWeight: 700, color: '#A39C8E', cursor: 'pointer' }}>
             + 새 루틴 추가
@@ -73,78 +73,33 @@ export function RoutineDrawer() {
   )
 }
 
-function RoutineCard({
-  r,
-  onToggleActive,
-  onToggleDay,
-  onSetPreset,
-  onDelete,
-  onEdit,
-}: {
-  r: Routine
-  onToggleActive: (id: string) => void
-  onToggleDay: (id: string, i: number) => void
-  onSetPreset: (id: string, kind: 'every' | 'week' | 'weekend') => void
-  onDelete: (id: string) => void
-  onEdit: () => void
-}) {
+function RoutineCard({ r, onToggleActive, onDelete, onEdit }: { r: Routine; onToggleActive: (id: string) => void; onDelete: (id: string) => void; onEdit: () => void }) {
   const lab = useLabelStore((s) => (r.labelId ? s.labels.find((l) => l.id === r.labelId) : undefined))
   const accent = lab?.color ?? '#15795A'
-  const isEvery = r.days.filter(Boolean).length === 7
-  const isWeek = r.days.slice(0, 5).every(Boolean) && !r.days[5] && !r.days[6]
-  const isWeekend = !r.days.slice(0, 5).some(Boolean) && r.days[5] && r.days[6]
-  const presets = [
-    { kind: 'every' as const, label: '매일', on: isEvery },
-    { kind: 'week' as const, label: '평일', on: isWeek },
-    { kind: 'weekend' as const, label: '주말', on: isWeekend },
-  ]
 
+  // 목록: 루틴이름(+라벨) / 시간 · 반복요일 — 한 줄 리스트. 수정(요일 등)은 이름 클릭 → 모달
   return (
-    <div style={{ background: '#fff', border: '1px solid #E1E5EC', borderRadius: 20, padding: 18, opacity: r.active ? 1 : 0.5 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
-        <div style={{ width: 42, height: 42, borderRadius: 13, background: accent + '1F', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 2l4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="M7 22l-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 13, background: '#fff', border: '1px solid #E1E5EC', borderRadius: 16, padding: '14px 16px', opacity: r.active ? 1 : 0.55 }}>
+      <div style={{ width: 42, height: 42, borderRadius: 13, background: accent + '1F', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 2l4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="M7 22l-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>
+      </div>
+      <div onClick={onEdit} className="hbtn" title="루틴 수정" style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.title}</div>
+          {lab && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: lab.color, background: lab.color + '1F', padding: '2.5px 8px', borderRadius: 20, flexShrink: 0 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: lab.color }} />{lab.name}</span>}
         </div>
-        <div onClick={onEdit} className="hbtn" title="루틴 수정" style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-.3px' }}>{r.title}</div>
-            {lab && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: lab.color, background: lab.color + '1F', padding: '2.5px 8px', borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: lab.color }} />{lab.name}</span>}
-          </div>
-          <div style={{ fontSize: 12.5, fontWeight: 600, color: '#A39C8E', marginTop: 1 }}>{r.time} · {daysLabel(r.days)}</div>
-        </div>
-        <div onClick={() => onToggleActive(r.id)} style={{ width: 46, height: 27, borderRadius: 20, cursor: 'pointer', position: 'relative', background: r.active ? '#15795A' : '#CCD2DC', flexShrink: 0 }}>
-          <div style={{ position: 'absolute', top: 2.5, left: r.active ? 22 : 2, width: 22, height: 22, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'left .15s' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: '#A39C8E', marginTop: 3 }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+          {r.time || '시간 미정'}
+          <span style={{ color: '#D5D0C4' }}>·</span>
+          {daysLabel(r.days)}
         </div>
       </div>
-
-      <div style={{ display: 'flex', gap: 5, marginTop: 14 }}>
-        {DOW.map((d, i) => (
-          <div
-            key={i}
-            onClick={() => onToggleDay(r.id, i)}
-            className="hbtn"
-            style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderRadius: 10, fontSize: 12, fontWeight: 800, cursor: 'pointer', background: r.days[i] ? '#15795A' : '#E9EDF3', color: r.days[i] ? '#fff' : '#A39C8E' }}
-          >
-            {d}
-          </div>
-        ))}
+      <div onClick={() => onToggleActive(r.id)} title={r.active ? '켜짐' : '꺼짐'} style={{ width: 46, height: 27, borderRadius: 20, cursor: 'pointer', position: 'relative', background: r.active ? '#15795A' : '#CCD2DC', flexShrink: 0 }}>
+        <div style={{ position: 'absolute', top: 2.5, left: r.active ? 22 : 2, width: 22, height: 22, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'left .15s' }} />
       </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 11 }}>
-        {presets.map((p) => (
-          <div
-            key={p.kind}
-            onClick={() => onSetPreset(r.id, p.kind)}
-            className="hbtn"
-            style={{ padding: '6px 12px', borderRadius: 18, fontSize: 11.5, fontWeight: 700, cursor: 'pointer', background: p.on ? '#E4F2EC' : '#E9EDF3', color: p.on ? '#15795A' : '#A39C8E' }}
-          >
-            {p.label}
-          </div>
-        ))}
-        <div style={{ flex: 1 }} />
-        <div onClick={() => onDelete(r.id)} style={{ display: 'flex', cursor: 'pointer', color: '#CFC9BC' }}>
-          <TrashIcon c="currentColor" w={16} />
-        </div>
+      <div onClick={() => onDelete(r.id)} className="hbtn" title="삭제" style={{ display: 'flex', cursor: 'pointer', color: '#CFC9BC', flexShrink: 0 }}>
+        <TrashIcon c="currentColor" w={16} />
       </div>
     </div>
   )
