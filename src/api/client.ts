@@ -39,6 +39,10 @@ export const gateway = axios.create({
 be.interceptors.request.use((cfg) => {
   const method = (cfg.method ?? 'get').toLowerCase()
   if (method !== 'get' && method !== 'head') {
+    // 로그인 시 be가 직접 심은 XSRF-TOKEN(path=/api)이 남아있으면, 브라우저가 그걸(경로 더 김) 먼저 보내
+    // be가 그 값을 읽어 헤더(path=/ 값)와 불일치 → 403. 매 상태변경 요청 전에 path=/api 변종을 제거해
+    // 프록시가 준 path=/ 하나만 남긴다. (부팅 clear만으론 타이밍/stale 번들에서 놓칠 수 있어 이중 방어)
+    document.cookie = 'XSRF-TOKEN=; path=/api; max-age=0; SameSite=Lax'
     const token = readCookie('XSRF-TOKEN')
     if (token) cfg.headers['X-XSRF-TOKEN'] = decodeURIComponent(token)
   }
