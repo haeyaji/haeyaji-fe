@@ -46,7 +46,7 @@ async function run(set: SetFn, get: GetFn, text: string, ctx: SendCtx, category?
   set((s) => ({ chat: [...s.chat, { role: 'user', text }], loading: true }))
   try {
     const mood = usePrefStore.getState().vibe ?? undefined // 온보딩 설문 vibe → 추천 분위기 힌트
-    const res = await sendMessage({ text, lat: ctx.lat, lng: ctx.lng, weather: ctx.weather, mood, ...timeContext(), history, category })
+    const res = await sendMessage({ text, lat: ctx.lat, lng: ctx.lng, weather: ctx.weather, mood, ...timeContext(), history, selectedCategory: category })
     set((s) => ({
       chat: [...s.chat, { role: 'assistant', text: res.reply, todos: res.todos, options: res.options, categories: res.categories }],
       loading: false,
