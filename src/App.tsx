@@ -6,7 +6,7 @@ import { useTodoStore } from '@/store/useTodoStore'
 import { todayKey } from '@/lib/dates'
 import { timeOfDay } from '@/lib/weather'
 import { usePrefStore } from '@/store/usePrefStore'
-import { fetchMe } from '@/api/authApi'
+import { fetchMe, getMemberProfile } from '@/api/authApi'
 import { getPreferences } from '@/api/personalizeApi'
 import { LoginScreen } from '@/features/auth/LoginScreen'
 import { ProfileSetup } from '@/features/auth/ProfileSetup'
@@ -58,7 +58,8 @@ export default function App() {
           window.location.reload() // 빈 localStorage로 스토어 재하이드레이트 (한 번만; 재로드 후 account 일치 → 재발 안 함)
           return
         }
-        if (me.nickname) usePrefStore.setState({ nickname: me.nickname }) // be가 nickname 주면 그 값으로
+        // 회원 프로필에서 닉네임 로드 (신규는 null → ProfileSetup에서 입력·PATCH). best-effort.
+        try { const p = await getMemberProfile(); if (p.nickname) usePrefStore.setState({ nickname: p.nickname }) } catch { /* be 미가동/미구현 → 로컬 폴백 */ }
         // be 저장 설문 복원 (다른 기기·계정 wipe 후에도 취향 유지 → 설문 재노출 방지). best-effort.
         try { usePrefStore.getState().hydrateFromServer(await getPreferences()) } catch { /* be 미가동/미저장 무시 */ }
         if (cancelled) return

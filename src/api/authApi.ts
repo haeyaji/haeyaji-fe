@@ -16,14 +16,30 @@ export function oauthLoginUrl(provider: Provider): string {
 export interface Me {
   memberId: string
   role: unknown // be는 authorities 배열로 반환. 현재는 사용처 없음.
-  nickname?: string // be가 /me에 nickname 넣어주면 표시에 사용(현재 미제공 → FE 로컬 닉네임 폴백)
-  email?: string
 }
 
-/** 현재 세션 확인. accessToken 쿠키 없거나 만료면 401(→ client 인터셉터가 reissue 시도). */
+/** 세션 확인 + memberId 획득(/me = {memberId, role}). 401이면 client 인터셉터가 reissue 시도. */
 export async function fetchMe(): Promise<Me> {
   const { data } = await be.get<Me>('/me')
   return data
+}
+
+/** 회원 프로필 (GET /members/me, ApiResponse 언랩). nickname은 미설정 신규회원이면 null. */
+export interface MemberProfile {
+  nickname: string | null
+  email: string | null
+  role: unknown
+  status: string
+  createdAt: string
+}
+export async function getMemberProfile(): Promise<MemberProfile> {
+  const res = await be.get<{ data: MemberProfile }>('/members/me')
+  return res.data.data
+}
+
+/** 닉네임 설정/변경 (PATCH /members/me/nickname). 2~10자·unique. 중복이면 be가 DUPLICATE_NICKNAME 에러. */
+export async function updateNickname(nickname: string): Promise<void> {
+  await be.patch('/members/me/nickname', { nickname })
 }
 
 /** 로그아웃 — refresh 삭제 + 쿠키 만료. 실패해도 클라 상태는 정리한다(best-effort). */

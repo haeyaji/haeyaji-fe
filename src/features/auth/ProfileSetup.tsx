@@ -1,21 +1,35 @@
 // 신규(또는 닉네임 미설정) 회원 프로필 입력 — 표시 이름(닉네임).
-// ERD member.nickname(NOT NULL) 대응. 현재 be에 nickname 필드/엔드포인트가 없어 로컬 persist.
-// be가 nickname 컬럼 + 설정 엔드포인트를 붙이면 여기 onSubmit에서 PATCH 호출로 스왑.
+// be member.nickname(2~10자·unique) 대응 → PATCH /members/me/nickname 저장 후 로컬 반영.
 import { useState } from 'react'
 import { BrandLogo } from '@/lib/icons'
 import { usePrefStore } from '@/store/usePrefStore'
 import { useAppStore } from '@/store/useAppStore'
+import { updateNickname } from '@/api/authApi'
+
+const MIN = 2
+const MAX = 10
 
 export function ProfileSetup() {
   const setNickname = usePrefStore((s) => s.setNickname)
   const toast = useAppStore((s) => s.toast)
   const [value, setValue] = useState('')
-  const valid = value.trim().length >= 1 && value.trim().length <= 50
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  const name = value.trim()
+  const valid = name.length >= MIN && name.length <= MAX
 
-  const submit = () => {
-    if (!valid) return
-    setNickname(value)
-    toast(`반가워요, ${value.trim()}님`)
+  const submit = async () => {
+    if (!valid || busy) return
+    setBusy(true)
+    setErr('')
+    try {
+      await updateNickname(name) // be 저장(unique 검증). 실패 시 중복/검증 메시지 표시
+      setNickname(name) // 성공 → 로컬 반영 (게이트 통과로 언마운트)
+      toast(`반가워요, ${name}님`)
+    } catch (e) {
+      setErr((e as Error).message || '닉네임 설정에 실패했어요')
+      setBusy(false)
+    }
   }
 
   return (
@@ -37,20 +51,23 @@ export function ProfileSetup() {
           <input
             autoFocus
             value={value}
-            onChange={(e) => setValue(e.target.value.slice(0, 50))}
+            onChange={(e) => { setValue(e.target.value.slice(0, MAX)); setErr('') }}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) submit() }}
-            placeholder="예: 지온"
-            style={{ width: '100%', border: '1.5px solid #E7EAEF', borderRadius: 14, outline: 'none', background: '#F9FAFB', fontFamily: 'inherit', fontSize: 16, fontWeight: 700, padding: '15px 16px' }}
+            placeholder="2~10자"
+            style={{ width: '100%', border: `1.5px solid ${err ? '#E5484D' : '#E7EAEF'}`, borderRadius: 14, outline: 'none', background: '#F9FAFB', fontFamily: 'inherit', fontSize: 16, fontWeight: 700, padding: '15px 16px' }}
             onFocus={(e) => (e.target.style.border = '1.5px solid #15795A')}
-            onBlur={(e) => (e.target.style.border = '1.5px solid #E7EAEF')}
+            onBlur={(e) => (e.target.style.border = `1.5px solid ${err ? '#E5484D' : '#E7EAEF'}`)}
           />
-          <div style={{ fontSize: 12.5, fontWeight: 600, color: '#B6BCC7', marginTop: 8, textAlign: 'right' }}>{value.trim().length}/50</div>
+          <div style={{ display: 'flex', alignItems: 'center', marginTop: 8, minHeight: 18 }}>
+            <div style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: '#E5484D' }}>{err}</div>
+            <div style={{ fontSize: 12.5, fontWeight: 600, color: '#B6BCC7' }}>{name.length}/{MAX}</div>
+          </div>
           <div
             onClick={submit}
-            className={valid ? 'lift' : ''}
-            style={{ marginTop: 8, textAlign: 'center', background: valid ? '#17150F' : '#D6D9DF', color: '#fff', fontSize: 16, fontWeight: 800, borderRadius: 15, padding: 16, cursor: valid ? 'pointer' : 'default', boxShadow: valid ? '0 10px 24px rgba(24,21,15,.22)' : 'none' }}
+            className={valid && !busy ? 'lift' : ''}
+            style={{ marginTop: 8, textAlign: 'center', background: valid && !busy ? '#17150F' : '#D6D9DF', color: '#fff', fontSize: 16, fontWeight: 800, borderRadius: 15, padding: 16, cursor: valid && !busy ? 'pointer' : 'default', boxShadow: valid && !busy ? '0 10px 24px rgba(24,21,15,.22)' : 'none' }}
           >
-            시작하기
+            {busy ? '설정 중…' : '시작하기'}
           </div>
         </div>
       </div>
