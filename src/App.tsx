@@ -6,6 +6,7 @@ import { useTodoStore } from '@/store/useTodoStore'
 import { todayKey } from '@/lib/dates'
 import { timeOfDay } from '@/lib/weather'
 import { usePrefStore } from '@/store/usePrefStore'
+import { useLabelStore } from '@/store/useLabelStore'
 import { fetchMe, getMemberProfile } from '@/api/authApi'
 import { getPreferences } from '@/api/personalizeApi'
 import { LoginScreen } from '@/features/auth/LoginScreen'
@@ -63,6 +64,7 @@ export default function App() {
         try { const p = await getMemberProfile(); if (p.nickname) usePrefStore.setState({ nickname: p.nickname }) } catch { /* be 미가동/미구현 → 로컬 폴백 */ }
         // be 저장 설문 복원 (다른 기기·계정 wipe 후에도 취향 유지 → 설문 재노출 방지). best-effort.
         try { usePrefStore.getState().hydrateFromServer(await getPreferences()) } catch { /* be 미가동/미저장 무시 */ }
+        void useLabelStore.getState().loadLabels() // 사용자 라벨 로드 (be /labels)
         if (cancelled) return
         useAppStore.getState().login(isCallback ? '로그인했어요' : undefined)
         if (isCallback && isNewMember) usePrefStore.setState({ surveyDone: false }) // 신규 → 온보딩

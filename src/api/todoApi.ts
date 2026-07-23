@@ -27,6 +27,7 @@ interface TodoResponse {
   lng: number | null
   source: 'MANUAL' | 'AI' | 'ROUTINE' | 'MEETING' | string
   sourceRefId: string | null
+  labelId: string | null // be todo.label_id (사용자 라벨 UUID)
   completed: boolean
   pinned: boolean
   sortOrder: number
@@ -59,6 +60,7 @@ function toTask(r: TodoResponse): Task {
     pinned: r.pinned,
     sortOrder: r.sortOrder,
     ai: r.source === 'AI',
+    labelId: r.labelId,
   }
 }
 
@@ -75,6 +77,7 @@ function toCreateBody(dateKey: string, t: Task, source?: TodoSource) {
     source: source ?? sourceOf(t),
     pinned: t.pinned ?? false,
     sortOrder: t.sortOrder ?? 0,
+    labelId: t.labelId ?? null,
   }
 }
 
@@ -89,6 +92,7 @@ function toUpdateBody(t: Task) {
     lng: t.lng ?? null,
     pinned: t.pinned ?? false,
     sortOrder: t.sortOrder ?? 0,
+    labelId: t.labelId ?? null,
     completed: (t.status ?? (t.done ? 'done' : 'todo')) === 'done',
   }
 }

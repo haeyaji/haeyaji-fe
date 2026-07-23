@@ -43,6 +43,7 @@ interface TodoState {
   updateTitle: (dateKey: string, id: string, title: string) => void
   removeTask: (dateKey: string, id: string) => void
   patchTask: (dateKey: string, id: string, patch: Partial<Task>) => void
+  setTaskLabel: (id: string, labelId: string | null) => void // todo.label_id be PATCH
   addTaskAt: (dateKey: string, title: string, status: TaskStatus) => void
   togglePin: (dateKey: string, id: string) => void
   reorderTasks: (ordered: TaskRef[]) => void
@@ -110,6 +111,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     try {
       const tasks = await fetchTodos(dateKey)
       set((s) => ({ tasksByDate: { ...s.tasksByDate, [dateKey]: tasks } }))
+      useLabelStore.getState().hydrateAssignments(tasks) // todo.labelId → 라벨 오버레이 동기화
     } catch {
       /* be 미기동/오류 — 기존 상태 유지 (조용히 무시) */
     }
@@ -184,6 +186,19 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     const keys = Object.keys(patch)
     if (keys.length === 1 && keys[0] === 'participants') return
     if (!isTemp(id)) updateTodo(updated).catch(() => rollback(dateKey))
+  },
+  setTaskLabel: (id, labelId) => {
+    // 라벨 할당은 날짜 무관 — 전체 날짜에서 해당 todo 찾아 labelId 갱신 + be PATCH
+    let target: { dateKey: string; task: Task } | null = null
+    const byDate = get().tasksByDate
+    for (const [dk, arr] of Object.entries(byDate)) {
+      const t = arr.find((x) => x.id === id)
+      if (t) { target = { dateKey: dk, task: t }; break }
+    }
+    if (!target) return
+    const updated = { ...target.task, labelId }
+    set((s) => ({ tasksByDate: mapTask(s.tasksByDate, target!.dateKey, id, () => updated) }))
+    if (!isTemp(id)) updateTodo(updated).catch(() => rollback(target!.dateKey))
   },
   addTaskAt: (dateKey, title, status) => {
     const t = title.trim()
