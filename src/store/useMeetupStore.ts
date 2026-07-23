@@ -6,10 +6,13 @@ import { persist } from 'zustand/middleware'
 
 export type MeetCell = 'free' | 'busy'
 
+/** be meeting.type ENUM */
+export type MeetingType = 'CASUAL' | 'TEAM' | 'REGULAR' | 'ETC'
+
 export interface Meetup {
   id: string
   title: string
-  type: string
+  type: MeetingType
   friendIds: string[]
   dates: string[] // 후보 날짜 (YYYY-MM-DD)
   myCells: Record<string, MeetCell> // "date|hour" → 내 가용

@@ -1,6 +1,6 @@
 // 친구 관계 — persist(localStorage). be 붙으면 서버 관계로 대체.
 // be friend 테이블: PENDING/ACCEPTED/REJECTED. 단일 사용자 데모라 수락은 demo 버튼으로 시뮬레이션.
-// TODO(be): GET /users?nickname=|code= (검색) / POST /friends(요청) / PATCH accept·reject / DELETE
+// TODO(be): GET /users?nickname= (검색) / POST /friends(요청) / PATCH accept·reject / DELETE
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { MOCK_USERS } from '@/lib/mockData'

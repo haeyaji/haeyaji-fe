@@ -6,7 +6,7 @@ import { useWeatherStore } from '@/store/useWeatherStore'
 import { useFriendStore, userById } from '@/store/useFriendStore'
 import { useMeetupStore, type MeetCell } from '@/store/useMeetupStore'
 import { useTodoStore } from '@/store/useTodoStore'
-import { MEET_TYPES, Avatar, TimeGrid, taskTick } from './meetupShared'
+import { MEET_TYPES, meetTypeLabel, Avatar, TimeGrid, taskTick } from './meetupShared'
 import type { WeatherCond } from '@/types'
 
 export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
@@ -15,7 +15,7 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
   const createMeetup = useMeetupStore((s) => s.create)
 
   const [step, setStep] = useState(0)
-  const [type, setType] = useState('가벼운 모임')
+  const [type, setType] = useState<import('@/store/useMeetupStore').MeetingType>('CASUAL')
   const [title, setTitle] = useState('')
   const [picked, setPicked] = useState<string[]>([])
   const [dates, setDates] = useState<string[]>([])
@@ -64,7 +64,7 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
   const moveMonth = (n: number) => setYm(({ y, m }) => ({ y: y + Math.floor((m + n) / 12), m: (((m + n) % 12) + 12) % 12 }))
 
   const finish = () => {
-    const id = createMeetup({ title: title.trim() || type, type, friendIds: picked, dates: sortedDates, myCells: cells })
+    const id = createMeetup({ title: title.trim() || meetTypeLabel(type), type, friendIds: picked, dates: sortedDates, myCells: cells })
     onCreated(id)
   }
 
@@ -82,8 +82,8 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
           <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-.4px' }}>어떤 약속인가요?</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
             {MEET_TYPES.map((t) => {
-              const on = type === t
-              return <div key={t} onClick={() => setType(t)} className="hbtn" style={{ padding: '9px 15px', borderRadius: 20, fontSize: 14, fontWeight: 800, cursor: 'pointer', background: on ? '#1E1C17' : '#F0EEE7', color: on ? '#fff' : '#8C8779' }}>{t}</div>
+              const on = type === t.code
+              return <div key={t.code} onClick={() => setType(t.code)} className="hbtn" style={{ padding: '9px 15px', borderRadius: 20, fontSize: 14, fontWeight: 800, cursor: 'pointer', background: on ? '#1E1C17' : '#F0EEE7', color: on ? '#fff' : '#8C8779' }}>{t.label}</div>
             })}
           </div>
 

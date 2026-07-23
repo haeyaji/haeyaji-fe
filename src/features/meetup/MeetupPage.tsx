@@ -4,7 +4,7 @@ import { longDate, hhmm } from './meetupShared'
 import { userById } from '@/store/useFriendStore'
 import { useAppStore } from '@/store/useAppStore'
 import { useMeetupStore, type Meetup } from '@/store/useMeetupStore'
-import { AvatarStack, friendEntered } from './meetupShared'
+import { AvatarStack, friendEntered, meetTypeLabel } from './meetupShared'
 import { MC } from './tokens'
 import { CreateMeetupModal } from './CreateMeetupModal'
 import { MeetupDetailPage } from './MeetupDetailPage'
@@ -85,7 +85,7 @@ function Card({ m, onOpen }: { m: Meetup; onOpen: (id: string) => void }) {
     <div onClick={() => onOpen(m.id)} className="lift" style={{ background: '#fff', borderRadius: 20, boxShadow: '0 1px 2px rgba(30,28,23,.05), 0 8px 22px rgba(30,28,23,.05)', padding: 0, overflow: 'hidden', cursor: 'pointer' }}>
       <div style={{ background: m.confirmed ? MC.confGrad : MC.slateGrad, padding: '16px 18px', color: '#fff' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: 11.5, fontWeight: 800, opacity: 0.85, letterSpacing: '.3px' }}>{m.type}</div>
+          <div style={{ fontSize: 11.5, fontWeight: 800, opacity: 0.85, letterSpacing: '.3px' }}>{meetTypeLabel(m.type)}</div>
           <div style={{ fontSize: 11, fontWeight: 800, background: 'rgba(255,255,255,.22)', padding: '3px 9px', borderRadius: 20 }}>{m.confirmed ? '확정' : '조율 중'}</div>
         </div>
         <div style={{ fontSize: 20, fontWeight: 800, marginTop: 4 }}>{m.title}</div>
