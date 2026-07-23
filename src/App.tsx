@@ -52,7 +52,8 @@ export default function App() {
         // 계정 변경/최초 실로그인 감지 → 이전(또는 목업) 계정의 로컬 데이터 제거 후 클린 재하이드레이트.
         // (localStorage는 브라우저 단위라 다른 계정 데이터가 남는 걸 방지. be 붙으면 서버 데이터로 대체)
         const ACCOUNT_KEY = 'haeyaji-account'
-        if (localStorage.getItem(ACCOUNT_KEY) !== me.memberId) {
+        // memberId가 유효한 문자열일 때만 (프록시 오작동 등으로 undefined면 reload 무한루프 방지)
+        if (typeof me.memberId === 'string' && me.memberId && localStorage.getItem(ACCOUNT_KEY) !== me.memberId) {
           ;['haeyaji-friends', 'haeyaji-meetups', 'haeyaji-notis', 'haeyaji-routines', 'haeyaji-labels', 'haeyaji-pref'].forEach((k) => localStorage.removeItem(k))
           localStorage.setItem(ACCOUNT_KEY, me.memberId)
           window.location.reload() // 빈 localStorage로 스토어 재하이드레이트 (한 번만; 재로드 후 account 일치 → 재발 안 함)
