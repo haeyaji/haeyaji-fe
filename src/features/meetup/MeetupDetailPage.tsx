@@ -1,335 +1,137 @@
-// 약속 상세 — 한 페이지 결과 중심. 참여 현황(위) → 겹치는 시간 결과 테이블(메인).
-// 가능한 시간대 리스트는 버튼→모달. 내 되는/안되는 시간은 "내 시간 수정" 모달에서 편집.
-import { useMemo, useState } from 'react'
-import { WeatherIcon } from '@/lib/icons'
-import { randomToken } from '@/lib/dom'
-import { longDate, mdLabel, hhmm, dur, candidateSlots, friendFree, friendEntered, taskTick, meetTypeLabel, type Slot } from './meetupShared'
-import { MC, cardStyle } from './tokens'
-import { useTodoStore } from '@/store/useTodoStore'
-import { useAppStore } from '@/store/useAppStore'
-import { useFriendStore, userById } from '@/store/useFriendStore'
-import { useMeetupStore, type MeetCell } from '@/store/useMeetupStore'
-import { useWeatherStore } from '@/store/useWeatherStore'
-import { Avatar, HeatGrid, TimeGrid } from './meetupShared'
-import { Shell } from './CreateMeetupModal'
-import type { WeatherCond } from '@/types'
+// 약속 상세 — be 슬롯 모델. 링크 공유 → 참여 → 가용 입력(슬롯 FREE) → 히트맵/베스트타임 → 확정.
+import { useEffect, useMemo, useState } from 'react'
+import { useMeetupStore } from '@/store/useMeetupStore'
+import { meetingInviteUrl } from '@/api/meetingApi'
+import { meetTypeLabel, slotDate, slotHM, dateLabel, confirmedRange, heatColor } from './meetupShared'
+import { MC } from './tokens'
 
-type Sel = { slot: Slot; startH: number; endH: number }
+const myMemberId = () => localStorage.getItem('haeyaji-account')
 
-export function MeetupDetailPage({ id, onBack }: { id: string; onBack: () => void }) {
-  const meetup = useMeetupStore((s) => s.meetups.find((m) => m.id === id))
-  const update = useMeetupStore((s) => s.update)
-  const remove = useMeetupStore((s) => s.remove)
-  const allFriendIds = useFriendStore((s) => s.friendIds)
-  const openMap = useAppStore((s) => s.openMap)
-  const toast = useAppStore((s) => s.toast)
-  const [adding, setAdding] = useState(false)
-  const [slotOpen, setSlotOpen] = useState(false)
-  const [editOpen, setEditOpen] = useState(false)
-  const [initialSel, setInitialSel] = useState<Slot | null>(null)
+export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; onBack: () => void }) {
+  const { detail, heatmap, bestTimes, myResponses, loading, loadDetail, join, submit, confirm, clearDetail } = useMeetupStore()
+  const [mine, setMine] = useState<Set<string>>(new Set()) // 내가 FREE로 고른 slotId
+  const [copied, setCopied] = useState(false)
 
-  const enteredIds = useMemo(() => (meetup ? meetup.friendIds.filter((fid) => friendEntered(fid, meetup.id)) : []), [meetup])
+  useEffect(() => { void loadDetail(shareToken); return () => clearDetail() }, [shareToken, loadDetail, clearDetail])
+  useEffect(() => { setMine(new Set(myResponses.filter((r) => r.status === 'FREE').map((r) => r.slotId))) }, [myResponses])
 
-  if (!meetup) return null
-  const participants = meetup.friendIds.map(userById).filter(Boolean)
-  const total = meetup.friendIds.length + 1
-  const myEntered = Object.values(meetup.myCells).some((v) => v === 'free')
-  const enteredCount = (myEntered ? 1 : 0) + enteredIds.length
-  const addable = allFriendIds.filter((fid) => !meetup.friendIds.includes(fid)).map(userById).filter(Boolean)
-  const slotCount = candidateSlots(meetup.dates, meetup.myCells, enteredIds).length
+  const isParticipant = !!detail?.participants.some((p) => p.memberId === myMemberId())
+  const isCreator = detail?.creatorId === myMemberId()
+  const total = heatmap?.participantCount ?? detail?.participants.length ?? 0
+  const freeBySlot = useMemo(() => Object.fromEntries((heatmap?.cells ?? []).map((c) => [c.slotId, c.freeCount])), [heatmap])
 
-  const heroBg = meetup.confirmed ? MC.confGrad : MC.slateGrad
-  // 초대 링크: 토큰 없으면 발급(be meeting.share_token 대응) 후 URL 복사. 조인 화면은 be 대기
-  const shareInvite = () => {
-    let token = meetup.shareToken
-    if (!token) {
-      token = randomToken(24) // crypto 기반 추측불가 토큰 (be 발급 전 임시)
-      update(id, { shareToken: token })
-    }
-    const url = `${location.origin}/invite/${token}`
-    navigator.clipboard?.writeText(url).then(() => toast('초대 링크를 복사했어요')).catch(() => toast(url))
+  // 슬롯 → 날짜×시간 그리드
+  const grid = useMemo(() => {
+    const slots = detail?.slots ?? []
+    const dates = detail?.dates ?? []
+    const times = Array.from(new Set(slots.map((s) => slotHM(s.slotStartAt)))).sort()
+    const map: Record<string, { id: string }> = {}
+    for (const s of slots) map[`${slotDate(s.slotStartAt)} ${slotHM(s.slotStartAt)}`] = { id: s.id }
+    return { dates, times, map }
+  }, [detail])
+
+  if (loading && !detail) return <Center>불러오는 중…</Center>
+  if (!detail) return <Center>약속을 찾을 수 없어요</Center>
+
+  const conf = detail.status === 'CONFIRMED' && detail.confirmedStartAt && detail.confirmedEndAt
+  const expired = detail.status === 'EXPIRED'
+  const dirty = JSON.stringify([...mine].sort()) !== JSON.stringify(myResponses.filter((r) => r.status === 'FREE').map((r) => r.slotId).sort())
+
+  const toggle = (slotId: string) => {
+    if (!isParticipant || conf || expired) return
+    setMine((p) => { const n = new Set(p); n.has(slotId) ? n.delete(slotId) : n.add(slotId); return n })
   }
-  const openSlots = (preselect?: Slot) => { setInitialSel(preselect ?? null); setSlotOpen(true) }
-  const pickByTick = (date: string, tick: number) => {
-    const s = candidateSlots(meetup.dates, meetup.myCells, enteredIds).find((x) => x.date === date && tick >= x.startH && tick < x.endH)
-    openSlots(s)
-  }
+  const save = () => submit(shareToken, [...mine].map((slotId) => ({ slotId, status: 'FREE' as const })))
+  const copy = () => { navigator.clipboard?.writeText(meetingInviteUrl(shareToken)).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500) }) }
 
   return (
     <div className="mp-pad" style={{ minHeight: 'var(--full-vh)', width: '100%', color: MC.ink, background: 'var(--canvas)' }}>
       <div className="mp-wrap">
-        <div onClick={onBack} className="hbtn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 15, fontWeight: 700, color: MC.muted, cursor: 'pointer', marginBottom: 16, padding: '4px 2px' }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
-          약속 목록
+        <div onClick={onBack} className="hbtn" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 14, fontWeight: 700, color: MC.muted, cursor: 'pointer', marginBottom: 14 }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg> 약속 목록
         </div>
 
-        {/* 히어로 */}
-        <div style={{ background: heroBg, borderRadius: 22, padding: '26px 28px', color: '#fff', marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ fontSize: 13, fontWeight: 800, opacity: 0.85, letterSpacing: '.3px' }}>{meetTypeLabel(meetup.type)}</div>
-            <div style={{ fontSize: 12, fontWeight: 800, background: 'rgba(255,255,255,.22)', padding: '4px 11px', borderRadius: 20 }}>{meetup.confirmed ? '확정' : '조율 중'}</div>
+        {/* 헤더 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
+          <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-.5px' }}>{detail.title}</div>
+          <span style={{ fontSize: 12.5, fontWeight: 800, color: MC.tintText, background: MC.tintBg, padding: '5px 11px', borderRadius: 20 }}>{meetTypeLabel(detail.type)}</span>
+          {conf && <span style={{ fontSize: 12.5, fontWeight: 800, color: '#fff', background: MC.primary, padding: '5px 11px', borderRadius: 20 }}>확정</span>}
+          {expired && <span style={{ fontSize: 12.5, fontWeight: 800, color: '#B4544A', background: '#F7E7E4', padding: '5px 11px', borderRadius: 20 }}>만료</span>}
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: MC.muted, marginBottom: 18 }}>
+          참여 {detail.participants.length}명 · {detail.timeStart.slice(0, 5)}~{detail.timeEnd.slice(0, 5)} · {detail.slotUnitMinutes}분 단위
+          {conf && <> · <b style={{ color: MC.primary }}>⏰ {confirmedRange(detail.confirmedStartAt!, detail.confirmedEndAt!)}</b></>}
+        </div>
+
+        {/* 공유 링크 */}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: '#fff', border: '1px solid #ECE9E0', borderRadius: 14, padding: '10px 12px', marginBottom: 16 }}>
+          <div style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, color: MC.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{meetingInviteUrl(shareToken)}</div>
+          <div onClick={copy} className="lift" style={{ fontSize: 13, fontWeight: 800, color: '#fff', background: MC.ink, borderRadius: 10, padding: '8px 14px', cursor: 'pointer', flexShrink: 0 }}>{copied ? '복사됨!' : '링크 복사'}</div>
+        </div>
+
+        {/* 참여 안 했으면 참여 버튼 */}
+        {!isParticipant && !expired && (
+          <div onClick={() => join(shareToken)} className="lift" style={{ textAlign: 'center', background: MC.primary, color: '#fff', fontSize: 15, fontWeight: 800, borderRadius: 14, padding: 14, cursor: 'pointer', marginBottom: 16 }}>이 약속 참여하기</div>
+        )}
+
+        {/* 슬롯 그리드 (히트맵 + 내 가용 입력) */}
+        <div style={{ background: '#fff', border: '1px solid #ECE9E0', borderRadius: 18, padding: 14, marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div style={{ fontSize: 15, fontWeight: 800 }}>{isParticipant && !conf && !expired ? '가능한 시간을 눌러 표시하세요' : '참여자 가능 시간'}</div>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: MC.muted }}>진하게 = 많이 겹침</div>
           </div>
-          <div style={{ fontSize: 28, fontWeight: 800, marginTop: 4 }}>{meetup.title}</div>
-          {meetup.dates.length > 0 && <div style={{ fontSize: 14.5, fontWeight: 600, opacity: 0.92, marginTop: 6 }}>{longDate(meetup.dates[0])}{meetup.dates.length > 1 ? ` 외 ${meetup.dates.length - 1}일` : ''} 후보</div>}
-          {!meetup.confirmed && (
-            <div onClick={shareInvite} className="hbtn" title="초대 링크 복사" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginTop: 12, background: 'rgba(255,255,255,.2)', borderRadius: 20, padding: '8px 15px', fontSize: 13.5, fontWeight: 800, cursor: 'pointer' }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5" /><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5" /></svg>
-              초대 링크 복사
+          <div style={{ overflowX: 'auto' }}>
+            <div style={{ display: 'inline-grid', gridTemplateColumns: `48px repeat(${grid.dates.length}, minmax(56px, 1fr))`, gap: 3 }}>
+              <div />
+              {grid.dates.map((d) => <div key={d} style={{ fontSize: 11.5, fontWeight: 800, textAlign: 'center', color: MC.muted, paddingBottom: 2 }}>{dateLabel(d)}</div>)}
+              {grid.times.map((t) => (
+                <>
+                  <div key={`h${t}`} style={{ fontSize: 11, fontWeight: 700, color: MC.muted, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 6 }}>{t}</div>
+                  {grid.dates.map((d) => {
+                    const cell = grid.map[`${d} ${t}`]
+                    if (!cell) return <div key={`${d}${t}`} style={{ height: 26, background: '#FAFAF7', borderRadius: 5 }} />
+                    const free = freeBySlot[cell.id] ?? 0
+                    const col = heatColor(free, total)
+                    const isMine = mine.has(cell.id)
+                    return (
+                      <div key={cell.id} onClick={() => toggle(cell.id)} title={`${free}/${total}명`}
+                        style={{ height: 26, borderRadius: 5, background: col.bg, cursor: isParticipant && !conf && !expired ? 'pointer' : 'default', boxShadow: isMine ? `inset 0 0 0 2.5px ${MC.primary}` : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: col.txt }}>
+                        {free > 0 ? free : ''}
+                      </div>
+                    )
+                  })}
+                </>
+              ))}
             </div>
-          )}
-          {meetup.confirmed && (
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 12, background: 'rgba(255,255,255,.22)', borderRadius: 20, padding: '6px 14px', fontSize: 14, fontWeight: 800 }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l4.5 4.5L19 7" /></svg>
-              {longDate(meetup.confirmed.date)} {hhmm(meetup.confirmed.startH)}~{hhmm(meetup.confirmed.endH)} 확정
+          </div>
+          {isParticipant && !conf && !expired && (
+            <div onClick={save} className={dirty ? 'lift' : ''} style={{ marginTop: 12, textAlign: 'center', background: dirty ? MC.ink : '#E6E4DC', color: dirty ? '#fff' : '#A8A498', fontSize: 14.5, fontWeight: 800, borderRadius: 12, padding: 12, cursor: dirty ? 'pointer' : 'default' }}>
+              내 가능 시간 저장
             </div>
           )}
         </div>
 
-        {/* 참여 현황 (결과 테이블 위) */}
-        <div style={{ ...cardStyle, marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div style={{ fontSize: 18, fontWeight: 800 }}>참여 현황 <span style={{ fontSize: 15, color: MC.primary }}>{enteredCount}</span><span style={{ fontSize: 15, color: MC.faint }}>/{total}</span></div>
-            {addable.length > 0 && (
-              <div onClick={() => setAdding((v) => !v)} className="hbtn" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 800, color: MC.primary, background: MC.tintBg, padding: '7px 12px', borderRadius: 20, cursor: 'pointer' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={MC.primary} strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg> 친구 추가
-              </div>
-            )}
-          </div>
-          <div style={{ height: 6, borderRadius: 4, background: '#ECE9E0', overflow: 'hidden', marginBottom: 14 }}>
-            <div style={{ width: `${total ? (enteredCount / total) * 100 : 0}%`, height: '100%', background: MC.primary, borderRadius: 4, transition: 'width .3s ease' }} />
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            <StatChip name="나" entered={myEntered} />
-            {participants.map((u) => <StatChip key={u!.id} name={u!.nickname} entered={friendEntered(u!.id, meetup.id)} onRemove={() => update(id, { friendIds: meetup.friendIds.filter((x) => x !== u!.id) })} />)}
-          </div>
-          {adding && (
-            <div style={{ marginTop: 12, background: MC.fieldBg, borderRadius: 13, padding: 8, display: 'flex', flexDirection: 'column', gap: 3, maxHeight: 200, overflowY: 'auto' }}>
-              {addable.map((u) => (
-                <div key={u!.id} onClick={() => { update(id, { friendIds: [...meetup.friendIds, u!.id] }); if (addable.length === 1) setAdding(false) }} className="hbtn" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 9px', borderRadius: 10, cursor: 'pointer' }}>
-                  <Avatar name={u!.nickname} size={30} font={13} />
-                  <div style={{ flex: 1, fontSize: 14.5, fontWeight: 800 }}>{u!.nickname}</div>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={MC.primary} strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+        {/* 베스트 타임 + 확정 */}
+        {!conf && !expired && bestTimes && bestTimes.windows.length > 0 && (
+          <div style={{ background: '#fff', border: '1px solid #ECE9E0', borderRadius: 18, padding: 16 }}>
+            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 10 }}>가장 많이 겹치는 시간 · 최대 {bestTimes.maxFreeCount}명</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {bestTimes.windows.slice(0, 5).map((w, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: MC.tintBg, borderRadius: 12, padding: '11px 14px' }}>
+                  <div style={{ flex: 1, minWidth: 0, fontSize: 14.5, fontWeight: 800, color: MC.tintText }}>{confirmedRange(w.startAt, w.endAt)}</div>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: MC.primary }}>{w.freeCount}명</div>
+                  {isCreator && <div onClick={() => confirm(shareToken, w.startAt, w.endAt)} className="lift" style={{ fontSize: 13, fontWeight: 800, color: '#fff', background: MC.primary, borderRadius: 10, padding: '7px 13px', cursor: 'pointer' }}>확정</div>}
                 </div>
               ))}
             </div>
-          )}
-        </div>
-
-        {/* 결과 테이블 (메인) */}
-        {meetup.dates.length > 0 && (
-          <div style={cardStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, gap: 10, flexWrap: 'wrap' }}>
-              <div style={{ fontSize: 18, fontWeight: 800 }}>겹치는 시간</div>
-              <div onClick={() => setEditOpen(true)} className="hbtn" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 800, color: MC.ink, background: MC.fieldBg, border: `1px solid ${MC.border}`, padding: '8px 13px', borderRadius: 11, cursor: 'pointer' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={MC.ink} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
-                내 시간 수정
-              </div>
-            </div>
-            <div style={{ fontSize: 13.5, fontWeight: 600, color: MC.muted, marginBottom: 14 }}>입력한 사람들 기준 · 진할수록 많이 겹쳐요 · 30분 단위</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
-              {([['#D8ECE1', '적음'], ['#A6D6BF', ''], ['#66B896', '과반'], ['#2F9E73', ''], ['#12664A', `전원 ${total}`]] as const).map(([c, l], i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <div style={{ width: 15, height: 15, borderRadius: 4, background: c }} />
-                  {l && <span style={{ fontSize: 12, fontWeight: 700, color: MC.muted }}>{l}</span>}
-                </div>
-              ))}
-            </div>
-            <HeatGrid dates={meetup.dates} myCells={meetup.myCells} friendIds={enteredIds} total={total} onPick={pickByTick} confirmed={meetup.confirmed} />
+            {!isCreator && <div style={{ fontSize: 12.5, fontWeight: 600, color: MC.muted, marginTop: 10 }}>확정은 약속 생성자만 할 수 있어요</div>}
           </div>
         )}
-
-        {/* 하단 액션 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 16 }}>
-          {meetup.dates.length > 0 && (
-            <div onClick={() => openSlots()} className="lift" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 52, borderRadius: 15, background: MC.primary, color: '#fff', fontSize: 15.5, fontWeight: 800, cursor: 'pointer' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3" /><path d="M3 9h18M8 2.5v4M16 2.5v4" /></svg>
-              가능한 시간대 <span style={{ background: 'rgba(255,255,255,.28)', padding: '1px 8px', borderRadius: 20, fontSize: 13 }}>{slotCount}</span>
-            </div>
-          )}
-          {meetup.confirmed && (
-            <div onClick={openMap} className="lift" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 52, borderRadius: 15, background: MC.ink, color: '#fff', fontSize: 15.5, fontWeight: 800, cursor: 'pointer' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" /><path d="M9 4v14M15 6v14" /></svg>
-              갈 만한 곳 찾기
-            </div>
-          )}
-          <div onClick={() => { remove(id); toast('약속을 삭제했어요'); onBack() }} className="hbtn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, height: 52, padding: '0 22px', borderRadius: 15, background: MC.dangerBg, color: MC.danger, fontSize: 14.5, fontWeight: 800, cursor: 'pointer' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={MC.danger} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M7 7l1 13h8l1-13" /></svg>
-            삭제
-          </div>
-        </div>
-      </div>
-
-      {slotOpen && <SlotListModal id={id} initial={initialSel} onClose={() => setSlotOpen(false)} />}
-      {editOpen && <EditMyTimeModal id={id} onClose={() => setEditOpen(false)} />}
-    </div>
-  )
-}
-
-// ── 가능한 시간대 모달 ──
-function SlotListModal({ id, initial, onClose }: { id: string; initial: Slot | null; onClose: () => void }) {
-  const meetup = useMeetupStore((s) => s.meetups.find((m) => m.id === id))!
-  const update = useMeetupStore((s) => s.update)
-  const addTaskAt = useTodoStore((s) => s.addTaskAt)
-  const toast = useAppStore((s) => s.toast)
-  const byDate = useWeatherStore((s) => s.byDate)
-  const [filter, setFilter] = useState<'all' | 'majority' | 'full'>('all')
-  const [sel, setSel] = useState<Sel | null>(initial ? { slot: initial, startH: initial.startH, endH: initial.endH } : null)
-
-  const enteredIds = meetup.friendIds.filter((fid) => friendEntered(fid, meetup.id))
-  const total = meetup.friendIds.length + 1
-  const allSlots = candidateSlots(meetup.dates, meetup.myCells, enteredIds)
-  const majCut = Math.floor(total / 2) + 1
-  const counts = { all: allSlots.length, majority: allSlots.filter((x) => x.count >= majCut).length, full: allSlots.filter((x) => x.count === total).length }
-  const slots = allSlots.filter((x) => (filter === 'full' ? x.count === total : filter === 'majority' ? x.count >= majCut : true))
-  const participants = meetup.friendIds.map(userById).filter(Boolean)
-
-  const confirm = () => {
-    if (!sel) return
-    update(id, { confirmed: { date: sel.slot.date, startH: sel.startH, endH: sel.endH } })
-    addTaskAt(sel.slot.date, `${meetup.title} · ${participants.map((u) => u!.nickname).join(', ') || '나'} (${hhmm(sel.startH)}~${hhmm(sel.endH)})`, 'todo')
-    toast('약속을 확정하고 캘린더에 등록했어요')
-    onClose()
-  }
-
-  return (
-    <Shell onClose={onClose} title={`가능한 시간대 ${allSlots.length}개`} width={700}>
-      <div style={{ display: 'flex', gap: 6, marginTop: 4, marginBottom: 12 }}>
-        {([['all', '모두'], ['majority', '과반수'], ['full', '전원']] as const).map(([k, l]) => {
-          const active = filter === k
-          return <div key={k} onClick={() => setFilter(k)} className="hbtn" style={{ flex: 1, textAlign: 'center', padding: '9px 4px', borderRadius: 11, fontSize: 13, fontWeight: 800, cursor: 'pointer', background: active ? MC.ink : MC.fieldBg, color: active ? '#fff' : MC.muted }}>{l} {counts[k]}</div>
-        })}
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '58vh', overflowY: 'auto', paddingRight: 4 }}>
-        {slots.length > 0 ? slots.slice(0, 20).map((slot) => {
-          const on = sel?.slot.date === slot.date && sel?.slot.startH === slot.startH
-          const raw = byDate[slot.date]
-          const cond = raw && ['sunny', 'cloudy', 'rainy', 'snowy'].includes(raw.cond) ? (raw.cond as WeatherCond) : undefined
-          const full = slot.count === total
-          const unavail: string[] = []
-          if (meetup.myCells[`${slot.date}|${slot.startH}`] !== 'free') unavail.push('나')
-          enteredIds.forEach((uid) => { if (!friendFree(uid, slot.date, slot.startH)) { const u = userById(uid); if (u) unavail.push(u.nickname) } })
-          const pending = meetup.friendIds.filter((fid) => !friendEntered(fid, meetup.id)).map(userById).filter(Boolean).map((u) => u!.nickname)
-          return (
-            <div key={slot.date + slot.startH}>
-              <div onClick={() => (on ? setSel(null) : setSel({ slot, startH: slot.startH, endH: slot.endH }))} className="lift" style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '12px 14px', borderRadius: 13, cursor: 'pointer', background: on ? MC.tintBg : '#fff', border: `1px solid ${on ? MC.primary : MC.border}` }}>
-                <div style={{ width: 24, height: 24, flexShrink: 0 }}>{cond && <WeatherIcon cond={cond} c={cond === 'sunny' ? MC.amber : '#A6A296'} />}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: MC.muted }}>{mdLabel(slot.date)}</div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 2 }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: on ? MC.tintText : MC.ink }}>{hhmm(slot.startH)}~{hhmm(slot.endH)}</div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: MC.muted }}>{dur(slot.startH, slot.endH)}</div>
-                  </div>
-                </div>
-                <span style={{ fontSize: 11.5, fontWeight: 800, color: full ? '#fff' : MC.tintText, background: full ? MC.primary : MC.tintBg, padding: '4px 10px', borderRadius: 20, flexShrink: 0 }}>{full ? `전원 ${total}` : `${slot.count}/${total}`}</span>
-              </div>
-              {on && sel && (
-                <div style={{ marginTop: 7, background: '#fff', border: `1px solid ${MC.border}`, borderRadius: 13, padding: '14px 15px', animation: 'rb-pop .18s ease' }}>
-                  {(unavail.length > 0 || pending.length > 0) && (
-                    <div style={{ marginBottom: 14, display: 'flex', flexDirection: 'column', gap: 7 }}>
-                      {unavail.length > 0 && <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}><span style={{ fontSize: 11, fontWeight: 800, color: MC.danger, background: MC.dangerBg, padding: '3px 8px', borderRadius: 7, flexShrink: 0 }}>못 와요</span><div style={{ fontSize: 13, fontWeight: 700, color: '#5B574B', lineHeight: 1.5 }}>{unavail.join(', ')}</div></div>}
-                      {pending.length > 0 && <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}><span style={{ fontSize: 11, fontWeight: 800, color: '#B0812E', background: MC.amberBg, padding: '3px 8px', borderRadius: 7, flexShrink: 0 }}>미입력</span><div style={{ fontSize: 13, fontWeight: 700, color: '#5B574B', lineHeight: 1.5 }}>{pending.join(', ')}</div></div>}
-                    </div>
-                  )}
-                  <div style={{ fontSize: 12, fontWeight: 700, color: MC.muted, marginBottom: 12, textAlign: 'center' }}>실제 만날 시간</div>
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: 8 }}>
-                    <Stepper label="시작" value={sel.startH} min={slot.startH} max={sel.endH - 0.5} onChange={(v) => setSel({ ...sel, startH: v })} />
-                    <div style={{ color: MC.faint, fontWeight: 800, fontSize: 15, paddingBottom: 6 }}>~</div>
-                    <Stepper label="종료" value={sel.endH} min={sel.startH + 0.5} max={slot.endH} onChange={(v) => setSel({ ...sel, endH: v })} />
-                  </div>
-                  <div style={{ textAlign: 'center', fontSize: 12.5, fontWeight: 800, color: MC.primary, marginTop: 8 }}>{dur(sel.startH, sel.endH)} 동안</div>
-                  <div onClick={confirm} className="lift" style={{ marginTop: 14, height: 46, borderRadius: 12, background: MC.primary, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 15, fontWeight: 800, cursor: 'pointer', boxShadow: '0 6px 14px rgba(31,122,92,.26)' }}>
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l4.5 4.5L19 7" /></svg>
-                    {hhmm(sel.startH)}~{hhmm(sel.endH)} 확정
-                  </div>
-                </div>
-              )}
-            </div>
-          )
-        }) : (
-          <div style={{ padding: '30px 0', textAlign: 'center', color: MC.faint, fontSize: 14.5, fontWeight: 600 }}>이 조건에 맞는 시간대가 없어요.</div>
-        )}
-      </div>
-    </Shell>
-  )
-}
-
-// ── 내 되는/안되는 시간 수정 모달 ──
-function EditMyTimeModal({ id, onClose }: { id: string; onClose: () => void }) {
-  const meetup = useMeetupStore((s) => s.meetups.find((m) => m.id === id))!
-  const update = useMeetupStore((s) => s.update)
-  const toast = useAppStore((s) => s.toast)
-  const tasksByDate = useTodoStore((s) => s.tasksByDate)
-  const [paintMode, setPaintMode] = useState<MeetCell>('free')
-
-  // 내 할 일을 그리드 셀에 표시 (표시 전용, 선택은 그대로)
-  const marks = useMemo(() => {
-    const out: Record<string, string[]> = {}
-    for (const d of meetup.dates) {
-      for (const t of tasksByDate[d] ?? []) {
-        const tk = taskTick(t.time)
-        if (tk == null) continue
-        const key = `${d}|${tk}`
-        ;(out[key] ??= []).push(t.title)
-      }
-    }
-    return out
-  }, [meetup.dates, tasksByDate])
-  const hasMarks = Object.keys(marks).length > 0
-
-  return (
-    <Shell onClose={onClose} title="내 되는 시간" width="min(1600px, 95vw)" fill>
-      <div style={{ fontSize: 17, fontWeight: 800, marginTop: 2, flexShrink: 0 }}>
-        내 일정을{' '}
-        <span style={{ display: 'inline-flex', background: MC.chipBg, borderRadius: 16, padding: 2, verticalAlign: 'middle', margin: '0 2px' }}>
-          {([['free', '되는'], ['busy', '안되는']] as const).map(([m, l]) => (
-            <span key={m} onClick={() => setPaintMode(m)} style={{ padding: '4px 10px', borderRadius: 14, fontSize: 13.5, fontWeight: 800, cursor: 'pointer', background: paintMode === m ? (m === 'free' ? MC.primary : '#EA8850') : 'transparent', color: paintMode === m ? '#fff' : MC.faint }}>{l}</span>
-          ))}
-        </span>{' '}
-        시간으로 칠해주세요
-      </div>
-      <div style={{ fontSize: 13, fontWeight: 600, color: MC.muted, marginTop: 6, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
-        <span>드래그해서 여러 칸을 한 번에 · 바로 저장돼요</span>
-        {hasMarks && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#9A7A3A' }}><span style={{ width: 5, height: 5, borderRadius: '50%', background: '#C08A3A' }} />내 할 일 표시</span>}
-      </div>
-      <TimeGrid dates={meetup.dates} cells={meetup.myCells} onChange={(next) => update(id, { myCells: next })} paintMode={paintMode} marks={marks} fill />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14, flexShrink: 0 }}>
-        <div onClick={() => update(id, { myCells: {} })} className="hbtn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: MC.muted, cursor: 'pointer' }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>
-          초기화
-        </div>
-        <div onClick={() => { toast('내 시간을 저장했어요'); onClose() }} className="lift" style={{ background: MC.ink, color: '#fff', fontSize: 14.5, fontWeight: 800, borderRadius: 13, padding: '12px 26px', cursor: 'pointer' }}>완료</div>
-      </div>
-    </Shell>
-  )
-}
-
-function StatChip({ name, entered, onRemove }: { name: string; entered: boolean; onRemove?: () => void }) {
-  return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 11px 5px 5px', borderRadius: 20, background: entered ? MC.tintBg : MC.fieldBg, border: `1px solid ${entered ? '#CFE6DA' : '#E4E0D6'}` }}>
-      <div style={{ position: 'relative', width: 26, height: 26, flexShrink: 0 }}>
-        <Avatar name={name} size={26} font={12} />
-        <div style={{ position: 'absolute', right: -2, bottom: -2, width: 12, height: 12, borderRadius: '50%', background: entered ? MC.primary : MC.amber, border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {entered && <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l4.5 4.5L19 7" /></svg>}
-        </div>
-      </div>
-      <span style={{ fontSize: 13.5, fontWeight: 800, color: entered ? MC.tintText : '#8C8779' }}>{name}</span>
-      {onRemove && <span onClick={onRemove} className="hbtn" style={{ cursor: 'pointer', display: 'flex', opacity: 0.35 }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={MC.ink} strokeWidth="2.4" strokeLinecap="round"><path d="M5 5l14 14M19 5L5 19" /></svg></span>}
-    </div>
-  )
-}
-
-function Stepper({ label, value, min, max, onChange }: { label: string; value: number; min: number; max: number; onChange: (v: number) => void }) {
-  const btn = (dir: -1 | 1, disabled: boolean) => (
-    <div onClick={() => !disabled && onChange(value + dir * 0.5)} style={{ width: 32, height: 32, borderRadius: 10, background: disabled ? '#F0EEE7' : MC.tintBg, color: disabled ? '#CFCBBE' : MC.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: disabled ? 'default' : 'pointer', fontSize: 18, fontWeight: 800, flexShrink: 0 }}>{dir === -1 ? '−' : '+'}</div>
-  )
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
-      <div style={{ fontSize: 11.5, fontWeight: 700, color: MC.muted }}>{label}</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        {btn(-1, value <= min)}
-        <div style={{ fontSize: 15, fontWeight: 800, color: MC.ink, width: 44, textAlign: 'center' }}>{hhmm(value)}</div>
-        {btn(1, value >= max)}
       </div>
     </div>
   )
+}
+
+function Center({ children }: { children: React.ReactNode }) {
+  return <div className="mp-pad" style={{ minHeight: 'var(--full-vh)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: MC.muted, fontSize: 15, fontWeight: 700 }}>{children}</div>
 }

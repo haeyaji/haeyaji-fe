@@ -1,5 +1,5 @@
 // 마이페이지 — 디자인 핸드오프 반영: 히어로(완료율 링 + 주간 날씨), 통계 벤토(친구·약속·이번주), 내 취향.
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { WeatherIcon } from '@/lib/icons'
 import { last7Days, next7Days, dowLabel, todayKey } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
@@ -42,8 +42,10 @@ export function MyPage() {
   const pref = usePrefStore()
   const tasksByDate = useTodoStore((s) => s.tasksByDate)
   const friendIds = useFriendStore((s) => s.friendIds)
-  const meetups = useMeetupStore((s) => s.meetups)
+  const meetups = useMeetupStore((s) => s.meetings)
+  const loadMeetings = useMeetupStore((s) => s.loadList)
   const byDate = useWeatherStore((s) => s.byDate)
+  useEffect(() => { void loadMeetings() }, [loadMeetings])
 
   const [detailUser, setDetailUser] = useState<AppUser | null>(null)
 
@@ -57,8 +59,8 @@ export function MyPage() {
   const weekDoneCnt = weekDays.filter((d) => d.done).length
 
   const friends = friendIds.map(userById).filter((u): u is AppUser => !!u)
-  const pendingCount = meetups.filter((m) => !m.confirmed).length
-  const confirmedCount = meetups.filter((m) => m.confirmed).length
+  const pendingCount = meetups.filter((m) => m.status !== 'CONFIRMED').length
+  const confirmedCount = meetups.filter((m) => m.status === 'CONFIRMED').length
   const hasPrefs = pref.preferredCategories.length > 0 || pref.avoid.length > 0 || pref.vibe || pref.intensity
 
   const heroWeather = next7Days().map((k, i) => {

@@ -1,47 +1,114 @@
-// 약속 — 독립 엔티티로 persist(localStorage). 친구에 종속되지 않고, 만든 뒤에도
-// 참여 친구·가용시간을 계속 추가/수정할 수 있는 구조. be 붙으면 약속 테이블로 대체.
-// TODO(be): POST /meetups, PATCH /meetups/{id}/participants 등
+// 약속(meeting) — be /meetings 슬롯·share-token 모델 연동. (구 친구+시간칸 mock 폐기)
+// 흐름: create(→shareToken) → 링크 공유 → join → 가용 제출(slotId+FREE/BUSY) → heatmap/best-times → confirm.
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { useAppStore } from './useAppStore'
+import {
+  listMeetings, createMeeting, getMeeting, confirmMeeting, joinMeeting,
+  submitAvailability, getHeatmap, getBestTimes, getMeetingStatus,
+  type MeetingSummary, type MeetingDetail, type Heatmap, type BestTimes, type MeetingStatusInfo,
+  type SlotResponseItem, type CreateMeetingInput,
+} from '@/api/meetingApi'
 
-export type MeetCell = 'free' | 'busy'
-
-/** be meeting.type ENUM */
-export type MeetingType = 'CASUAL' | 'TEAM' | 'REGULAR' | 'ETC'
-
-export interface Meetup {
-  id: string
-  title: string
-  type: MeetingType
-  friendIds: string[]
-  dates: string[] // 후보 날짜 (YYYY-MM-DD)
-  myCells: Record<string, MeetCell> // "date|hour" → 내 가용
-  confirmed?: { date: string; startH: number; endH: number } // 확정 시간 범위 (endH 배타)
-  shareToken?: string // be meeting.share_token — 초대 URL 토큰(생성 시 발급). 조인 화면은 be 대기
-  createdAt: number
-}
+const myMemberId = (): string | null => localStorage.getItem('haeyaji-account')
+const toast = (m: string) => useAppStore.getState().toast(m)
+const errMsg = (e: unknown) => (e as Error)?.message || '요청에 실패했어요'
 
 interface MeetupState {
-  meetups: Meetup[]
-  create: (m: Omit<Meetup, 'id' | 'createdAt'>) => string
-  update: (id: string, patch: Partial<Meetup>) => void
-  remove: (id: string) => void
-  get: (id: string) => Meetup | undefined
+  meetings: MeetingSummary[]
+  detail: MeetingDetail | null
+  heatmap: Heatmap | null
+  bestTimes: BestTimes | null
+  status: MeetingStatusInfo | null
+  myResponses: SlotResponseItem[] // 현재 회원의 슬롯 응답(가용 그리드 초기값)
+  loading: boolean
+  loadList: () => Promise<void>
+  create: (input: CreateMeetingInput) => Promise<MeetingDetail | null>
+  loadDetail: (shareToken: string) => Promise<void>
+  join: (shareToken: string) => Promise<boolean>
+  submit: (shareToken: string, responses: SlotResponseItem[]) => Promise<void>
+  confirm: (shareToken: string, startAt: string, endAt: string) => Promise<void>
+  clearDetail: () => void
 }
 
-export const useMeetupStore = create<MeetupState>()(
-  persist(
-    (set, get) => ({
-      meetups: [],
-      create: (m) => {
-        const id = 'mt' + Date.now()
-        set((s) => ({ meetups: [{ ...m, id, createdAt: Date.now() }, ...s.meetups] }))
-        return id
-      },
-      update: (id, patch) => set((s) => ({ meetups: s.meetups.map((x) => (x.id === id ? { ...x, ...patch } : x)) })),
-      remove: (id) => set((s) => ({ meetups: s.meetups.filter((x) => x.id !== id) })),
-      get: (id) => get().meetups.find((x) => x.id === id),
-    }),
-    { name: 'haeyaji-meetups' },
-  ),
-)
+export const useMeetupStore = create<MeetupState>((set, get) => ({
+  meetings: [],
+  detail: null,
+  heatmap: null,
+  bestTimes: null,
+  status: null,
+  myResponses: [],
+  loading: false,
+
+  loadList: async () => {
+    try {
+      set({ meetings: await listMeetings() })
+    } catch { /* be 미가동 무시 */ }
+  },
+
+  create: async (input) => {
+    try {
+      const d = await createMeeting(input)
+      set((s) => ({ meetings: [toSummary(d), ...s.meetings] }))
+      return d
+    } catch (e) {
+      toast(errMsg(e))
+      return null
+    }
+  },
+
+  loadDetail: async (shareToken) => {
+    set({ loading: true })
+    try {
+      const [detail, heatmap, bestTimes, status] = await Promise.all([
+        getMeeting(shareToken), getHeatmap(shareToken).catch(() => null), getBestTimes(shareToken).catch(() => null), getMeetingStatus(shareToken).catch(() => null),
+      ])
+      const mine = status?.participants.find((p) => p.memberId === myMemberId())
+      set({ detail, heatmap, bestTimes, status, myResponses: mine?.responses ?? [], loading: false })
+    } catch (e) {
+      set({ loading: false })
+      toast(errMsg(e))
+    }
+  },
+
+  join: async (shareToken) => {
+    try {
+      await joinMeeting(shareToken)
+      await get().loadDetail(shareToken)
+      return true
+    } catch (e) {
+      toast(errMsg(e))
+      return false
+    }
+  },
+
+  submit: async (shareToken, responses) => {
+    try {
+      await submitAvailability(shareToken, responses)
+      set({ myResponses: responses })
+      // 히트맵/상태 갱신
+      const [heatmap, status] = await Promise.all([getHeatmap(shareToken).catch(() => get().heatmap), getMeetingStatus(shareToken).catch(() => get().status)])
+      set({ heatmap, status })
+      toast('가능한 시간을 저장했어요')
+    } catch (e) {
+      toast(errMsg(e))
+    }
+  },
+
+  confirm: async (shareToken, startAt, endAt) => {
+    try {
+      const detail = await confirmMeeting(shareToken, startAt, endAt)
+      set((s) => ({ detail, meetings: s.meetings.map((m) => (m.shareToken === shareToken ? toSummary(detail) : m)) }))
+      toast('약속을 확정했어요')
+    } catch (e) {
+      toast(errMsg(e))
+    }
+  },
+
+  clearDetail: () => set({ detail: null, heatmap: null, bestTimes: null, status: null, myResponses: [] }),
+}))
+
+const toSummary = (d: MeetingDetail): MeetingSummary => ({
+  id: d.id, title: d.title, type: d.type, status: d.status, shareToken: d.shareToken,
+  participantCount: d.participants.length, deadline: d.deadline,
+  confirmedStartAt: d.confirmedStartAt, confirmedEndAt: d.confirmedEndAt, createdAt: d.createdAt,
+})
