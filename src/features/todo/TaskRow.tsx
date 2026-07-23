@@ -1,13 +1,25 @@
 import { CheckMark, TrashIcon } from '@/lib/icons'
 import { useTodoStore } from '@/store/useTodoStore'
+import { useAppStore } from '@/store/useAppStore'
 import type { Task } from '@/types'
 
 const ellipsis = { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } as const
+
+// 핀 아이콘 (채워짐/윤곽) — 할일 페이지·상세와 동일 심볼
+function PinIcon({ filled, w = 16 }: { filled: boolean; w?: number }) {
+  return (
+    <svg width={w} height={w} viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 4h6l-1 5 3 3v2H7v-2l3-3-1-5z" /><path d="M12 14v6" />
+    </svg>
+  )
+}
 
 /** variant 'home' = 우측 meta / 'aside' = 제목 아래 meta. onOpen 지정 시 행 클릭으로 상세 열림 */
 export function TaskRow({ task, variant, onOpen }: { task: Task; variant: 'home' | 'aside'; onOpen?: (task: Task) => void }) {
   const toggleTask = useTodoStore((s) => s.toggleTask)
   const deleteTask = useTodoStore((s) => s.deleteTask)
+  const togglePin = useTodoStore((s) => s.togglePin)
+  const selId = useAppStore((s) => s.selId)
   const meta = task.meta || task.time || ''
   const titleColor = task.done ? '#AEA89B' : '#17150F'
   const metaColor = task.ai ? '#15795A' : '#A39C8E'
@@ -52,6 +64,11 @@ export function TaskRow({ task, variant, onOpen }: { task: Task; variant: 'home'
       </div>
 
       {home && <div style={{ fontSize: 18, fontWeight: 600, color: metaColor, flexShrink: 0 }}>{meta}</div>}
+
+      {/* 핀 — 할일의 pinned와 동일 상태(store), 상단 고정 */}
+      <div onClick={(e) => { e.stopPropagation(); togglePin(selId, task.id) }} className="hbtn" title={task.pinned ? '고정 해제' : '상단 고정'} style={{ display: 'flex', cursor: 'pointer', flexShrink: 0, color: task.pinned ? '#C2702A' : '#CBD0D8' }}>
+        <PinIcon filled={!!task.pinned} w={home ? 18 : 16} />
+      </div>
 
       <div onClick={(e) => { e.stopPropagation(); deleteTask(task.id) }} className="hbtn" style={{ display: 'flex', cursor: 'pointer', color: '#CAD0DA', flexShrink: 0 }}>
         <TrashIcon />

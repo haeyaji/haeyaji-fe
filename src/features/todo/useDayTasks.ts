@@ -16,7 +16,10 @@ export function useDayTasks(): DayTasksView {
   const raw = useTodoStore((s) => s.tasksByDate[selId]) ?? []
   const done = raw.filter((t) => t.done).length
   const total = raw.length
-  const tasks = [...raw.filter((t) => t.group === 'routine'), ...raw.filter((t) => t.group !== 'routine')]
+  // 핀 먼저 → 루틴 → 개별 (핀은 be todo.pinned, 홈/할일/상세 공통 상태)
+  const pin = (t: Task) => (t.pinned ? 0 : 1)
+  const grp = (t: Task) => (t.group === 'routine' ? 0 : 1)
+  const tasks = [...raw].sort((a, b) => pin(a) - pin(b) || grp(a) - grp(b))
   return {
     tasks,
     done,
