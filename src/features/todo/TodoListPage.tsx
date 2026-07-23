@@ -210,7 +210,6 @@ function TaskItem({ row, rows, onOpen, onToggle, onPin, dragKey, setDragKey, reo
           <span style={{ fontSize: 15.5, fontWeight: 700, color: done ? MC.faint : MC.ink, textDecoration: done ? 'line-through' : 'none' }}>{task.title}</span>
           {label && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: label.color, background: label.color + '1F', padding: '2.5px 9px', borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: label.color }} />{label.name}</span>}
           {task.ai && <span style={{ fontSize: 11, fontWeight: 800, color: '#15795A', background: '#E4F2EC', padding: '2.5px 8px', borderRadius: 20 }}>AI</span>}
-          {task.category && <span style={{ fontSize: 11, fontWeight: 800, color: '#5A554B', background: '#F0F2F6', padding: '2.5px 8px', borderRadius: 20 }}>{task.category}</span>}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
           <span style={{ fontSize: 11.5, fontWeight: 800, color: badge.color, background: badge.bg, padding: '3px 9px', borderRadius: 20 }}>{badge.label}</span>

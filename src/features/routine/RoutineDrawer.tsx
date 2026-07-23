@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { CloseIcon, RoutineIcon, TrashIcon } from '@/lib/icons'
+import { CloseIcon, TrashIcon } from '@/lib/icons'
 import { DOW } from '@/lib/mockData'
 import { useAppStore } from '@/store/useAppStore'
 import { useRoutineStore } from '@/store/useRoutineStore'
+import { useLabelStore } from '@/store/useLabelStore'
 import { RoutineFormModal } from './RoutineFormModal'
 import type { Routine } from '@/types'
 
@@ -87,6 +88,8 @@ function RoutineCard({
   onDelete: (id: string) => void
   onEdit: () => void
 }) {
+  const lab = useLabelStore((s) => (r.labelId ? s.labels.find((l) => l.id === r.labelId) : undefined))
+  const accent = lab?.color ?? '#15795A'
   const isEvery = r.days.filter(Boolean).length === 7
   const isWeek = r.days.slice(0, 5).every(Boolean) && !r.days[5] && !r.days[6]
   const isWeekend = !r.days.slice(0, 5).some(Boolean) && r.days[5] && r.days[6]
@@ -99,11 +102,14 @@ function RoutineCard({
   return (
     <div style={{ background: '#fff', border: '1px solid #E1E5EC', borderRadius: 20, padding: 18, opacity: r.active ? 1 : 0.5 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
-        <div style={{ width: 42, height: 42, borderRadius: 13, background: '#E4F2EC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ width: 22, height: 22, display: 'inline-flex' }}><RoutineIcon cat={r.cat} c="#15795A" /></span>
+        <div style={{ width: 42, height: 42, borderRadius: 13, background: accent + '1F', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 2l4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="M7 22l-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>
         </div>
         <div onClick={onEdit} className="hbtn" title="루틴 수정" style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
-          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-.3px' }}>{r.title}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-.3px' }}>{r.title}</div>
+            {lab && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: lab.color, background: lab.color + '1F', padding: '2.5px 8px', borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: lab.color }} />{lab.name}</span>}
+          </div>
           <div style={{ fontSize: 12.5, fontWeight: 600, color: '#A39C8E', marginTop: 1 }}>{r.time} · {daysLabel(r.days)}</div>
         </div>
         <div onClick={() => onToggleActive(r.id)} style={{ width: 46, height: 27, borderRadius: 20, cursor: 'pointer', position: 'relative', background: r.active ? '#15795A' : '#CCD2DC', flexShrink: 0 }}>

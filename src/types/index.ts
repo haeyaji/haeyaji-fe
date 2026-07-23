@@ -64,7 +64,6 @@ export interface Task {
   group: TaskGroup // routine/personal → be todo_source(ROUTINE/MANUAL), ai=AI
   done: boolean
   status?: TaskStatus // todo/done (미지정 시 done 값으로 유추)
-  category?: Category | null // be todo.category (6종). 추천에서 실어옴 — 행동학습(DONE→가중치)용, 수동은 null
   placeName?: string | null // be todo.place_name (추천 장소명)
   placeUrl?: string | null // be todo.place_url (지도 딥링크)
   lat?: number | null // be todo.lat (지도 마커)
@@ -113,15 +112,13 @@ export interface Place {
   lng: number
 }
 
-export type RoutineCat = 'yoga' | 'shop' | 'code'
-
 export interface Routine {
   id: string
   title: string
-  cat: RoutineCat
   time: string
-  days: boolean[] // 월~일 (7)
-  active: boolean
+  days: boolean[] // 월~일 (7) → be routine_day.day_of_week
+  active: boolean // be routine.is_active
+  labelId?: string | null // be routine.label_id — 기본 라벨(생성 todo에 상속)
 }
 
 export interface ChatMessage {
