@@ -47,9 +47,10 @@ export function AiDrawer() {
     setDismissed((prev) => new Set(prev).add(key))
     toast('관심없음으로 표시했어요')
   }
-  // 추천을 '일정에 추가' → 그 카드 category를 함께 실어 be가 개인화 positive(ADD +1) 학습
+  // 추천 '일정에 추가' = 강한 긍정. todo 생성과 별개로 SELECTED(+2) 신호를 명시 전송(fire-and-forget).
   const select = (t: RecommendedTodo) => {
-    addPlaceTask({ title: t.placeName || t.title, placeName: t.placeName, placeUrl: t.placeUrl, lat: t.y, lng: t.x, category: t.category })
+    addPlaceTask({ title: t.placeName || t.title, placeName: t.placeName, placeUrl: t.placeUrl, lat: t.y, lng: t.x })
+    fireSignal(sendRecommendFeedback(t.category, 'SELECTED'))
   }
 
   // 플로팅 위젯 크기 (좌상단 그립 드래그로 조절 — 우하단 앵커 고정)
