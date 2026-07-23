@@ -70,10 +70,10 @@ function rollback(dateKey: string) {
 function reconcile(dateKey: string, tempId: string, saved: Task) {
   useTodoStore.setState((s) => ({ tasksByDate: { ...s.tasksByDate, [dateKey]: (s.tasksByDate[dateKey] ?? []).map((t) => (t.id === tempId ? saved : t)) } }))
 }
-// 생성 실패: 임시 task 제거 + 토스트
-function failCreate(dateKey: string, tempId: string) {
+// 생성 실패: 임시 task 제거 + 토스트 (be 에러 메시지 노출: 과거 날짜 등)
+function failCreate(dateKey: string, tempId: string, err?: unknown) {
   useTodoStore.setState((s) => ({ tasksByDate: { ...s.tasksByDate, [dateKey]: (s.tasksByDate[dateKey] ?? []).filter((t) => t.id !== tempId) } }))
-  useAppStore.getState().toast('저장에 실패했어요')
+  useAppStore.getState().toast(err instanceof Error && err.message ? err.message : '저장에 실패했어요')
 }
 // 제목 입력 디바운스 PATCH (키 입력마다 저장 방지)
 const titleTimers = new Map<string, ReturnType<typeof setTimeout>>()
@@ -109,7 +109,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     const temp: Task = { id: 'tmp' + Date.now(), title: input.title, time: '', group: 'personal', done: false, ai: true, placeName: input.placeName ?? null, placeUrl: input.placeUrl ?? null, lat: input.lat ?? null, lng: input.lng ?? null, pinned: false, sortOrder: nextSort(list) }
     set((s) => ({ tasksByDate: { ...s.tasksByDate, [dateKey]: [...(s.tasksByDate[dateKey] ?? []), temp] } }))
     useAppStore.getState().toast(`'${input.title}' 일정에 추가됨`)
-    createTodo(dateKey, temp, 'AI').then((saved) => reconcile(dateKey, temp.id, saved)).catch(() => failCreate(dateKey, temp.id))
+    createTodo(dateKey, temp, 'AI').then((saved) => reconcile(dateKey, temp.id, saved)).catch((err) => failCreate(dateKey, temp.id, err))
   },
   submitTask: ({ dateKey, title, time, group, labelId }) => {
     const t = title.trim()
@@ -123,7 +123,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
         reconcile(dateKey, temp.id, saved)
         if (labelId) useLabelStore.getState().setTodoLabel(saved.id, labelId) // 서버 발급 id에 라벨 매핑
       })
-      .catch(() => failCreate(dateKey, temp.id))
+      .catch((err) => failCreate(dateKey, temp.id, err))
     return true
   },
   setStatus: (dateKey, id, status) => {
@@ -163,7 +163,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     const list = get().tasksByDate[dateKey] ?? []
     const temp: Task = { id: 'tmp' + Date.now(), title: t, group: 'personal', done: status === 'done', status, pinned: false, sortOrder: nextSort(list) }
     set((s) => ({ tasksByDate: { ...s.tasksByDate, [dateKey]: [...(s.tasksByDate[dateKey] ?? []), temp] } }))
-    createTodo(dateKey, temp, 'MEETING').then((saved) => reconcile(dateKey, temp.id, saved)).catch(() => failCreate(dateKey, temp.id))
+    createTodo(dateKey, temp, 'MEETING').then((saved) => reconcile(dateKey, temp.id, saved)).catch((err) => failCreate(dateKey, temp.id, err))
   },
   togglePin: (dateKey, id) => {
     const cur = find(dateKey, id)
@@ -216,7 +216,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
           reconcile(dateKey, task.id, saved)
           if (labelId) useLabelStore.getState().setTodoLabel(saved.id, labelId) // 루틴 라벨 상속
         })
-        .catch(() => failCreate(dateKey, task.id))
+        .catch((err) => failCreate(dateKey, task.id, err))
     })
     return created
   },
