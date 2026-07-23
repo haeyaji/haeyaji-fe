@@ -1,5 +1,5 @@
 // 할 일 상세 (공용) — 할 일 리스트에서 연다. be todo 계약에 맞춰 제목·상태(TODO/DONE)·시간·
-// 카테고리·장소·핀 + 공유(todo_participant: 역할·초대수락)만 다룬다. (칸반/지라 필드는 제거됨)
+// 분류(라벨)·장소·핀·반복(루틴) + 공유(todo_participant: 역할·초대수락)를 다룬다. (칸반/지라 필드는 제거됨)
 import { useState } from 'react'
 import { CloseIcon, PlusIcon, TrashIcon } from '@/lib/icons'
 import { useTodoStore, statusOf } from '@/store/useTodoStore'

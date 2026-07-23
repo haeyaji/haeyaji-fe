@@ -1,4 +1,4 @@
-// 루틴 생성·수정 모달 — 이름·시간·카테고리·반복 요일 지정. (RoutineDrawer의 + 새 루틴 / 카드 편집)
+// 루틴 생성·수정 모달 — 이름·시간·분류(라벨)·반복 요일 지정. (RoutineDrawer의 + 새 루틴 / 카드 편집)
 import { useState } from 'react'
 import { CloseIcon } from '@/lib/icons'
 import { normalizeTime } from '@/lib/dates'

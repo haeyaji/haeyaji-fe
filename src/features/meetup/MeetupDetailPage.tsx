@@ -2,7 +2,7 @@
 // 가능한 시간대 리스트는 버튼→모달. 내 되는/안되는 시간은 "내 시간 수정" 모달에서 편집.
 import { useMemo, useState } from 'react'
 import { WeatherIcon } from '@/lib/icons'
-import { longDate, mdLabel, hhmm, dur, candidateSlots, friendFree, friendEntered, taskTick, type Slot } from './meetupShared'
+import { longDate, mdLabel, hhmm, dur, candidateSlots, friendFree, friendEntered, taskTick, meetTypeLabel, type Slot } from './meetupShared'
 import { MC, cardStyle } from './tokens'
 import { useTodoStore } from '@/store/useTodoStore'
 import { useAppStore } from '@/store/useAppStore'
@@ -65,7 +65,7 @@ export function MeetupDetailPage({ id, onBack }: { id: string; onBack: () => voi
         {/* 히어로 */}
         <div style={{ background: heroBg, borderRadius: 22, padding: '26px 28px', color: '#fff', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ fontSize: 13, fontWeight: 800, opacity: 0.85, letterSpacing: '.3px' }}>{meetup.type}</div>
+            <div style={{ fontSize: 13, fontWeight: 800, opacity: 0.85, letterSpacing: '.3px' }}>{meetTypeLabel(meetup.type)}</div>
             <div style={{ fontSize: 12, fontWeight: 800, background: 'rgba(255,255,255,.22)', padding: '4px 11px', borderRadius: 20 }}>{meetup.confirmed ? '확정' : '조율 중'}</div>
           </div>
           <div style={{ fontSize: 28, fontWeight: 800, marginTop: 4 }}>{meetup.title}</div>

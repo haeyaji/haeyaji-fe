@@ -72,7 +72,7 @@ export function FriendSearchModal({ onClose, onOpenDetail }: { onClose: () => vo
                   <div onClick={(e) => { e.stopPropagation(); removeFriend(u.id); toast(`${u.nickname}님을 친구에서 삭제했어요`) }} className="hbtn" title="삭제" style={{ width: 34, height: 34, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#CAD0DA', cursor: 'pointer', flexShrink: 0 }}><TrashIcon w={16} c="currentColor" /></div>
                 } />
               )) : (
-                <div style={{ padding: 30, textAlign: 'center', color: MC.faint, fontSize: 14, fontWeight: 600 }}>아직 친구가 없어요. 닉네임·코드로 검색해 요청해보세요.</div>
+                <div style={{ padding: 30, textAlign: 'center', color: MC.faint, fontSize: 14, fontWeight: 600 }}>아직 친구가 없어요. 닉네임으로 검색해 요청해보세요.</div>
               )}
             </>
           )}

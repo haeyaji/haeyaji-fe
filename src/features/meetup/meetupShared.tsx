@@ -3,11 +3,18 @@ import { useEffect, useRef } from 'react'
 import { WeatherIcon } from '@/lib/icons'
 import { dowLabel, dayNum, parseKey } from '@/lib/dates'
 import type { WeatherCond } from '@/types'
-import type { MeetCell } from '@/store/useMeetupStore'
+import type { MeetCell, MeetingType } from '@/store/useMeetupStore'
 import { useWeatherStore } from '@/store/useWeatherStore'
 import { MC } from './tokens'
 
-export const MEET_TYPES = ['가벼운 모임', '팀 회의', '정기 모임', '기타']
+// be meeting.type ENUM ↔ 표시 라벨 (저장은 code, UI만 label)
+export const MEET_TYPES: { code: MeetingType; label: string }[] = [
+  { code: 'CASUAL', label: '가벼운 모임' },
+  { code: 'TEAM', label: '팀 회의' },
+  { code: 'REGULAR', label: '정기 모임' },
+  { code: 'ETC', label: '기타' },
+]
+export const meetTypeLabel = (code: string): string => MEET_TYPES.find((t) => t.code === code)?.label ?? code
 // 오전 7시~새벽 2시, 30분 단위: [7, 7.5, …, 25.5] (24=자정, 25=새벽1시, 26=새벽2시)
 export const TICKS: number[] = []
 for (let hh = 7; hh < 26; hh++) { TICKS.push(hh); TICKS.push(hh + 0.5) }
