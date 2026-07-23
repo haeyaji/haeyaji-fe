@@ -1,10 +1,10 @@
+// 루틴 = 반복 정의(휴대폰 알람식). fe는 정의만 관리하고, 실제 todo는 be 스케줄러가 만든다.
+// be RoutineScheduler: 매일 자정(cron 0 0 0 * * *, KST)에 활성 루틴을 그날 todo로 자동 생성(중복 방지).
+// TODO(be): GET/POST/PATCH/DELETE /routines + POST /routines/apply. 현재는 로컬 persist.
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Routine } from '@/types'
-import { dowIndexOf } from '@/lib/weather'
-import { fmtKey } from '@/lib/dates'
 import { useAppStore } from './useAppStore'
-import { useTodoStore } from './useTodoStore'
 
 type PresetKind = 'every' | 'week' | 'weekend'
 
@@ -23,66 +23,40 @@ export interface RoutineInput {
 
 interface RoutineState {
   routines: Routine[]
-  toggleActive: (id: string) => void
+  toggleActive: (id: string) => void // is_active — 완전 비활성화(스케줄러 생성 중단)
   toggleDay: (id: string, i: number) => void
   setPreset: (id: string, kind: PresetKind) => void
   deleteRoutine: (id: string) => void
-  /** 루틴 생성 (모달·아코디언) — 생성된 루틴 반환 */
+  /** 루틴 정의 생성 (모달·아코디언) — 생성된 루틴 반환. todo 생성은 be 스케줄러가 담당 */
   createRoutine: (input: RoutineInput) => Routine
   updateRoutine: (id: string, patch: Partial<Routine>) => void
-  /** 루틴 1개를 이번 달 잔여일에 할 일로 적용 — 생성 건수 반환 */
-  applyRoutine: (r: Routine) => number
-  batchApply: () => void
-}
-
-// 활성/지정 루틴들을 이번 달 잔여일(오늘~말일)의 해당 요일 항목으로 펼침 (라벨 상속)
-function monthEntries(routines: Routine[]): { dateKey: string; title: string; time: string; labelId?: string | null }[] {
-  const now = new Date()
-  const y = now.getFullYear()
-  const mo = now.getMonth()
-  const lastDay = new Date(y, mo + 1, 0).getDate()
-  const entries: { dateKey: string; title: string; time: string; labelId?: string | null }[] = []
-  routines.forEach((r) => {
-    for (let d = now.getDate(); d <= lastDay; d++) {
-      const date = new Date(y, mo, d)
-      if (r.days[dowIndexOf(date)]) entries.push({ dateKey: fmtKey(date), title: r.title, time: r.time, labelId: r.labelId })
-    }
-  })
-  return entries
 }
 
 export const useRoutineStore = create<RoutineState>()(
   persist(
-    (set, get) => ({
-  routines: [], // TODO(be): GET /routines 로 채움. 현재 로컬 persist(새로고침 유지)
-  toggleActive: (id) => set((s) => ({ routines: s.routines.map((r) => (r.id === id ? { ...r, active: !r.active } : r)) })),
-  toggleDay: (id, i) =>
-    set((s) => ({
-      routines: s.routines.map((r) => {
-        if (r.id !== id) return r
-        const days = r.days.slice()
-        days[i] = !days[i]
-        return { ...r, days }
-      }),
-    })),
-  setPreset: (id, kind) => set((s) => ({ routines: s.routines.map((r) => (r.id === id ? { ...r, days: PRESETS[kind] } : r)) })),
-  deleteRoutine: (id) => {
-    set((s) => ({ routines: s.routines.filter((r) => r.id !== id) }))
-    useAppStore.getState().toast('루틴을 삭제했어요')
-  },
-  createRoutine: ({ title, time, days, labelId = null }) => {
-    const routine: Routine = { id: 'nr' + Date.now(), title: title.trim() || '새 루틴', time, days, active: true, labelId }
-    set((s) => ({ routines: [...s.routines, routine] }))
-    return routine
-  },
-  updateRoutine: (id, patch) => set((s) => ({ routines: s.routines.map((r) => (r.id === id ? { ...r, ...patch } : r)) })),
-  applyRoutine: (r) => useTodoStore.getState().bulkAddRoutine(monthEntries([r])),
-  batchApply: () => {
-    // 활성 루틴을 이번 달 잔여일의 해당 요일에 실제 할 일로 등록 (중복은 스킵)
-    const created = useTodoStore.getState().bulkAddRoutine(monthEntries(get().routines.filter((r) => r.active)))
-    useAppStore.getState().toast(created > 0 ? `${created}개 일정을 이번 달에 등록했어요` : '이미 모두 등록되어 있어요')
-    useAppStore.getState().closeRoutine()
-  },
+    (set) => ({
+      routines: [],
+      toggleActive: (id) => set((s) => ({ routines: s.routines.map((r) => (r.id === id ? { ...r, active: !r.active } : r)) })),
+      toggleDay: (id, i) =>
+        set((s) => ({
+          routines: s.routines.map((r) => {
+            if (r.id !== id) return r
+            const days = r.days.slice()
+            days[i] = !days[i]
+            return { ...r, days }
+          }),
+        })),
+      setPreset: (id, kind) => set((s) => ({ routines: s.routines.map((r) => (r.id === id ? { ...r, days: PRESETS[kind] } : r)) })),
+      deleteRoutine: (id) => {
+        set((s) => ({ routines: s.routines.filter((r) => r.id !== id) }))
+        useAppStore.getState().toast('루틴을 삭제했어요')
+      },
+      createRoutine: ({ title, time, days, labelId = null }) => {
+        const routine: Routine = { id: 'nr' + Date.now(), title: title.trim() || '새 루틴', time, days, active: true, labelId }
+        set((s) => ({ routines: [...s.routines, routine] }))
+        return routine
+      },
+      updateRoutine: (id, patch) => set((s) => ({ routines: s.routines.map((r) => (r.id === id ? { ...r, ...patch } : r)) })),
     }),
     { name: 'haeyaji-routines' },
   ),
