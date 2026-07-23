@@ -35,11 +35,11 @@ export const useFriendStore = create<FriendState>()(
   ),
 )
 
-// 닉네임 부분일치 또는 friend_code 정확일치 검색 (be 검색 API 대응)
+// 닉네임 부분일치 검색 (be 검색 API 대응)
 export function searchUsers(query: string): AppUser[] {
   const q = query.trim().toLowerCase()
   if (!q) return []
-  return MOCK_USERS.filter((u) => u.nickname.toLowerCase().includes(q) || u.friendCode.toLowerCase() === q)
+  return MOCK_USERS.filter((u) => u.nickname.toLowerCase().includes(q))
 }
 
 export const userById = (id: string): AppUser | undefined => MOCK_USERS.find((u) => u.id === id)

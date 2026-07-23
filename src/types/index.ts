@@ -95,7 +95,6 @@ export interface WeekDay {
 export interface AppUser {
   id: string
   nickname: string
-  friendCode: string // be member.friend_code — 친구추가용 코드
   vibe: string // 대표 분위기 (usePrefStore vibe와 같은 값 집합)
   cats: Category[] // 선호 카테고리
 }
