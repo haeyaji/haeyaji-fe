@@ -55,7 +55,7 @@ export function MeetupDetailPage({ id, onBack }: { id: string; onBack: () => voi
   }
 
   return (
-    <div className="mp-pad" style={{ minHeight: 'var(--full-vh)', width: '100%', color: MC.ink, background: MC.canvas }}>
+    <div className="mp-pad" style={{ minHeight: 'var(--full-vh)', width: '100%', color: MC.ink, background: 'var(--canvas)' }}>
       <div className="mp-wrap">
         <div onClick={onBack} className="hbtn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 15, fontWeight: 700, color: MC.muted, cursor: 'pointer', marginBottom: 16, padding: '4px 2px' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
