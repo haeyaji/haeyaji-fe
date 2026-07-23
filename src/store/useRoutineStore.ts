@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { Routine } from '@/types'
 import { dowIndexOf } from '@/lib/weather'
 import { fmtKey } from '@/lib/dates'
@@ -50,8 +51,10 @@ function monthEntries(routines: Routine[]): { dateKey: string; title: string; ti
   return entries
 }
 
-export const useRoutineStore = create<RoutineState>((set, get) => ({
-  routines: [], // TODO(be): GET /routines 로 채움 (현재는 빈 상태로 시작)
+export const useRoutineStore = create<RoutineState>()(
+  persist(
+    (set, get) => ({
+  routines: [], // TODO(be): GET /routines 로 채움. 현재 로컬 persist(새로고침 유지)
   toggleActive: (id) => set((s) => ({ routines: s.routines.map((r) => (r.id === id ? { ...r, active: !r.active } : r)) })),
   toggleDay: (id, i) =>
     set((s) => ({
@@ -80,4 +83,7 @@ export const useRoutineStore = create<RoutineState>((set, get) => ({
     useAppStore.getState().toast(created > 0 ? `${created}개 일정을 이번 달에 등록했어요` : '이미 모두 등록되어 있어요')
     useAppStore.getState().closeRoutine()
   },
-}))
+    }),
+    { name: 'haeyaji-routines' },
+  ),
+)
