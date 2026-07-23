@@ -20,6 +20,7 @@ interface PrefState {
   intensity: string | null
   surveyDone: boolean
   setNickname: (v: string) => void
+  hydrateFromServer: (d: { preferredCategories: string[]; avoid: string[]; vibe: string | null; intensity: string | null }) => void
   toggleCategory: (c: Category) => void
   toggleAvoid: (a: string) => void
   setVibe: (v: string | null) => void
@@ -40,6 +41,15 @@ export const usePrefStore = create<PrefState>()(
       intensity: null,
       surveyDone: false,
       setNickname: (nickname) => set({ nickname: nickname.trim() }),
+      // be 저장 설문으로 로컬 복원. 서버에 취향이 있으면 설문 완료로 간주(재노출 방지).
+      // 이미 로컬에서 완료했으면 유지(빈 서버값이 done을 되돌리지 않게).
+      hydrateFromServer: (d) => set((s) => ({
+        preferredCategories: d.preferredCategories as Category[],
+        avoid: d.avoid,
+        vibe: d.vibe,
+        intensity: d.intensity,
+        surveyDone: s.surveyDone || d.preferredCategories.length > 0 || d.avoid.length > 0 || !!d.vibe || !!d.intensity,
+      })),
       toggleCategory: (c) => set((s) => ({ preferredCategories: toggle(s.preferredCategories, c) })),
       toggleAvoid: (a) => set((s) => ({ avoid: toggle(s.avoid, a) })),
       setVibe: (vibe) => set({ vibe }),

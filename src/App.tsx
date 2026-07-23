@@ -7,6 +7,7 @@ import { todayKey } from '@/lib/dates'
 import { timeOfDay } from '@/lib/weather'
 import { usePrefStore } from '@/store/usePrefStore'
 import { fetchMe } from '@/api/authApi'
+import { getPreferences } from '@/api/personalizeApi'
 import { LoginScreen } from '@/features/auth/LoginScreen'
 import { ProfileSetup } from '@/features/auth/ProfileSetup'
 import { OnboardingSurvey } from '@/features/auth/OnboardingSurvey'
@@ -58,6 +59,9 @@ export default function App() {
           return
         }
         if (me.nickname) usePrefStore.setState({ nickname: me.nickname }) // be가 nickname 주면 그 값으로
+        // be 저장 설문 복원 (다른 기기·계정 wipe 후에도 취향 유지 → 설문 재노출 방지). best-effort.
+        try { usePrefStore.getState().hydrateFromServer(await getPreferences()) } catch { /* be 미가동/미저장 무시 */ }
+        if (cancelled) return
         useAppStore.getState().login(isCallback ? '로그인했어요' : undefined)
         if (isCallback && isNewMember) usePrefStore.setState({ surveyDone: false }) // 신규 → 온보딩
       } catch {
