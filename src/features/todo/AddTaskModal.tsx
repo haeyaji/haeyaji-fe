@@ -15,7 +15,7 @@ export function AddTaskModal() {
   const { addOpen, closeAdd, selId } = useAppStore()
   const toast = useAppStore((s) => s.toast)
   const submitTask = useTodoStore((s) => s.submitTask)
-  const { createRoutine, applyRoutine } = useRoutineStore()
+  const createRoutine = useRoutineStore((s) => s.createRoutine)
   const [title, setTitle] = useState('')
   const [date, setDate] = useState(selId)
   const [time, setTime] = useState('')
@@ -51,12 +51,11 @@ export function AddTaskModal() {
     const n = normTime()
     if (n === null) return
     if (group === 'routine') {
-      // 루틴 생성 + 이번 달 잔여일에 할 일로 적용 (루틴 ↔ 투두 상호)
+      // 루틴 정의만 생성 (알람식). 실제 할 일은 be 스케줄러가 매일 자정에 자동 등록
       if (!title.trim()) { toast('루틴 이름을 입력해주세요'); return }
       if (!days.some(Boolean)) { toast('반복 요일을 하나 이상 선택해주세요'); return }
-      const r = createRoutine({ title, time: n || '', days })
-      const cnt = applyRoutine(r)
-      toast(cnt > 0 ? `루틴 등록 · 이번 달 ${cnt}개 적용됨` : '루틴을 등록했어요')
+      createRoutine({ title, time: n || '', days })
+      toast('루틴을 등록했어요 · 매일 자정에 오늘 할 일로 추가돼요')
       reset()
       closeAdd()
       return

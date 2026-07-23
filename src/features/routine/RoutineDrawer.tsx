@@ -19,7 +19,7 @@ function daysLabel(days: boolean[]): string {
 
 export function RoutineDrawer() {
   const { routineOpen, closeRoutine } = useAppStore()
-  const { routines, toggleActive, deleteRoutine, batchApply } = useRoutineStore()
+  const { routines, toggleActive, deleteRoutine } = useRoutineStore()
   const [form, setForm] = useState<Routine | 'new' | null>(null)
   if (!routineOpen) return null
 
@@ -45,7 +45,7 @@ export function RoutineDrawer() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 24px', background: '#fff', borderBottom: '1px solid #E4E7EE' }}>
           <div>
             <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-.4px' }}>루틴 관리</div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#A39C8E', marginTop: 2 }}>반복 일정을 등록하고 한 번에 적용하세요</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#A39C8E', marginTop: 2 }}>반복할 일정을 알람처럼 등록해두세요</div>
           </div>
           <div onClick={closeRoutine} style={{ width: 30, height: 30, borderRadius: 10, background: '#E9EDF3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <CloseIcon />
@@ -61,10 +61,9 @@ export function RoutineDrawer() {
           </div>
         </div>
 
-        <div style={{ padding: '16px 24px', background: '#fff', borderTop: '1px solid #E4E7EE' }}>
-          <div onClick={batchApply} className="lift" style={{ textAlign: 'center', fontSize: 15, fontWeight: 700, color: '#fff', background: '#15795A', borderRadius: 14, padding: 14, cursor: 'pointer' }}>
-            이번 달에 일괄 적용
-          </div>
+        <div style={{ padding: '14px 24px', background: '#fff', borderTop: '1px solid #E4E7EE', display: 'flex', alignItems: 'center', gap: 8, color: '#A39C8E' }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+          <div style={{ fontSize: 12.5, fontWeight: 700 }}>활성 루틴은 매일 자정에 오늘 할 일로 자동 등록돼요</div>
         </div>
       </div>
 
