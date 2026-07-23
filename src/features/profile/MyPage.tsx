@@ -34,7 +34,7 @@ function Ring({ rate, size = 104, sw = 10 }: { rate: number; size?: number; sw?:
 }
 
 export function MyPage() {
-  const nickname = useAppStore((s) => s.nickname)
+  const nickname = usePrefStore((s) => s.nickname)
   const setView = useAppStore((s) => s.setView)
   const searchOpen = useAppStore((s) => s.friendSearchOpen)
   const openFriendSearch = useAppStore((s) => s.openFriendSearch)

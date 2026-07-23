@@ -1,12 +1,12 @@
 import { create } from 'zustand'
 import { todayKey } from '@/lib/dates'
 import { logoutApi } from '@/api/authApi'
+import { usePrefStore } from './usePrefStore'
 
 type View = 'home' | 'todo' | 'calendar' | 'mypage' | 'meetup'
 
 interface AppState {
   authed: boolean
-  nickname: string // 회원가입 닉네임 (be 인증 붙으면 그 값으로 대체)
   sidebarCollapsed: boolean
   view: View
   selId: string // 할일·캘린더용 선택 날짜
@@ -56,7 +56,6 @@ let toastTimer: ReturnType<typeof setTimeout> | undefined
 
 export const useAppStore = create<AppState>((set) => ({
   authed: false,
-  nickname: '게스트', // 임시 폴백. TODO(be): 카카오 로그인 프로필 닉네임으로 대체(login에서 set)
   sidebarCollapsed: false,
   view: 'home',
   selId: todayKey(),
@@ -79,6 +78,7 @@ export const useAppStore = create<AppState>((set) => ({
   },
   logout: () => {
     logoutApi().catch(() => {}) // 쿠키 만료는 be에 위임, 실패해도 클라는 정리
+    usePrefStore.setState({ nickname: '' }) // 로컬 표시이름 정리(다른 계정 재로그인 대비). be가 /me nickname 주면 무의미
     set({ authed: false, aiOpen: false, weatherOpen: false, routineOpen: false, addOpen: false, mapOpen: false, meetupCreateOpen: false, friendSearchOpen: false, labelManagerOpen: false, view: 'home' })
   },
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
