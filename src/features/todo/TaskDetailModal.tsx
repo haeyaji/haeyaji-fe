@@ -31,10 +31,10 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
   const friendIds = useFriendStore((s) => s.friendIds)
   const assignments = useLabelStore((s) => s.assignments) // 라벨 변경 리렌더용
   const setTodoLabel = useLabelStore((s) => s.setTodoLabel)
-  const { createRoutine, applyRoutine } = useRoutineStore()
+  const createRoutine = useRoutineStore((s) => s.createRoutine)
   const toast = useAppStore((s) => s.toast)
   const [inviteRole, setInviteRole] = useState<ShareRole>('editor')
-  const [routineOpen, setRoutineOpen] = useState(false)
+  const [expand, setExpand] = useState(false)
   const [days, setDays] = useState<boolean[]>([true, true, true, true, true, false, false])
 
   // 스토어 최신 상태 반영 (수정 즉시 리렌더)
@@ -59,13 +59,19 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
 
   const labelId = assignments[taskId] ?? null
 
-  // 이 할 일을 반복 루틴으로 등록 (루틴 ↔ 투두: 라벨 상속해 이번 달 자동 생성)
+  const isRoutine = task.group === 'routine'
+  // 개별 → 루틴: 루틴 정의 생성(알람식, todo는 be 스케줄러가 생성) + 이 할 일을 루틴 소속으로
   const registerRoutine = () => {
     if (!days.some(Boolean)) { toast('반복 요일을 하나 이상 선택해주세요'); return }
-    const r = createRoutine({ title: task.title, time: task.time || '', days, labelId })
-    const cnt = applyRoutine(r)
-    toast(cnt > 0 ? `루틴으로 등록 · 이번 달 ${cnt}개 적용됨` : '루틴으로 등록했어요')
-    setRoutineOpen(false)
+    createRoutine({ title: task.title, time: task.time || '', days, labelId })
+    patchTask(dateKey, taskId, { group: 'routine' })
+    toast('루틴으로 등록했어요 · 매일 자정에 자동 생성돼요')
+    setExpand(false)
+  }
+  // 루틴 → 개별: 이 할 일만 일반 할 일로 전환 (루틴 정의는 그대로)
+  const convertToTodo = () => {
+    patchTask(dateKey, taskId, { group: 'personal' })
+    toast('일반 할 일로 바꿨어요')
   }
 
   return (
@@ -142,18 +148,21 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
           </div>
         )}
 
-        {/* 반복 — 이 할 일을 루틴으로 (루틴 ↔ 투두) */}
+        {/* 반복 — 루틴 (루틴 todo면 ON·끄면 개별로 / 개별이면 켜서 루틴 등록) */}
         <div style={{ marginTop: 22 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#8B8579' }}>루틴으로 반복</div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#A39C8E', marginTop: 3 }}>반복 요일로 등록하면 이번 달에 자동으로 할 일이 생겨요</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#8B8579' }}>{isRoutine ? '루틴 할 일' : '루틴으로 반복'}</div>
+                {isRoutine && <span style={{ fontSize: 11, fontWeight: 800, color: '#15795A', background: '#E4F2EC', padding: '2.5px 8px', borderRadius: 20 }}>반복 중</span>}
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#A39C8E', marginTop: 3 }}>{isRoutine ? '반복 루틴에서 온 할 일이에요 · 끄면 일반 할 일이 돼요' : '반복 요일로 등록하면 매일 자정에 자동 생성돼요'}</div>
             </div>
-            <div onClick={() => setRoutineOpen((v) => !v)} title="루틴 반복" style={{ width: 46, height: 27, borderRadius: 20, cursor: 'pointer', position: 'relative', background: routineOpen ? '#15795A' : '#CCD2DC', flexShrink: 0 }}>
-              <div style={{ position: 'absolute', top: 2.5, left: routineOpen ? 22 : 2, width: 22, height: 22, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'left .15s' }} />
+            <div onClick={() => (isRoutine ? convertToTodo() : setExpand((v) => !v))} title={isRoutine ? '일반 할 일로 바꾸기' : '루틴 설정'} style={{ width: 46, height: 27, borderRadius: 20, cursor: 'pointer', position: 'relative', background: isRoutine || expand ? '#15795A' : '#CCD2DC', flexShrink: 0 }}>
+              <div style={{ position: 'absolute', top: 2.5, left: isRoutine || expand ? 22 : 2, width: 22, height: 22, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'left .15s' }} />
             </div>
           </div>
-          {routineOpen && (
+          {!isRoutine && expand && (
             <div style={{ marginTop: 12, background: '#F9FAFB', border: '1px solid #EEF0F4', borderRadius: 14, padding: 15, animation: 'rb-fade .16s ease' }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#8B8579', marginBottom: 9 }}>반복 요일</div>
               <DayPicker days={days} onChange={setDays} />
