@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CloseIcon } from '@/lib/icons'
-import { normalizeTime } from '@/lib/dates'
+import { normalizeTime, todayKey } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
 import { useTodoStore } from '@/store/useTodoStore'
 import { useRoutineStore } from '@/store/useRoutineStore'
@@ -24,9 +24,9 @@ export function AddTaskModal() {
   const [labelId, setLabelId] = useState<string | null>(null)
   const [days, setDays] = useState<boolean[]>([true, true, true, true, true, false, false])
 
-  // 열릴 때 선택 날짜로 동기화
+  // 열릴 때 선택 날짜로 동기화 (과거면 오늘로 보정 — be는 과거 날짜 생성 불가)
   useEffect(() => {
-    if (addOpen) setDate(selId)
+    if (addOpen) setDate(selId < todayKey() ? todayKey() : selId)
   }, [addOpen, selId])
 
   if (!addOpen) return null
@@ -107,7 +107,7 @@ export function AddTaskModal() {
             {group !== 'routine' && (
               <div style={{ flex: 1 }}>
                 <div style={fieldLabel}>날짜</div>
-                <input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }} />
+                <input type="date" value={date} min={todayKey()} onChange={(e) => e.target.value && setDate(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }} />
               </div>
             )}
             <div style={{ flex: 1 }}>
