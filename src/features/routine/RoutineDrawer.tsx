@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { CloseIcon, RoutineIcon, TrashIcon } from '@/lib/icons'
 import { DOW } from '@/lib/mockData'
 import { useAppStore } from '@/store/useAppStore'
 import { useRoutineStore } from '@/store/useRoutineStore'
+import { RoutineFormModal } from './RoutineFormModal'
 import type { Routine } from '@/types'
 
 function daysLabel(days: boolean[]): string {
@@ -16,7 +18,8 @@ function daysLabel(days: boolean[]): string {
 
 export function RoutineDrawer() {
   const { routineOpen, closeRoutine } = useAppStore()
-  const { routines, toggleActive, toggleDay, setPreset, deleteRoutine, addRoutine, batchApply } = useRoutineStore()
+  const { routines, toggleActive, toggleDay, setPreset, deleteRoutine, batchApply } = useRoutineStore()
+  const [form, setForm] = useState<Routine | 'new' | null>(null)
   if (!routineOpen) return null
 
   return (
@@ -50,9 +53,9 @@ export function RoutineDrawer() {
 
         <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           {routines.map((r) => (
-            <RoutineCard key={r.id} r={r} onToggleActive={toggleActive} onToggleDay={toggleDay} onSetPreset={setPreset} onDelete={deleteRoutine} />
+            <RoutineCard key={r.id} r={r} onToggleActive={toggleActive} onToggleDay={toggleDay} onSetPreset={setPreset} onDelete={deleteRoutine} onEdit={() => setForm(r)} />
           ))}
-          <div onClick={addRoutine} className="hbtn" style={{ border: '1.5px dashed #CCD2DC', borderRadius: 18, padding: 14, textAlign: 'center', fontSize: 13.5, fontWeight: 700, color: '#A39C8E', cursor: 'pointer' }}>
+          <div onClick={() => setForm('new')} className="hbtn" style={{ border: '1.5px dashed #CCD2DC', borderRadius: 18, padding: 14, textAlign: 'center', fontSize: 13.5, fontWeight: 700, color: '#A39C8E', cursor: 'pointer' }}>
             + 새 루틴 추가
           </div>
         </div>
@@ -63,6 +66,8 @@ export function RoutineDrawer() {
           </div>
         </div>
       </div>
+
+      {form && <RoutineFormModal routine={form === 'new' ? null : form} onClose={() => setForm(null)} />}
     </>
   )
 }
@@ -73,12 +78,14 @@ function RoutineCard({
   onToggleDay,
   onSetPreset,
   onDelete,
+  onEdit,
 }: {
   r: Routine
   onToggleActive: (id: string) => void
   onToggleDay: (id: string, i: number) => void
   onSetPreset: (id: string, kind: 'every' | 'week' | 'weekend') => void
   onDelete: (id: string) => void
+  onEdit: () => void
 }) {
   const isEvery = r.days.filter(Boolean).length === 7
   const isWeek = r.days.slice(0, 5).every(Boolean) && !r.days[5] && !r.days[6]
@@ -95,7 +102,7 @@ function RoutineCard({
         <div style={{ width: 42, height: 42, borderRadius: 13, background: '#E4F2EC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <span style={{ width: 22, height: 22, display: 'inline-flex' }}><RoutineIcon cat={r.cat} c="#15795A" /></span>
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div onClick={onEdit} className="hbtn" title="루틴 수정" style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
           <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-.3px' }}>{r.title}</div>
           <div style={{ fontSize: 12.5, fontWeight: 600, color: '#A39C8E', marginTop: 1 }}>{r.time} · {daysLabel(r.days)}</div>
         </div>

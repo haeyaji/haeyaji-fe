@@ -10,6 +10,7 @@ import { useWeatherStore } from '@/store/useWeatherStore'
 import { useLocationStore } from '@/store/useLocationStore'
 import { useDayTasks } from '@/features/todo/useDayTasks'
 import { TaskRow, EmptyTasks } from '@/features/todo/TaskRow'
+import { TaskDetailModal } from '@/features/todo/TaskDetailModal'
 import type { Task, WeatherCond } from '@/types'
 
 function evColor(t: Task): { bg: string; color: string } {
@@ -23,6 +24,7 @@ export function CalendarPage() {
   const setMapSel = useMapStore((s) => s.setMapSel)
   const tasksByDate = useTodoStore((s) => s.tasksByDate)
   const { tasks, total, frac } = useDayTasks()
+  const [detail, setDetail] = useState<Task | null>(null)
 
   // 실제 예보(오늘~+7일) 미리 로드 — 캘린더 셀 아이콘은 실데이터 있는 날만 표시
   const byDate = useWeatherStore((s) => s.byDate)
@@ -184,7 +186,7 @@ export function CalendarPage() {
               </div>
               <div style={{ marginTop: 8, flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', marginRight: -8, paddingRight: 8 }}>
                 {tasks.map((t) => (
-                  <TaskRow key={t.id} task={t} variant="aside" />
+                  <TaskRow key={t.id} task={t} variant="aside" onOpen={setDetail} />
                 ))}
                 {total === 0 && <EmptyTasks />}
               </div>
@@ -207,6 +209,8 @@ export function CalendarPage() {
           </div>
         </div>
       </div>
+
+      {detail && <TaskDetailModal dateKey={selId} taskId={detail.id} onClose={() => setDetail(null)} />}
     </div>
   )
 }
