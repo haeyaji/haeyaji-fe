@@ -1,9 +1,20 @@
 // 백엔드(be) DTO 대응 타입. nlp는 snake_case로 내보내지만 be가 camelCase로
 // 정규화해 내려주는 것을 전제로 한다. (be 구현 시 확정)
 
-export type Intent = 'recommend' | 'info' | 'chat'
+export type Intent = 'recommend' | 'recommend_category' | 'info' | 'chat'
 
 export type Category = '야외' | '실내' | '휴식' | '생산성' | '사람만나기' | '맛집/카페'
+
+/** 추천 카테고리 선택(choice) 10종 코드 — 설문 6종 Category와 별개 taxonomy. */
+export type RecCategory =
+  | 'CAFE_DESSERT' | 'RESTAURANT' | 'NATURE_WALK' | 'SPORTS_ACTIVITY' | 'CULTURE_EXHIBIT'
+  | 'INDOOR_PLAY' | 'REST_HEALING' | 'STUDY_WORK' | 'SOCIAL' | 'SHOPPING'
+
+/** nlp 1단계 응답의 카테고리 후보 (code + 선택 시 be로 넘길 세부 키워드). */
+export interface RecCategoryOption {
+  code: RecCategory
+  keywords?: string[]
+}
 
 /** nlp TodoItem (be 경유). 지도 마커용 좌표/거리 포함. */
 export interface RecommendedTodo {
@@ -23,6 +34,7 @@ export interface MessageResponse {
   reply: string
   todos: RecommendedTodo[]
   options: string[] // 좁히기 칩 후보 (막연한 요청일 때 nlp가 내려줌, 기본 [])
+  categories: RecCategoryOption[] // 1단계 카테고리 후보 (intent recommend_category일 때, 없으면 [])
 }
 
 /** nlp history 턴 (멀티턴 좁히기 맥락) */
@@ -126,6 +138,7 @@ export interface ChatMessage {
   text: string
   todos?: RecommendedTodo[] // nlp 추천 결과 (assistant 메시지)
   options?: string[] // 좁히기 칩 (assistant 메시지)
+  categories?: RecCategoryOption[] // 1단계 카테고리 선택 칩 (assistant 메시지)
 }
 
 export interface HourlyForecast {

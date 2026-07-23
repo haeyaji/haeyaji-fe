@@ -1,6 +1,6 @@
 // 추천 게이트웨이. be 완성 전까지는 nlp(:8000/api/message) 직결로 테스트.
 // (원래 흐름은 fe→be→nlp. be 붙으면 VITE_API_BASE만 be 주소로 바꾸면 됨)
-import type { ChatTurn, MessageResponse, RecommendedTodo } from '@/types'
+import type { ChatTurn, MessageResponse, RecCategory, RecCategoryOption, RecommendedTodo } from '@/types'
 import { gateway } from './client'
 
 export interface RecommendRequest {
@@ -12,6 +12,19 @@ export interface RecommendRequest {
   timeOfDay?: string // 예: "오후 2시"
   weekday?: string // 예: "토요일"
   history?: ChatTurn[] // 최근 대화 턴 (멀티턴 좁히기 맥락)
+  category?: RecCategory // 2단계 호출: 1단계에서 유저가 고른 카테고리 code
+}
+
+// nlp categories[] 정규화 — 문자열("CAFE_DESSERT") 또는 객체({code, keywords}) 어느 쪽이어도 안전
+function normalizeCategory(c: unknown): RecCategoryOption | null {
+  if (typeof c === 'string') return { code: c as RecCategory }
+  if (c && typeof c === 'object') {
+    const o = c as Record<string, unknown>
+    const code = (o.code ?? o.category) as RecCategory | undefined
+    if (!code) return null
+    return { code, keywords: Array.isArray(o.keywords) ? (o.keywords as string[]) : undefined }
+  }
+  return null
 }
 
 // nlp 응답이 camelCase(CamelModel) 또는 snake_case 어느 쪽이어도 안전하게 매핑
@@ -33,10 +46,14 @@ function normalizeTodo(t: Record<string, unknown>): RecommendedTodo {
 export async function sendMessage(body: RecommendRequest): Promise<MessageResponse> {
   const { data: res } = await gateway.post<Record<string, unknown>>('/message', body)
   const todos = Array.isArray(res.todos) ? (res.todos as Record<string, unknown>[]).map(normalizeTodo) : []
+  const categories = Array.isArray(res.categories)
+    ? (res.categories as unknown[]).map(normalizeCategory).filter((c): c is RecCategoryOption => !!c)
+    : []
   return {
     intent: res.intent as MessageResponse['intent'],
     reply: (res.reply as string) ?? '',
     todos,
     options: Array.isArray(res.options) ? (res.options as string[]) : [],
+    categories,
   }
 }
