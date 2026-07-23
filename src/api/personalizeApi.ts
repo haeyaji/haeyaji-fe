@@ -28,9 +28,10 @@ export async function getPreferences(): Promise<PreferenceData> {
   return res.data.data
 }
 
-/** 구멍2 — 추천 카드 부정 피드백. category는 그 카드의 RecommendedTodo.category.
- *  (긍정 신호는 별도 엔드포인트가 아니라 '일정에 추가' 시 todo 바디의 category로 be가 학습) */
-export type FeedbackSignal = 'IGNORED'
+/** 구멍2 — 추천 카드 피드백. category는 그 카드의 RecommendedTodo.category 그대로.
+ *  SELECTED='일정에 추가'(강한 긍정 +2) / ADD=장소 약한 긍정(+1) / IGNORED=무시(−0.5).
+ *  todo.category는 ERD에서 제거됨(label_id 대체) → 긍정 신호는 todo 저장과 분리해 이 엔드포인트로 명시 전송. */
+export type FeedbackSignal = 'SELECTED' | 'ADD' | 'IGNORED'
 
 export async function sendRecommendFeedback(category: Category, signal: FeedbackSignal): Promise<void> {
   await be.post('/recommend/feedback', { category, signal })
