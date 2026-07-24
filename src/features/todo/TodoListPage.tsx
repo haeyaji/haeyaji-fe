@@ -1,9 +1,9 @@
 // 할 일 — 사이드바 독립 메뉴. 전체 할 일을 섹션(내 할일·루틴·공유 중)으로 모아 보고,
 // 행을 눌러 공용 상세(TaskDetailModal)에서 편집·공유한다. 핀 고정·드래그 수동정렬 지원.
 // be todo 계약: pinned(최상단 고정) · sort_order(드래그 순서) · TODO/DONE 2상태.
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { PlusIcon } from '@/lib/icons'
-import { todayKey } from '@/lib/dates'
+import { todayKey, addDays, dateFullLabel } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
 import { useTodoStore, statusOf } from '@/store/useTodoStore'
 import { userById } from '@/store/useFriendStore'
@@ -31,6 +31,8 @@ interface Row {
 }
 const keyOf = (r: Row) => `${r.dateKey}-${r.task.id}`
 
+const navBtnStyle: React.CSSProperties = { width: 32, height: 32, borderRadius: 10, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }
+
 export function TodoListPage() {
   const tasksByDate = useTodoStore((s) => s.tasksByDate)
   const setStatus = useTodoStore((s) => s.setStatus)
@@ -39,6 +41,9 @@ export function TodoListPage() {
   const openAdd = useAppStore((s) => s.openAdd)
   const openLabelManager = useAppStore((s) => s.openLabelManager)
   const openRoutine = useAppStore((s) => s.openRoutine)
+  const selId = useAppStore((s) => s.selId)
+  const setSelId = useAppStore((s) => s.setSelId)
+  useEffect(() => { void useTodoStore.getState().loadDate(selId) }, [selId]) // 선택 날짜 할일 로드
   const labels = useLabelStore((s) => s.labels)
   const assignments = useLabelStore((s) => s.assignments)
   const routineDefs = useRoutineStore((s) => s.routines)
@@ -49,7 +54,8 @@ export function TodoListPage() {
   const [filterLabel, setFilterLabel] = useState<string | null>(null)
   const [dragKey, setDragKey] = useState<string | null>(null)
 
-  const all: Row[] = Object.keys(tasksByDate).flatMap((dateKey) => (tasksByDate[dateKey] ?? []).map((task) => ({ dateKey, task })))
+  // 선택 날짜(selId)의 할 일만 관리 — 날짜별로 보고 앞뒤로 이동
+  const all: Row[] = (tasksByDate[selId] ?? []).map((task) => ({ dateKey: selId, task }))
   const q = query.trim().toLowerCase()
   const visible = all
     .filter(({ task }) => !q || task.title.toLowerCase().includes(q))
@@ -67,8 +73,8 @@ export function TodoListPage() {
   const mine = sortRows(visible.filter(({ task }) => (task.participants?.length ?? 0) === 0))
 
   const total = all.length
-  const todayCount = all.filter(({ dateKey }) => dateKey === todayKey()).length
   const doneCount = all.filter(({ task }) => statusOf(task) === 'done').length
+  const isToday = selId === todayKey()
 
   // 드래그: 같은 섹션 안에서 dragKey를 targetKey 앞으로 이동 → sort_order 재부여
   const reorderWithin = (rows: Row[], targetKey: string) => {
@@ -91,8 +97,17 @@ export function TodoListPage() {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
           <div>
             <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-.6px' }}>할 일</div>
-            <div style={{ fontSize: 14.5, fontWeight: 600, color: MC.muted, marginTop: 5 }}>
-              오늘 {todayCount} · 전체 {total} · 완료 {doneCount}
+            {/* 날짜 네비게이션 — 선택 날짜의 할 일을 앞뒤로 이동하며 관리 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 9, flexWrap: 'wrap' }}>
+              <div onClick={() => setSelId(addDays(selId, -1))} className="hbtn" title="전날" style={navBtnStyle}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
+              </div>
+              <div style={{ fontSize: 16.5, fontWeight: 800, minWidth: 128, textAlign: 'center' }}>{dateFullLabel(selId)}</div>
+              <div onClick={() => setSelId(addDays(selId, 1))} className="hbtn" title="다음날" style={navBtnStyle}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+              </div>
+              {!isToday && <div onClick={() => setSelId(todayKey())} className="hbtn" style={{ fontSize: 13, fontWeight: 800, color: MC.tintText, background: MC.tintBg, borderRadius: 10, padding: '7px 12px', cursor: 'pointer' }}>오늘</div>}
+              <span style={{ fontSize: 13.5, fontWeight: 700, color: MC.muted, marginLeft: 4 }}>전체 {total} · 완료 {doneCount}</span>
             </div>
           </div>
           <div onClick={openAdd} className="lift" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: MC.ink, color: '#fff', fontSize: 15, fontWeight: 700, padding: '13px 20px', borderRadius: 15, cursor: 'pointer' }}>
