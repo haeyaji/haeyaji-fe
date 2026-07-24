@@ -97,16 +97,16 @@ export function TodoListPage() {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
           <div>
             <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-.6px' }}>할 일</div>
-            {/* 날짜 네비게이션 — 선택 날짜의 할 일을 앞뒤로 이동하며 관리 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 9, flexWrap: 'wrap' }}>
+            {/* 날짜 네비게이션 — 선택 날짜의 할 일을 앞뒤로 이동하며 관리 (날짜 크게·가운데) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 11 }}>
               <div onClick={() => setSelId(addDays(selId, -1))} className="hbtn" title="전날" style={navBtnStyle}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
               </div>
-              <div style={{ fontSize: 16.5, fontWeight: 800, minWidth: 128, textAlign: 'center' }}>{dateFullLabel(selId)}</div>
+              <div style={{ fontSize: 25, fontWeight: 800, letterSpacing: '-.4px', minWidth: 190, textAlign: 'center' }}>{dateFullLabel(selId)}</div>
               <div onClick={() => setSelId(addDays(selId, 1))} className="hbtn" title="다음날" style={navBtnStyle}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
               </div>
-              {!isToday && <div onClick={() => setSelId(todayKey())} className="hbtn" style={{ fontSize: 13, fontWeight: 800, color: MC.tintText, background: MC.tintBg, borderRadius: 10, padding: '7px 12px', cursor: 'pointer' }}>오늘</div>}
+              {!isToday && <div onClick={() => setSelId(todayKey())} className="hbtn" style={{ fontSize: 13, fontWeight: 800, color: MC.tintText, background: MC.tintBg, borderRadius: 10, padding: '8px 13px', cursor: 'pointer' }}>오늘</div>}
               <span style={{ fontSize: 13.5, fontWeight: 700, color: MC.muted, marginLeft: 4 }}>전체 {total} · 완료 {doneCount}</span>
             </div>
           </div>
