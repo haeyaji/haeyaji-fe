@@ -105,6 +105,20 @@ function failCreate(dateKey: string, tempId: string, err?: unknown) {
 // 제목 입력 디바운스 PATCH (키 입력마다 저장 방지)
 const titleTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
+// 토글/핀/상태 광클 시 동시 PATCH가 be 동시성 오류(500)·CSRF 레이스를 유발 → per-id 디바운스로
+// 최종 상태만 1번 전송(직렬화). 낙관적 UI는 즉시 반영되므로 체감은 그대로.
+const writeTimers = new Map<string, ReturnType<typeof setTimeout>>()
+function queueWrite(dateKey: string, id: string) {
+  if (isTemp(id)) return
+  const prev = writeTimers.get(id)
+  if (prev) clearTimeout(prev)
+  writeTimers.set(id, setTimeout(() => {
+    writeTimers.delete(id)
+    const cur = find(dateKey, id)
+    if (cur && !isTemp(cur.id)) updateTodo(cur).catch(() => rollback(dateKey))
+  }, 250))
+}
+
 export const useTodoStore = create<TodoState>((set, get) => ({
   tasksByDate: {},
   loadDate: async (dateKey) => {
@@ -123,7 +137,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     const done = !cur.done
     const updated: Task = { ...cur, done, status: done ? 'done' : 'todo' }
     set((s) => ({ tasksByDate: mapTask(s.tasksByDate, dateKey, id, () => updated) }))
-    if (!isTemp(id)) updateTodo(updated).catch(() => rollback(dateKey))
+    queueWrite(dateKey, id)
   },
   deleteTask: (id) => {
     const dateKey = sel()
@@ -160,7 +174,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     if (!cur) return
     const updated: Task = { ...cur, status, done: status === 'done' }
     set((s) => ({ tasksByDate: mapTask(s.tasksByDate, dateKey, id, () => updated) }))
-    if (!isTemp(id)) updateTodo(updated).catch(() => rollback(dateKey))
+    queueWrite(dateKey, id)
   },
   updateTitle: (dateKey, id, title) => {
     set((s) => ({ tasksByDate: mapTask(s.tasksByDate, dateKey, id, (t) => ({ ...t, title })) }))
@@ -185,7 +199,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     // participants(공유)는 별도 todo_participant 기능 — 이 todo CRUD로는 저장 안 함
     const keys = Object.keys(patch)
     if (keys.length === 1 && keys[0] === 'participants') return
-    if (!isTemp(id)) updateTodo(updated).catch(() => rollback(dateKey))
+    queueWrite(dateKey, id)
   },
   setTaskLabel: (id, labelId) => {
     // 라벨 할당은 날짜 무관 — 전체 날짜에서 해당 todo 찾아 labelId 갱신 + be PATCH
@@ -213,7 +227,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     if (!cur) return
     const updated: Task = { ...cur, pinned: !cur.pinned }
     set((s) => ({ tasksByDate: mapTask(s.tasksByDate, dateKey, id, () => updated) }))
-    if (!isTemp(id)) updateTodo(updated).catch(() => rollback(dateKey))
+    queueWrite(dateKey, id)
   },
   reorderTasks: (ordered) => {
     const idx = new Map(ordered.map((r, i) => [`${r.dateKey}:${r.id}`, i]))
