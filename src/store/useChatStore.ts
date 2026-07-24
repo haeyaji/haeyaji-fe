@@ -26,6 +26,7 @@ interface ChatState {
 type SetFn = (partial: (s: ChatState) => Partial<ChatState>) => void
 type GetFn = () => ChatState
 
+const DEFAULT_RADIUS_M = 2000 // 근처(도보권) 기본 반경 2km
 const DOW_KO = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일']
 
 // 현재 시각 → nlp 컨텍스트 ("오후 2시", "토요일")
@@ -46,7 +47,7 @@ async function run(set: SetFn, get: GetFn, text: string, ctx: SendCtx, category?
   set((s) => ({ chat: [...s.chat, { role: 'user', text }], loading: true }))
   try {
     const mood = usePrefStore.getState().vibe ?? undefined // 온보딩 설문 vibe → 추천 분위기 힌트
-    const res = await sendMessage({ text, lat: ctx.lat, lng: ctx.lng, weather: ctx.weather, mood, ...timeContext(), history, selectedCategory: category })
+    const res = await sendMessage({ text, lat: ctx.lat, lng: ctx.lng, weather: ctx.weather, mood, ...timeContext(), history, selectedCategory: category, radiusM: DEFAULT_RADIUS_M })
     set((s) => ({
       chat: [...s.chat, { role: 'assistant', text: res.reply, todos: res.todos, options: res.options, categories: res.categories }],
       loading: false,
