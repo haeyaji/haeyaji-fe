@@ -46,6 +46,8 @@ export function MyPage() {
   const loadMeetings = useMeetupStore((s) => s.loadList)
   const byDate = useWeatherStore((s) => s.byDate)
   useEffect(() => { void loadMeetings() }, [loadMeetings])
+  // 최근 7일 할 일 로드 (완료율 링이 조각나지 않게 한 번에)
+  useEffect(() => { last7Days().forEach((k) => void useTodoStore.getState().loadDate(k)) }, [])
 
   const [detailUser, setDetailUser] = useState<AppUser | null>(null)
 

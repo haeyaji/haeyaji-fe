@@ -1,4 +1,5 @@
 // 주간 달성률 (핸드오프 §5.6) — 오늘 기준 최근 7일 롤링, 실제 할 일 완료 이력 연결.
+import { useEffect } from 'react'
 import { dowLabel, last7Days, todayKey } from '@/lib/dates'
 import { useTodoStore } from '@/store/useTodoStore'
 
@@ -6,6 +7,11 @@ export function AdherenceCard() {
   const tasksByDate = useTodoStore((s) => s.tasksByDate)
   const T = todayKey()
   const days = last7Days()
+
+  // 최근 7일 할 일을 한 번에 로드 (부팅은 선택날짜+오늘만 → 달성률이 조각나던 문제 해결)
+  useEffect(() => {
+    last7Days().forEach((k) => void useTodoStore.getState().loadDate(k))
+  }, [])
 
   const rows = days.map((k) => {
     const list = tasksByDate[k]
