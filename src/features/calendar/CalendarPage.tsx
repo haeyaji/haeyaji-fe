@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { CategoryIcon, PlusIcon, WeatherIcon } from '@/lib/icons'
 import { PLACES } from '@/lib/mockData'
-import { catGrad, useDayWeather, recsFor } from '@/lib/weather'
-import { dateShortLabel, fmtKey, next7Days, parseKey, todayKey } from '@/lib/dates'
+import { catGrad, useDayWeather, recsFor, isLightInk } from '@/lib/weather'
+import { addDays, dateShortLabel, fmtKey, parseKey, todayKey } from '@/lib/dates'
+import { WeatherScene } from '@/features/weather/WeatherScene'
 import { useAppStore } from '@/store/useAppStore'
 import { useMapStore } from '@/store/useMapStore'
 import { useTodoStore } from '@/store/useTodoStore'
@@ -26,15 +27,17 @@ export function CalendarPage() {
   const { tasks, total, frac } = useDayTasks()
   const [detail, setDetail] = useState<Task | null>(null)
 
-  // 실제 예보(오늘~+7일) 미리 로드 — 캘린더 셀 아이콘은 실데이터 있는 날만 표시
+  // 실제 예보 최대한 로드 — 단기+중기(오늘~+10일). 캘린더 셀 아이콘은 실데이터 있는 날만 표시
   const byDate = useWeatherStore((s) => s.byDate)
   const lat = useLocationStore((s) => s.lat)
   const lng = useLocationStore((s) => s.lng)
+  const region = useLocationStore((s) => s.region) || '현재 위치'
   useEffect(() => {
-    next7Days().forEach((k) => useWeatherStore.getState().loadDay(lat, lng, k))
+    for (let i = 0; i <= 10; i++) void useWeatherStore.getState().loadDay(lat, lng, addDays(todayKey(), i))
   }, [lat, lng])
 
   const w = useDayWeather(selId)
+  const tileHourly = w.hourly.slice(0, 5)
   const dateShort = dateShortLabel(selId)
   const recs = recsFor(w.cond)
   const top = PLACES.find((p) => p.id === recs[0].id)!
@@ -54,6 +57,12 @@ export function CalendarPage() {
   for (let d = 1; d <= lastDay; d++) monthKeys.push(fmtKey(new Date(ym.y, ym.m, d)))
   const monthTotal = monthKeys.reduce((n, k) => n + (tasksByDate[k]?.length ?? 0), 0)
   const calSummary = `이번 달 일정 ${monthTotal}개 · ${dateShort} 선택됨`
+
+  // 표시 중인 달의 할 일을 be에서 로드 (셀 이벤트·개수 실데이터)
+  useEffect(() => {
+    monthKeys.forEach((k) => void useTodoStore.getState().loadDate(k))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ym.y, ym.m])
 
   const weekHdr = ['일', '월', '화', '수', '목', '금', '토'].map((label, i) => ({ label, color: i === 0 ? '#C2453B' : i === 6 ? '#3F82C2' : '#A39C8E' }))
 
@@ -163,19 +172,30 @@ export function CalendarPage() {
 
           {/* aside */}
           <div className="cal-aside" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ borderRadius: 24, overflow: 'hidden', position: 'relative', background: w.sky, color: w.ink, padding: '22px 24px' }}>
-              <div style={{ position: 'absolute', top: -40, right: -26, width: 150, height: 150, borderRadius: '50%', background: w.glow, filter: 'blur(26px)' }} />
-              <div style={{ position: 'relative' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, opacity: 0.72 }}>{dateShort}</div>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, marginTop: 8 }}>
-                  <div style={{ width: 46, height: 46 }}><WeatherIcon cond={w.cond} c={w.iconC} /></div>
-                  <div style={{ fontSize: 54, fontWeight: 300, letterSpacing: '-2.5px', lineHeight: 0.8 }}>{w.temp}°</div>
-                  <div style={{ paddingBottom: 6 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700 }}>{w.condKo}</div>
-                    <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.7 }}>최고 {w.hi}° / 최저 {w.lo}°</div>
+            {/* 메인과 동일한 애니메이션 날씨 씬 (움직이는 배경 + LOCAL FORECAST 오버레이) */}
+            <div onClick={openWeather} className="lift" style={{ borderRadius: 24, overflow: 'hidden', position: 'relative', cursor: 'pointer', background: w.sky, backgroundClip: 'padding-box', border: '1px solid rgba(24,21,15,.12)' }}>
+              <WeatherScene cond={w.cond} tod={w.tod} ink={w.ink} />
+              <div style={{ position: 'relative', padding: '18px 20px', color: w.ink, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1.5px', opacity: 0.6 }}>LOCAL FORECAST</div>
+                <div style={{ fontSize: 20, fontWeight: 800, marginTop: 3 }}>{region}</div>
+                <div style={{ fontSize: 12.5, fontWeight: 700, opacity: 0.72, marginTop: 2 }}>{dateShort}</div>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, marginTop: 14 }}>
+                  <div style={{ fontSize: 54, fontWeight: 300, letterSpacing: '-2.5px', lineHeight: 0.82 }}>{w.temp}°</div>
+                  <div style={{ paddingBottom: 4 }}>
+                    <div style={{ fontSize: 16, fontWeight: 700 }}>{w.condKo}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.7 }}>최고 {w.hi}° / 최저 {w.lo}°</div>
                   </div>
                 </div>
-                <div onClick={openWeather} style={{ marginTop: 15, fontSize: 12.5, fontWeight: 700, opacity: 0.85, cursor: 'pointer' }}>상세 날씨 →</div>
+                <div style={{ display: 'flex', gap: 6, marginTop: 14 }}>
+                  {tileHourly.map((h, i) => (
+                    <div key={i} style={{ flex: 1, background: isLightInk(w.ink) ? 'rgba(10,16,28,.42)' : 'rgba(255,255,255,.5)', borderRadius: 10, padding: '7px 0', textAlign: 'center' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.7 }}>{h.label}</div>
+                      <div style={{ width: 18, height: 18, margin: '3px auto' }}><WeatherIcon cond={w.cond} c={w.iconC} /></div>
+                      <div style={{ fontSize: 14, fontWeight: 700 }}>{h.temp}°</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: 13, fontSize: 12.5, fontWeight: 700, opacity: 0.85 }}>상세 날씨 →</div>
               </div>
             </div>
 

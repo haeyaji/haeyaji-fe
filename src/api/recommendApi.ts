@@ -1,7 +1,7 @@
-// 추천 게이트웨이. be 완성 전까지는 nlp(:8000/api/message) 직결로 테스트.
-// (원래 흐름은 fe→be→nlp. be 붙으면 VITE_API_BASE만 be 주소로 바꾸면 됨)
+// 추천 게이트웨이 — be POST /message. be가 로그인 회원의 개인화 가중치(WeightService)를 얹어
+// nlp로 위임하고, ApiResponse<NlpMessageResponse>로 감싸 반환한다(→ data.data 언랩).
 import type { ChatTurn, MessageResponse, RecCategory, RecCategoryOption, RecommendedTodo } from '@/types'
-import { gateway } from './client'
+import { be } from './client'
 
 export interface RecommendRequest {
   text: string
@@ -50,7 +50,8 @@ function normalizeTodo(t: Record<string, unknown>): RecommendedTodo {
 }
 
 export async function sendMessage(body: RecommendRequest): Promise<MessageResponse> {
-  const { data: res } = await gateway.post<Record<string, unknown>>('/message', body)
+  const { data: env } = await be.post<{ data: Record<string, unknown> }>('/message', body)
+  const res = env.data ?? {}
   const todos = Array.isArray(res.todos) ? (res.todos as Record<string, unknown>[]).map(normalizeTodo) : []
   const categories = Array.isArray(res.categories)
     ? (res.categories as unknown[]).map(normalizeCategory).filter((c): c is RecCategoryOption => !!c)
