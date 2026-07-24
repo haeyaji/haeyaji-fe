@@ -1,12 +1,11 @@
 import { PlusIcon, WeatherIcon, CategoryIcon, SparkleIcon } from '@/lib/icons'
 import { useEffect, useState } from 'react'
-import { PLACES } from '@/lib/mockData'
-import { aiHint, catGrad, useDayWeather, recsFor, pseudoCond, isLightInk } from '@/lib/weather'
+import { aiHint, catGrad, useDayWeather, pseudoCond, isLightInk } from '@/lib/weather'
+import { useHomeRecStore } from '@/store/useHomeRecStore'
 import { addDays, dateFullLabel, dateShortLabel, dowLabel, greeting, next7Days, todayKey } from '@/lib/dates'
 import { useWeatherStore } from '@/store/useWeatherStore'
 import { useAppStore } from '@/store/useAppStore'
 import { usePrefStore } from '@/store/usePrefStore'
-import { useMapStore } from '@/store/useMapStore'
 import { useLocationStore } from '@/store/useLocationStore'
 import { useDayTasks } from '@/features/todo/useDayTasks'
 import { TaskRow, EmptyTasks } from '@/features/todo/TaskRow'
@@ -20,7 +19,6 @@ import { AdherenceCard } from './AdherenceCard'
 export function HomeDashboard() {
   const { selId, setSelId, weatherSelId, setWeatherSelId, openWeather, openAdd, openAi, openMap } = useAppStore()
   const nickname = usePrefStore((s) => s.nickname)
-  const setMapSel = useMapStore((s) => s.setMapSel)
   const { tasks, done, total, progPct, frac } = useDayTasks()
   const [detail, setDetail] = useState<Task | null>(null)
 
@@ -46,13 +44,17 @@ export function HomeDashboard() {
         : dateShortLabel(selId).replace(/ \(.\)$/, '')
   const tileHourly = w.hourly.slice(0, 5)
 
-  const recs = recsFor(w.cond)
-  const top = PLACES.find((p) => p.id === recs[0].id)!
-  const recName = top.name.replace(' (페리 빌딩)', '')
-  const recInk = top.cat === 'culture' ? '#241F33' : '#1E3318'
+  // 개인화 추천(be /message) + 실검색(be /places/search) → 대표 장소 1건. 위치·날씨 확정 시 1회.
+  const rec = useHomeRecStore((s) => s.rec)
+  const recLoading = useHomeRecStore((s) => s.loading)
+  useEffect(() => {
+    if (lat && lng) void useHomeRecStore.getState().load(lat, lng, w.condKo ?? '')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lat, lng])
+  const recCat = rec?.cat ?? 'cafe'
+  const recInk = recCat === 'culture' ? '#241F33' : '#1E3318'
 
   const openRecMap = () => {
-    setMapSel(top.id)
     openMap()
   }
   // 주간 예보 클릭 = 날씨만 전환 (할일·캘린더는 그대로)
@@ -170,18 +172,27 @@ export function HomeDashboard() {
             <div style={{ position: 'relative', fontSize: 13.5, fontWeight: 800, color: '#6FE6B8' }}>대화 열기 →</div>
           </div>
 
-          {/* RECOMMENDATION 1x1 */}
+          {/* RECOMMENDATION 1x1 — 개인화 추천 + 실검색 대표 장소 */}
           <div onClick={openRecMap} className="tile lift" style={{ gridColumn: '4 / 5', gridRow: '5 / 6', minHeight: 150, padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}>
-            <div style={{ position: 'absolute', inset: 0, background: catGrad(top.cat) }} />
+            <div style={{ position: 'absolute', inset: 0, background: catGrad(recCat) }} />
             <div style={{ position: 'relative', padding: 18, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', color: recInk }}>
-              <div style={{ position: 'absolute', top: 14, left: 14, fontSize: 10.5, fontWeight: 800, background: 'rgba(255,255,255,.85)', color: '#1E3318', padding: '5px 10px', borderRadius: 20 }}>적합도 {recs[0].fit}%</div>
+              <div style={{ position: 'absolute', top: 14, left: 14, fontSize: 10.5, fontWeight: 800, background: 'rgba(255,255,255,.85)', color: '#1E3318', padding: '5px 10px', borderRadius: 20 }}>{rec ? rec.catLabel : '추천'}</div>
               <div style={{ position: 'absolute', top: 12, right: 12, width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={{ width: 16, height: 16, display: 'inline-flex' }}>
-                  <CategoryIcon cat={top.cat} c="#17150F" />
+                  <CategoryIcon cat={recCat} c="#17150F" />
                 </span>
               </div>
-              <div style={{ fontSize: 16, fontWeight: 800 }}>{recName}</div>
-              <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.72, marginTop: 2 }}>{top.type} · {top.dist}</div>
+              {rec ? (
+                <>
+                  <div style={{ fontSize: 16, fontWeight: 800 }}>{rec.name}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.72, marginTop: 2 }}>{[rec.typeLabel, rec.dist].filter(Boolean).join(' · ')}</div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: 15, fontWeight: 800 }}>{recLoading ? '추천 찾는 중…' : '추천 준비 중'}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.72, marginTop: 2 }}>취향·날씨 기반 장소</div>
+                </>
+              )}
             </div>
           </div>
           {/* 월간 캘린더 (신규) */}

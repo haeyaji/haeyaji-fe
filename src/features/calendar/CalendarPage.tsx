@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CategoryIcon, PlusIcon, WeatherIcon } from '@/lib/icons'
-import { PLACES } from '@/lib/mockData'
-import { catGrad, useDayWeather, recsFor, isLightInk } from '@/lib/weather'
+import { catGrad, useDayWeather, isLightInk } from '@/lib/weather'
+import { useHomeRecStore } from '@/store/useHomeRecStore'
 import { addDays, dateShortLabel, fmtKey, parseKey, todayKey } from '@/lib/dates'
 import { WeatherScene } from '@/features/weather/WeatherScene'
 import { useAppStore } from '@/store/useAppStore'
@@ -39,8 +39,12 @@ export function CalendarPage() {
   const w = useDayWeather(selId)
   const tileHourly = w.hourly.slice(0, 5)
   const dateShort = dateShortLabel(selId)
-  const recs = recsFor(w.cond)
-  const top = PLACES.find((p) => p.id === recs[0].id)!
+  const rec = useHomeRecStore((s) => s.rec) // 개인화 추천(HomeDashboard와 공유, 캐시로 중복호출 차단)
+  const recCat = rec?.cat ?? 'cafe'
+  useEffect(() => {
+    if (lat && lng) void useHomeRecStore.getState().load(lat, lng, w.condKo ?? '')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lat, lng])
 
   // 표시 중인 연·월 (기본: 선택 날짜의 달), 좌우로 이동 가능
   const sel = parseKey(selId)
@@ -218,13 +222,13 @@ export function CalendarPage() {
               </div>
             </div>
 
-            <div onClick={openAi} className="lift" style={{ borderRadius: 24, padding: '16px 18px', cursor: 'pointer', background: catGrad(top.cat), color: top.cat === 'culture' ? '#241F33' : '#1E3318', display: 'flex', alignItems: 'center', gap: 13 }}>
+            <div onClick={openAi} className="lift" style={{ borderRadius: 24, padding: '16px 18px', cursor: 'pointer', background: catGrad(recCat), color: recCat === 'culture' ? '#241F33' : '#1E3318', display: 'flex', alignItems: 'center', gap: 13 }}>
               <div style={{ width: 40, height: 40, borderRadius: 13, background: 'rgba(255,255,255,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ width: 16, height: 16, display: 'inline-flex' }}><CategoryIcon cat={top.cat} c="#17150F" /></span>
+                <span style={{ width: 16, height: 16, display: 'inline-flex' }}><CategoryIcon cat={recCat} c="#17150F" /></span>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, opacity: 0.66 }}>이 날 추천 · 적합도 {recs[0].fit}%</div>
-                <div style={{ fontSize: 15, fontWeight: 800, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{top.name.replace(' (페리 빌딩)', '')}</div>
+                <div style={{ fontSize: 11, fontWeight: 800, opacity: 0.66 }}>{rec ? `AI 추천 · ${rec.catLabel}` : 'AI 추천 장소'}</div>
+                <div style={{ fontSize: 15, fontWeight: 800, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rec ? rec.name : '대화로 추천받기'}</div>
               </div>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: 0.6 }}><path d="M9 6l6 6-6 6" /></svg>
             </div>
