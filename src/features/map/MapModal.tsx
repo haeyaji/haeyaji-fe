@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useOverlay } from '@/lib/useOverlay'
 import { CategoryIcon, CloseIcon } from '@/lib/icons'
-import { PLACES } from '@/lib/mockData'
-import { useDayWeather, recsFor } from '@/lib/weather'
+import { useDayWeather } from '@/lib/weather'
+import { useHomeRecStore, weatherDefaultCode } from '@/store/useHomeRecStore'
 import { dowLabel } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
 import { useMapStore } from '@/store/useMapStore'
@@ -57,6 +57,8 @@ export function MapModal() {
   const loc = useLocationStore()
 
   const [results, setResults] = useState<MapPlace[]>([])
+  const [recResults, setRecResults] = useState<MapPlace[]>([]) // 오늘 추천 장소 = 실검색(개인화 카테고리/날씨 폴백)
+  const homeRec = useHomeRecStore((s) => s.rec)
   const [searching, setSearching] = useState(false)
   const [zoomNotice, setZoomNotice] = useState(false)
   const [needsResearch, setNeedsResearch] = useState(false) // 지도가 검색 시점과 달라짐 → "다시 검색" 버튼
@@ -192,18 +194,47 @@ export function MapModal() {
   // 훅은 early return보다 항상 먼저 (훅 순서 위반 방지)
   const w = useDayWeather(selId)
 
+  // 오늘 추천 장소(기본 목록/핀) — mock 대신 실검색. 개인화 카테고리(홈 추천) 우선, 없으면 날씨 폴백.
+  // 채팅 nlp 추천(nlpPins)이 있으면 그걸 쓰므로 이 검색은 건너뛴다.
+  useEffect(() => {
+    if (!mapOpen || nlpPins.length > 0) return
+    const code = homeRec?.code ?? weatherDefaultCode(w.condKo ?? '')
+    const kw = REC_CATEGORY_KEYWORD[code] ?? ''
+    if (!kw) return
+    const org = effOrigin
+    let cancelled = false
+    ;(async () => {
+      try {
+        const places = await searchPlaces(kw, org.lat, org.lng, 2000, 8)
+        if (cancelled) return
+        setRecResults(
+          places.map((d) => ({
+            id: d.url?.split('/').pop() ?? `${d.x},${d.y}`,
+            name: d.name,
+            type: d.category || REC_CATEGORY_LABEL[code] || '장소',
+            dist: fmtDist(Math.round(distM(org.lat, org.lng, d.y, d.x))),
+            cat: catOf(d.category || ''),
+            lat: d.y,
+            lng: d.x,
+            placeUrl: d.url ?? undefined,
+            address: d.address,
+          })),
+        )
+      } catch {
+        if (!cancelled) setRecResults([])
+      }
+    })()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapOpen, nlpPins.length, homeRec?.code, effOrigin.lat, effOrigin.lng, w.condKo])
+
   useOverlay(mapOpen, closeMap)
   if (!mapOpen) return null
 
   const mapHint = `${dowLabel(selId)}요일 · ${w.condKo} 기준 · 내 주변`
-  const recIds = recsFor(w.cond)
 
-  const mockRec: MapPlace[] = recIds
-    .map((r) => PLACES.find((x) => x.id === r.id))
-    .filter((p): p is (typeof PLACES)[number] => !!p)
-    .map((p) => ({ id: p.id, name: p.name, type: p.type, dist: p.dist, cat: p.cat, lat: p.lat, lng: p.lng }))
-  // 추천 핀: nlp 추천(좌표) 우선, 없으면 mock 폴백
-  const recPins: MapPlace[] = nlpPins.length > 0 ? nlpPins : mockRec
+  // 추천 핀: 채팅 nlp 추천(좌표) 우선, 없으면 실검색 기반 오늘 추천 장소
+  const recPins: MapPlace[] = nlpPins.length > 0 ? nlpPins : recResults
 
   // 목록: 탐색 중이면 탐색 결과, 아니면 추천
   const shown: MapPlace[] = activeKeyword ? results : recPins

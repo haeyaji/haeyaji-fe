@@ -12,6 +12,14 @@ import type { PlaceCat, RecCategory } from '@/types'
 const RADIUS_M = 2000 // 도보권 2km (useChatStore DEFAULT_RADIUS_M와 동일)
 const DOW_KO = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일']
 
+// 개인화(nlp) 실패 시 폴백: 날씨(한글)로 기본 카테고리 → 실검색은 하되 개인화만 빠짐
+export function weatherDefaultCode(weather: string): RecCategory {
+  if (/비|눈|소나기|우박/.test(weather)) return 'CAFE_DESSERT' // 궂은 날 → 실내 카페
+  if (/흐림|구름|안개|흐려/.test(weather)) return 'CULTURE_EXHIBIT' // 흐림 → 전시·실내
+  if (/맑음|맑/.test(weather)) return 'NATURE_WALK' // 맑음 → 산책·야외
+  return 'RESTAURANT'
+}
+
 export interface HomeRec {
   code: RecCategory
   catLabel: string // 개인화 카테고리 라벨 (예: 카페·디저트)
@@ -51,17 +59,22 @@ export const useHomeRecStore = create<HomeRecState>((set, get) => ({
     if (get().loading || get().key === key) return // 같은 위치·날씨면 재호출 안 함
     set({ loading: true, key })
     try {
-      const mood = usePrefStore.getState().vibe ?? undefined
-      // 1단계: 개인화 카테고리 (selectedCategory 없이 호출 → categories[] 후보)
-      const res = await sendMessage({ text: `${weather ? weather + ' ' : ''}날씨에 어울리는 근처 장소 추천해줘`, lat, lng, weather, mood, ...timeContext() })
-      const topCat = res.categories[0]
-      if (!topCat) { set({ loading: false }); return } // 후보 없으면 유지(폴백은 UI에서)
-      const code = topCat.code
-      const keyword = topCat.keywords?.[0] ?? REC_CATEGORY_KEYWORD[code] ?? REC_CATEGORY_LABEL[code]
+      // 1단계: 개인화 카테고리 (selectedCategory 없이 → categories[] 후보). nlp 다운이면 폴백.
+      let code: RecCategory | null = null
+      let keyword = ''
+      try {
+        const mood = usePrefStore.getState().vibe ?? undefined
+        const res = await sendMessage({ text: `${weather ? weather + ' ' : ''}날씨에 어울리는 근처 장소 추천해줘`, lat, lng, weather, mood, ...timeContext() })
+        const topCat = res.categories[0]
+        if (topCat) { code = topCat.code; keyword = topCat.keywords?.[0] ?? REC_CATEGORY_KEYWORD[topCat.code] ?? '' }
+      } catch { /* nlp 다운 → 아래 날씨 폴백 */ }
+      // 개인화 실패 폴백: 날씨 기반 기본 카테고리로 실검색(비개인화지만 실제 장소는 뜬다)
+      if (!code) code = weatherDefaultCode(weather)
+      if (!keyword) keyword = REC_CATEGORY_KEYWORD[code] ?? REC_CATEGORY_LABEL[code]
       // 2단계: 실제 장소 검색 (카카오 로컬 프록시)
       const places = await searchPlaces(keyword, lat, lng, RADIUS_M, 5)
       const p = places[0]
-      if (!p) { set({ loading: false }); return }
+      if (!p) { set({ loading: false, key: null }); return } // 검색도 0건이면 재시도 허용
       set({
         loading: false,
         rec: {
@@ -75,7 +88,7 @@ export const useHomeRecStore = create<HomeRecState>((set, get) => ({
         },
       })
     } catch {
-      set({ loading: false, key: null }) // 실패 시 키 해제 → 다음 시도 허용
+      set({ loading: false, key: null }) // 검색까지 실패 → 키 해제, 다음 시도 허용
     }
   },
 }))
