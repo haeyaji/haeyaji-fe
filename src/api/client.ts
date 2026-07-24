@@ -71,10 +71,18 @@ be.interceptors.response.use(
   (r) => r,
   async (err) => {
     const e = err as AxiosError
-    const original = e.config as (InternalAxiosRequestConfig & { _retried?: boolean }) | undefined
+    const original = e.config as (InternalAxiosRequestConfig & { _retried?: boolean; _csrfRetried?: boolean }) | undefined
     const url = original?.url ?? ''
+    const method = (original?.method ?? 'get').toLowerCase()
     const is401 = e.response?.status === 401
     const reissuable = is401 && original && !original._retried && !url.includes('/auth/reissue')
+
+    // CSRF 403: be가 이 403 응답에서 새 XSRF-TOKEN(path=/)을 심어준다 → 그 토큰으로 1회 재시도.
+    // (세션 첫 상태변경 요청이 토큰 없이 나가 403 나는 부트스트랩 문제 해결)
+    if (e.response?.status === 403 && original && !original._csrfRetried && method !== 'get' && method !== 'head') {
+      original._csrfRetried = true
+      return be(original) // 요청 인터셉터가 새로 심긴 XSRF를 읽어 헤더로 실어 재전송
+    }
 
     if (reissuable) {
       original._retried = true
