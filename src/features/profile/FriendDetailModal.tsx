@@ -1,16 +1,11 @@
-// 친구 상세 — 프로필·취향·약속잡기 진입·친구 삭제.
+// 친구 상세 — 프로필·친구 삭제. (be는 상대 취향을 안 줘서 프로필만 표시)
 import { CloseIcon, TrashIcon } from '@/lib/icons'
 import { useOverlay } from '@/lib/useOverlay'
-import { useAppStore } from '@/store/useAppStore'
 import { useFriendStore } from '@/store/useFriendStore'
-import { PrefIcon } from './prefIcons'
-import type { AppUser } from '@/types'
 
-export function FriendDetailModal({ user, onClose }: { user: AppUser; onClose: () => void }) {
-  const removeFriend = useFriendStore((s) => s.removeFriend)
-  const toast = useAppStore((s) => s.toast)
+export function FriendDetailModal({ user, onClose }: { user: { id: string; nickname: string }; onClose: () => void }) {
+  const remove = useFriendStore((s) => s.remove)
   useOverlay(true, onClose)
-  const chips = [user.vibe, ...user.cats]
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(24,21,15,.42)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'rb-fade .16s ease' }}>
@@ -28,21 +23,11 @@ export function FriendDetailModal({ user, onClose }: { user: AppUser; onClose: (
             {user.nickname.slice(0, 1)}
           </div>
           <div style={{ fontSize: 23, fontWeight: 800, marginTop: 14 }}>{user.nickname}</div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#8B8579', marginTop: 4 }}>{user.vibe}</div>
-        </div>
-
-        {/* 취향 칩 */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 18 }}>
-          {chips.map((c) => (
-            <span key={c} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#EAF5EF', color: '#0F5A42', fontSize: 13.5, fontWeight: 800, padding: '7px 12px', borderRadius: 20 }}>
-              <PrefIcon name={c} color="#15795A" w={15} />
-              {c}
-            </span>
-          ))}
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#8B8579', marginTop: 4 }}>친구</div>
         </div>
 
         {/* 액션 */}
-        <div onClick={() => { removeFriend(user.id); toast(`${user.nickname}님을 친구에서 삭제했어요`); onClose() }} className="hbtn" style={{ marginTop: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '13px', borderRadius: 14, background: '#F6ECEA', fontSize: 14.5, fontWeight: 800, color: '#C0645C', cursor: 'pointer' }}>
+        <div onClick={() => { void remove(user.id); onClose() }} className="hbtn" style={{ marginTop: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '13px', borderRadius: 14, background: '#F6ECEA', fontSize: 14.5, fontWeight: 800, color: '#C0645C', cursor: 'pointer' }}>
           <TrashIcon w={15} c="#C0645C" /> 친구 삭제
         </div>
       </div>
