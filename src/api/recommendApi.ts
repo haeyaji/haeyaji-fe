@@ -13,6 +13,7 @@ export interface RecommendRequest {
   weekday?: string // 예: "토요일"
   history?: ChatTurn[] // 최근 대화 턴 (멀티턴 좁히기 맥락)
   selectedCategory?: RecCategory // 2단계: 1단계에서 고른 카테고리 code (be 계약: selectedCategory)
+  radiusM?: number // 추천 장소 검색 반경(m). 미전송 시 서버 기본값
 }
 
 // nlp categories[] 정규화 — 문자열("CAFE_DESSERT") 또는 객체({code, label, reason, keywords}) 어느 쪽이어도 안전
