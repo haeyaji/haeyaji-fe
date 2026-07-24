@@ -30,7 +30,8 @@ function PinIcon({ filled, c }: { filled: boolean; c: string }) {
 export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string; taskId: string; onClose: () => void }) {
   const tasksByDate = useTodoStore((s) => s.tasksByDate)
   const { updateTitle, setStatus, removeTask, patchTask, togglePin } = useTodoStore()
-  const friendIds = useFriendStore((s) => s.friendIds)
+  const friendItems = useFriendStore((s) => s.friends)
+  const nameOf = useFriendStore((s) => s.nameOf)
   const assignments = useLabelStore((s) => s.assignments) // 라벨 변경 리렌더용
   const setTodoLabel = useLabelStore((s) => s.setTodoLabel)
   const createRoutine = useRoutineStore((s) => s.createRoutine)
@@ -49,7 +50,7 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
   // ── 공유 (역할 먼저 지정 → 초대 → 상대 수락) ──
   const participants = task.participants ?? []
   const sharedIds = new Set(participants.map((p) => p.userId))
-  const friends = friendIds.map(userById).filter((u): u is NonNullable<typeof u> => !!u)
+  const friends = friendItems.map((f) => ({ id: f.memberId, nickname: nameOf(f.memberId) }))
   const addable = friends.filter((f) => !sharedIds.has(f.id))
   const acceptedCount = participants.filter((p) => p.status === 'accepted').length
   const pendingCount = participants.filter((p) => p.status === 'pending').length

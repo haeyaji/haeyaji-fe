@@ -5,7 +5,7 @@ import { last7Days, next7Days, dowLabel, todayKey } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
 import { usePrefStore } from '@/store/usePrefStore'
 import { useTodoStore } from '@/store/useTodoStore'
-import { useFriendStore, userById } from '@/store/useFriendStore'
+import { useFriendStore } from '@/store/useFriendStore'
 import { useMeetupStore } from '@/store/useMeetupStore'
 import { useWeatherStore } from '@/store/useWeatherStore'
 import { PrefIcon } from './prefIcons'
@@ -13,7 +13,7 @@ import { FriendSearchModal } from './FriendSearchModal'
 import { FriendDetailModal } from './FriendDetailModal'
 import { MC } from '@/features/meetup/tokens'
 import { Avatar, AvatarStack } from '@/features/meetup/meetupShared'
-import type { AppUser, WeatherCond } from '@/types'
+import type { WeatherCond } from '@/types'
 
 function Ring({ rate, size = 104, sw = 10 }: { rate: number; size?: number; sw?: number }) {
   const R = (size - sw) / 2
@@ -41,15 +41,17 @@ export function MyPage() {
   const closeFriendSearch = useAppStore((s) => s.closeFriendSearch)
   const pref = usePrefStore()
   const tasksByDate = useTodoStore((s) => s.tasksByDate)
-  const friendIds = useFriendStore((s) => s.friendIds)
+  const friendItems = useFriendStore((s) => s.friends)
+  const nameOf = useFriendStore((s) => s.nameOf)
+  const loadFriends = useFriendStore((s) => s.load)
   const meetups = useMeetupStore((s) => s.meetings)
   const loadMeetings = useMeetupStore((s) => s.loadList)
   const byDate = useWeatherStore((s) => s.byDate)
-  useEffect(() => { void loadMeetings() }, [loadMeetings])
+  useEffect(() => { void loadMeetings(); void loadFriends() }, [loadMeetings, loadFriends])
   // 최근 7일 할 일 로드 (완료율 링이 조각나지 않게 한 번에)
   useEffect(() => { last7Days().forEach((k) => void useTodoStore.getState().loadDate(k)) }, [])
 
-  const [detailUser, setDetailUser] = useState<AppUser | null>(null)
+  const [detailUser, setDetailUser] = useState<{ id: string; nickname: string } | null>(null)
 
   const week = last7Days()
   const flat = week.flatMap((k) => tasksByDate[k] ?? [])
@@ -60,7 +62,7 @@ export function MyPage() {
   })
   const weekDoneCnt = weekDays.filter((d) => d.done).length
 
-  const friends = friendIds.map(userById).filter((u): u is AppUser => !!u)
+  const friendNames = friendItems.map((f) => nameOf(f.memberId))
   const pendingCount = meetups.filter((m) => m.status !== 'CONFIRMED').length
   const confirmedCount = meetups.filter((m) => m.status === 'CONFIRMED').length
   const hasPrefs = pref.preferredCategories.length > 0 || pref.avoid.length > 0 || pref.vibe || pref.intensity
@@ -124,8 +126,8 @@ export function MyPage() {
         {/* 통계 벤토 */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 20, alignItems: 'start' }}>
           <div onClick={openFriendSearch} className="lift" style={{ ...statCard, cursor: 'pointer' }}>
-            {badge(<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={MC.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>, `${friends.length}`, '친구')}
-            <div style={{ marginTop: 14 }}>{friends.length > 0 ? <AvatarStack names={friends.map((f) => f.nickname)} /> : <div style={{ fontSize: 12.5, fontWeight: 700, color: MC.faint }}>아직 없어요</div>}</div>
+            {badge(<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={MC.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>, `${friendItems.length}`, '친구')}
+            <div style={{ marginTop: 14 }}>{friendNames.length > 0 ? <AvatarStack names={friendNames} /> : <div style={{ fontSize: 12.5, fontWeight: 700, color: MC.faint }}>아직 없어요</div>}</div>
           </div>
 
           <div onClick={() => setView('meetup')} className="lift" style={{ ...statCard, cursor: 'pointer' }}>
