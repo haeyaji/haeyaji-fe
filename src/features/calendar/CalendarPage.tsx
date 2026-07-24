@@ -77,6 +77,8 @@ export function CalendarPage() {
     const cond = raw && ['sunny', 'cloudy', 'rainy', 'snowy'].includes(raw.cond) ? (raw.cond as WeatherCond) : undefined
     cells.push({ key: k, day: i + 1, cond, isToday: k === T, inWeek: true, wid: k })
   })
+  // 항상 6주(42칸) 고정 — 후행 빈칸 채워 달마다 그리드 높이가 변하지 않게 (aside도 안 흔들림)
+  while (cells.length < 42) cells.push({ key: 't' + cells.length, day: null })
 
   const pickDay = (wid: string) => {
     setSelId(wid)
@@ -199,7 +201,7 @@ export function CalendarPage() {
               </div>
             </div>
 
-            <div className="tile" style={{ flex: 1, minHeight: 240, padding: '20px 22px', display: 'flex', flexDirection: 'column' }}>
+            <div className="tile" style={{ flex: 1, minHeight: 0, padding: '20px 22px', display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
                 <div style={{ fontSize: 16, fontWeight: 800 }}>이 날 일정</div>
                 <div style={{ fontSize: 12.5, fontWeight: 700, color: '#A39C8E' }}>{frac}</div>
