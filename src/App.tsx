@@ -70,6 +70,7 @@ export default function App() {
         void useLabelStore.getState().loadLabels() // 사용자 라벨 로드 (be /labels)
         void useRoutineStore.getState().loadRoutines() // 루틴 정의 로드 (be /routines)
         void useFriendStore.getState().load() // 친구·요청 로드 (be /friends)
+        void useTodoStore.getState().loadShared() // 공유받은 일정 로드 → 캘린더/할일에 병합 (be /todos/shared)
         if (cancelled) return
         useAppStore.getState().login(isCallback ? '로그인했어요' : undefined)
         if (isCallback && isNewMember) usePrefStore.setState({ surveyDone: false }) // 신규 → 온보딩

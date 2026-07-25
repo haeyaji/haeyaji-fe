@@ -44,7 +44,7 @@ export type TodoSource = 'MANUAL' | 'AI' | 'ROUTINE' | 'MEETING'
 const sourceOf = (t: Pick<Task, 'group' | 'ai'>): TodoSource => (t.group === 'routine' ? 'ROUTINE' : t.ai ? 'AI' : 'MANUAL')
 
 /** be TodoResponse → fe Task */
-function toTask(r: TodoResponse): Task {
+export function toTask(r: TodoResponse): Task {
   const status: TaskStatus = r.completed ? 'done' : 'todo'
   return {
     id: r.id,

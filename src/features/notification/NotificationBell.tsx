@@ -24,7 +24,7 @@ export function NotificationBell() {
   const { authed, notiOpen, openNoti, closeNoti } = useAppStore()
   useOverlay(notiOpen, closeNoti)
   const { notifications, markRead, markAllRead, remove } = useNotificationStore()
-  const { pending, shared, load, accept, reject, leave } = useShareInboxStore()
+  const { pending, load, accept, reject } = useShareInboxStore()
   useEffect(() => { if (authed) void load() }, [authed, load])
   useEffect(() => { if (notiOpen) void load() }, [notiOpen, load]) // 열 때마다 최신 초대 재조회
   if (!authed) return null
@@ -79,26 +79,7 @@ export function NotificationBell() {
                 </div>
               ))}
 
-              {/* 공유받은(수락됨) 일정 — 읽기 전용 + 나가기 */}
-              {shared.length > 0 && (
-                <>
-                  <div style={{ fontSize: 11.5, fontWeight: 800, color: '#8B8579', padding: '4px 4px 1px' }}>공유받은 일정 {shared.length}</div>
-                  {shared.map((t) => (
-                    <div key={t.id} style={{ display: 'flex', gap: 11, padding: '11px 12px', borderRadius: 13, background: '#F3F8F5', border: '1px solid #DCEAE2' }}>
-                      <div style={{ width: 36, height: 36, borderRadius: 10, background: '#E4F2EC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#15795A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 800, color: '#17150F', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.title}</div>
-                        <div style={{ fontSize: 11.5, fontWeight: 700, color: '#8B8579', marginTop: 2 }}>{t.date ? dateFullLabel(t.date) : ''}{t.time ? ` · ${t.time.slice(0, 5)}` : ''}</div>
-                      </div>
-                      <div onClick={() => leave(t.id)} className="hbtn" title="공유 나가기" style={{ alignSelf: 'center', fontSize: 12, fontWeight: 800, color: '#8B8579', cursor: 'pointer', flexShrink: 0 }}>나가기</div>
-                    </div>
-                  ))}
-                </>
-              )}
-
-              {pending.length === 0 && shared.length === 0 && notifications.length === 0 ? (
+              {pending.length === 0 && notifications.length === 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#B6BCC7', gap: 10, padding: '40px 20px' }}>
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CAD0DA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
                   <div style={{ fontSize: 14.5, fontWeight: 600 }}>새 알림이 없어요</div>
