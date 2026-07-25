@@ -15,7 +15,7 @@ interface ApiResponse<T> {
 }
 
 /** be TodoResponse (camelCase) */
-interface TodoResponse {
+export interface TodoResponse {
   id: string
   title: string
   date: string // "yyyy-MM-dd"
