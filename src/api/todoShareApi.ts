@@ -60,3 +60,9 @@ export async function listSharedTodos(): Promise<TodoResponse[]> {
   const res = await be.get<Env<TodoResponse[]>>('/todos/shared')
   return res.data.data ?? []
 }
+
+/** 내가 받은 PENDING 초대 목록 (#59) — 수락/거절 전에 발견하는 진입점. */
+export async function listPendingInvitations(): Promise<TodoResponse[]> {
+  const res = await be.get<Env<TodoResponse[]>>('/todos/invitations')
+  return res.data.data ?? []
+}

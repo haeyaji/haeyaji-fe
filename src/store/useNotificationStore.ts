@@ -19,9 +19,9 @@ export interface AppNotification {
 }
 
 // 처음 화면이 비지 않도록 샘플 알림 (be 붙으면 서버 데이터로 대체)
+// 공유 초대(SHARE_INVITE)는 실제 be #59 초대로 벨에서 렌더 → 가짜 시드는 두지 않는다.
 const SEED: AppNotification[] = [
   { id: 'nt1', category: 'TODO', type: 'TODO_WEATHER_ALERT', title: '오후에 비 소식이 있어요', body: '야외 일정은 오전으로 옮기는 게 좋아요', isRead: false, createdAt: '2026-07-23T08:10:00Z' },
-  { id: 'nt2', category: 'INVITE', type: 'SHARE_INVITE', title: "'도윤'님이 할 일을 공유했어요", body: '배포 준비 · 편집 권한', isRead: false, createdAt: '2026-07-23T07:30:00Z' },
   { id: 'nt3', category: 'TODO', type: 'TODO_REMINDER', title: '오늘 할 일 3개가 남았어요', body: '완료하고 하루를 마무리해보세요', isRead: true, createdAt: '2026-07-22T21:00:00Z' },
 ]
 
