@@ -1,11 +1,12 @@
 // 할 일 상세 (공용) — 할 일 리스트에서 연다. be todo 계약에 맞춰 제목·상태(TODO/DONE)·시간·
 // 분류(라벨)·장소·핀·반복(루틴) + 공유(todo_participant: 역할·초대수락)를 다룬다. (칸반/지라 필드는 제거됨)
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CloseIcon, PlusIcon, TrashIcon } from '@/lib/icons'
 import { safeUrl } from '@/lib/dom'
 import { useOverlay } from '@/lib/useOverlay'
 import { useTodoStore, statusOf } from '@/store/useTodoStore'
-import { useFriendStore, userById } from '@/store/useFriendStore'
+import { useFriendStore } from '@/store/useFriendStore'
+import { shareTodo, listParticipants, changeParticipantRole, removeParticipant, type TodoParticipant } from '@/api/todoShareApi'
 import { useLabelStore } from '@/store/useLabelStore'
 import { useRoutineStore } from '@/store/useRoutineStore'
 import { useAppStore } from '@/store/useAppStore'
@@ -47,19 +48,33 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
   const badge = dateBadge(dateKey)
   const done = statusOf(task) === 'done'
 
-  // ── 공유 (역할 먼저 지정 → 초대 → 상대 수락) ──
-  const participants = task.participants ?? []
-  const sharedIds = new Set(participants.map((p) => p.userId))
+  // ── 공유 (be /todos/{id}/share) — 이 모달의 할 일은 내 소유이므로 나는 owner ──
+  // be는 participants에 OWNER 행을 두지 않음 → 초대받은 사람만. 수락/거절은 초대받은 본인만 가능(여기선 상태 표시만).
+  const [parts, setParts] = useState<TodoParticipant[]>([])
+  const isServerTodo = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(taskId) // be UUID일 때만 공유 가능
+  useEffect(() => {
+    if (!isServerTodo) return
+    let alive = true
+    listParticipants(taskId).then((p) => { if (alive) setParts(p) }).catch(() => { /* 미공유/권한없음 무시 */ })
+    return () => { alive = false }
+  }, [taskId, isServerTodo])
+  const refetch = () => listParticipants(taskId).then(setParts).catch(() => {})
+  const sharedIds = new Set(parts.map((p) => p.memberId))
   const friends = friendItems.map((f) => ({ id: f.memberId, nickname: nameOf(f.memberId) }))
   const addable = friends.filter((f) => !sharedIds.has(f.id))
-  const acceptedCount = participants.filter((p) => p.status === 'accepted').length
-  const pendingCount = participants.filter((p) => p.status === 'pending').length
-  const setParticipants = (next: typeof participants) => patchTask(dateKey, taskId, { participants: next })
-  const invite = (userId: string) => setParticipants([...participants, { userId, role: inviteRole, status: 'pending' }])
-  const accept = (userId: string) => setParticipants(participants.map((p) => (p.userId === userId ? { ...p, status: 'accepted' } : p)))
-  const reject = (userId: string) => setParticipants(participants.map((p) => (p.userId === userId ? { ...p, status: 'rejected' } : p)))
-  const unshare = (userId: string) => setParticipants(participants.filter((p) => p.userId !== userId))
-  const setRole = (userId: string, role: ShareRole) => setParticipants(participants.map((p) => (p.userId === userId ? { ...p, role } : p)))
+  const acceptedCount = parts.filter((p) => p.inviteStatus === 'ACCEPTED').length
+  const pendingCount = parts.filter((p) => p.inviteStatus === 'PENDING').length
+  const beRole = (r: ShareRole) => (r === 'viewer' ? 'VIEWER' : 'EDITOR') as 'EDITOR' | 'VIEWER'
+  const invite = async (memberId: string) => {
+    try { await shareTodo(taskId, [{ memberId, role: beRole(inviteRole) }]); await refetch(); toast('공유했어요') }
+    catch (e) { toast((e as Error)?.message || '공유에 실패했어요') }
+  }
+  const unshare = async (memberId: string) => {
+    try { await removeParticipant(taskId, memberId); await refetch() } catch (e) { toast((e as Error)?.message || '해제에 실패했어요') }
+  }
+  const setRole = async (memberId: string, role: ShareRole) => {
+    try { await changeParticipantRole(taskId, memberId, beRole(role)); await refetch() } catch (e) { toast((e as Error)?.message || '변경에 실패했어요') }
+  }
 
   const labelId = assignments[taskId] ?? null
 
@@ -190,40 +205,35 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
               <div style={{ flex: 1, fontSize: 14.5, fontWeight: 800 }}>나</div>
               <span style={{ fontSize: 11.5, fontWeight: 800, color: '#0F5A42', background: '#EAF5EF', padding: '5px 11px', borderRadius: 20 }}>소유자</span>
             </div>
-            {/* 참여자 */}
-            {participants.map((p) => {
-              const u = userById(p.userId)
-              if (!u) return null
-              const pending = p.status === 'pending'
-              const rejected = p.status === 'rejected'
+            {/* 참여자 (초대받은 사람만; 수락/거절은 상대 본인이 알림에서) */}
+            {parts.map((p) => {
+              const roleKey = p.role.toLowerCase() as ShareRole
+              const pending = p.inviteStatus === 'PENDING'
+              const rejected = p.inviteStatus === 'REJECTED'
               const dot = pending ? '#E0883A' : rejected ? '#D9614F' : null
+              const nick = nameOf(p.memberId)
               return (
-                <div key={p.userId} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 13px', borderTop: '1px solid #EEF0F4', background: pending ? '#FEFBF6' : rejected ? '#FCF3F1' : '#fff' }}>
+                <div key={p.memberId} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 13px', borderTop: '1px solid #EEF0F4', background: pending ? '#FEFBF6' : rejected ? '#FCF3F1' : '#fff' }}>
                   <div style={{ position: 'relative', flexShrink: 0, opacity: pending || rejected ? 0.8 : 1 }}>
-                    <Avatar name={u.nickname} size={34} font={15} />
+                    <Avatar name={nick} size={34} font={15} />
                     {dot && <span style={{ position: 'absolute', right: -2, bottom: -2, width: 13, height: 13, borderRadius: '50%', background: dot, border: '2px solid #fff' }} />}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14.5, fontWeight: 700, color: pending || rejected ? '#8B8579' : '#17150F', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textDecoration: rejected ? 'line-through' : 'none' }}>{u.nickname}</div>
-                    {pending && <div style={{ fontSize: 11.5, fontWeight: 800, color: '#C2702A', marginTop: 1 }}>수락 대기 · {ROLE_LABEL[p.role]}</div>}
+                    <div style={{ fontSize: 14.5, fontWeight: 700, color: pending || rejected ? '#8B8579' : '#17150F', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textDecoration: rejected ? 'line-through' : 'none' }}>{nick}</div>
+                    {pending && <div style={{ fontSize: 11.5, fontWeight: 800, color: '#C2702A', marginTop: 1 }}>수락 대기 · {ROLE_LABEL[roleKey]}</div>}
                     {rejected && <div style={{ fontSize: 11.5, fontWeight: 800, color: '#C24A3A', marginTop: 1 }}>초대 거절됨</div>}
                   </div>
-                  {pending ? (
-                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                      <div onClick={() => accept(p.userId)} className="lift" title="데모: 상대가 수락" style={{ fontSize: 12, fontWeight: 800, color: '#fff', background: '#15795A', padding: '6px 12px', borderRadius: 20, cursor: 'pointer' }}>수락</div>
-                      <div onClick={() => reject(p.userId)} className="hbtn" title="데모: 상대가 거절" style={{ fontSize: 12, fontWeight: 800, color: '#C24A3A', background: '#FBEBE7', padding: '6px 12px', borderRadius: 20, cursor: 'pointer' }}>거절</div>
-                    </div>
-                  ) : rejected ? null : (
+                  {!pending && !rejected && (
                     <select
-                      value={p.role}
-                      onChange={(e) => setRole(p.userId, e.target.value as ShareRole)}
+                      value={roleKey}
+                      onChange={(e) => setRole(p.memberId, e.target.value as ShareRole)}
                       style={{ appearance: 'none', WebkitAppearance: 'none', border: '1px solid #E7EAEF', outline: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 800, borderRadius: 9, padding: '6px 10px', background: '#fff', color: '#5A554B', flexShrink: 0 }}
                     >
                       <option value="editor">편집</option>
                       <option value="viewer">보기</option>
                     </select>
                   )}
-                  <div onClick={() => unshare(p.userId)} className="hbtn" title={pending ? '초대 취소' : rejected ? '목록에서 제거' : '공유 해제'} style={{ color: '#CAD0DA', cursor: 'pointer', display: 'flex', flexShrink: 0 }}>
+                  <div onClick={() => unshare(p.memberId)} className="hbtn" title={pending ? '초대 취소' : rejected ? '목록에서 제거' : '공유 해제'} style={{ color: '#CAD0DA', cursor: 'pointer', display: 'flex', flexShrink: 0 }}>
                     <CloseIcon w={14} c="currentColor" />
                   </div>
                 </div>
@@ -232,7 +242,9 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
           </div>
 
           {/* 초대: 역할 먼저 고르고 친구 선택 */}
-          {addable.length > 0 ? (
+          {!isServerTodo ? (
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#B6BCC7', marginTop: 11, padding: '0 2px' }}>저장된 할 일만 공유할 수 있어요</div>
+          ) : addable.length > 0 ? (
             <div style={{ marginTop: 12, background: '#F9FAFB', border: '1px solid #EEF0F4', borderRadius: 14, padding: 13 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <span style={{ fontSize: 12.5, fontWeight: 800, color: '#8B8579' }}>초대 권한</span>
