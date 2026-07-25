@@ -3,7 +3,7 @@
 import { create } from 'zustand'
 import { useAppStore } from './useAppStore'
 import {
-  listMeetings, createMeeting, getMeeting, confirmMeeting, joinMeeting,
+  listMeetings, createMeeting, getMeeting, confirmMeeting, joinMeeting, inviteMembers,
   submitAvailability, getHeatmap, getBestTimes, getMeetingStatus,
   type MeetingSummary, type MeetingDetail, type Heatmap, type BestTimes, type MeetingStatusInfo,
   type SlotResponseItem, type CreateMeetingInput,
@@ -25,6 +25,7 @@ interface MeetupState {
   create: (input: CreateMeetingInput) => Promise<MeetingDetail | null>
   loadDetail: (shareToken: string) => Promise<void>
   join: (shareToken: string) => Promise<boolean>
+  invite: (shareToken: string, memberIds: string[]) => Promise<void>
   submit: (shareToken: string, responses: SlotResponseItem[]) => Promise<void>
   confirm: (shareToken: string, startAt: string, endAt: string) => Promise<void>
   clearDetail: () => void
@@ -78,6 +79,18 @@ export const useMeetupStore = create<MeetupState>((set, get) => ({
     } catch (e) {
       toast(errMsg(e))
       return false
+    }
+  },
+
+  invite: async (shareToken, memberIds) => {
+    if (memberIds.length === 0) return
+    try {
+      const r = await inviteMembers(shareToken, memberIds)
+      await get().loadDetail(shareToken)
+      const skipped = r.skippedMemberIds.length
+      toast(`${r.invitedMemberIds.length}명 초대했어요${skipped ? ` (이미 참여 ${skipped}명 제외)` : ''}`)
+    } catch (e) {
+      toast(errMsg(e))
     }
   },
 

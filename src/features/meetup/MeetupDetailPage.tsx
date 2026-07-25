@@ -1,18 +1,23 @@
 // 약속 상세 — be 슬롯 모델. 링크 공유 → 참여 → 가용 입력(슬롯 FREE) → 히트맵/베스트타임 → 확정.
 import { useEffect, useMemo, useState } from 'react'
 import { useMeetupStore } from '@/store/useMeetupStore'
+import { useFriendStore } from '@/store/useFriendStore'
 import { meetingInviteUrl } from '@/api/meetingApi'
-import { meetTypeLabel, slotDate, slotHM, dateLabel, confirmedRange, heatColor } from './meetupShared'
+import { meetTypeLabel, slotDate, slotHM, dateLabel, confirmedRange, heatColor, Avatar } from './meetupShared'
 import { MC } from './tokens'
 
 const myMemberId = () => localStorage.getItem('haeyaji-account')
 
 export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; onBack: () => void }) {
-  const { detail, heatmap, bestTimes, myResponses, loading, loadDetail, join, submit, confirm, clearDetail } = useMeetupStore()
+  const { detail, heatmap, bestTimes, myResponses, loading, loadDetail, join, invite, submit, confirm, clearDetail } = useMeetupStore()
+  const friendItems = useFriendStore((s) => s.friends)
+  const nameOf = useFriendStore((s) => s.nameOf)
+  const loadFriends = useFriendStore((s) => s.load)
   const [mine, setMine] = useState<Set<string>>(new Set()) // 내가 FREE로 고른 slotId
   const [copied, setCopied] = useState(false)
 
   useEffect(() => { void loadDetail(shareToken); return () => clearDetail() }, [shareToken, loadDetail, clearDetail])
+  useEffect(() => { void loadFriends() }, [loadFriends])
   useEffect(() => { setMine(new Set(myResponses.filter((r) => r.status === 'FREE').map((r) => r.slotId))) }, [myResponses])
 
   const isParticipant = !!detail?.participants.some((p) => p.memberId === myMemberId())
@@ -43,6 +48,9 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
   }
   const save = () => submit(shareToken, [...mine].map((slotId) => ({ slotId, status: 'FREE' as const })))
   const copy = () => { navigator.clipboard?.writeText(meetingInviteUrl(shareToken)).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500) }) }
+  // 친구 초대 — 아직 참여하지 않은 친구만
+  const partIds = new Set(detail.participants.map((p) => p.memberId))
+  const invitable = friendItems.filter((f) => !partIds.has(f.memberId))
 
   return (
     <div className="mp-pad" style={{ minHeight: 'var(--full-vh)', width: '100%', color: MC.ink, background: 'var(--canvas)' }}>
@@ -68,6 +76,22 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
           <div style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, color: MC.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{meetingInviteUrl(shareToken)}</div>
           <div onClick={copy} className="lift" style={{ fontSize: 13, fontWeight: 800, color: '#fff', background: MC.ink, borderRadius: 10, padding: '8px 14px', cursor: 'pointer', flexShrink: 0 }}>{copied ? '복사됨!' : '링크 복사'}</div>
         </div>
+
+        {/* 친구 초대 (be /invitations) — 참여 중인 사람만 초대 가능, 이미 참여한 친구는 제외 */}
+        {isParticipant && !expired && !conf && invitable.length > 0 && (
+          <div style={{ background: '#fff', border: '1px solid #ECE9E0', borderRadius: 14, padding: '12px 14px', marginBottom: 16 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 800, color: MC.muted, marginBottom: 10 }}>친구 초대</div>
+            <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+              {invitable.map((f) => (
+                <div key={f.rowId} onClick={() => invite(shareToken, [f.memberId])} className="lift" title={`${nameOf(f.memberId)} 초대`} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#fff', border: '1px solid #E7EAEF', color: MC.ink, fontSize: 13, fontWeight: 800, padding: '6px 12px 6px 7px', borderRadius: 20, cursor: 'pointer' }}>
+                  <Avatar name={nameOf(f.memberId)} size={22} font={11} />
+                  {nameOf(f.memberId)}
+                  <span style={{ fontSize: 15, fontWeight: 800, color: MC.primary, lineHeight: 1 }}>+</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* 참여 안 했으면 참여 버튼 */}
         {!isParticipant && !expired && (

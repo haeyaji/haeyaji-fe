@@ -87,6 +87,12 @@ export async function joinMeeting(shareToken: string): Promise<Participant> {
   return res.data.data
 }
 
+/** 친구를 memberId로 약속에 초대 (MEET-4, 생성자·참여자). 이미 참여 중이면 skipped. */
+export async function inviteMembers(shareToken: string, memberIds: string[]): Promise<{ invitedMemberIds: string[]; skippedMemberIds: string[] }> {
+  const res = await be.post<Env<{ invitedMemberIds: string[]; skippedMemberIds: string[] }>>(`/meetings/${shareToken}/invitations`, { memberIds })
+  return res.data.data
+}
+
 // ── MeetingResponseController ──
 export async function submitAvailability(shareToken: string, responses: SlotResponseItem[]): Promise<SlotResponseItem[]> {
   const res = await be.put<Env<SlotResponseItem[]>>(`/meetings/${shareToken}/responses`, { responses })
