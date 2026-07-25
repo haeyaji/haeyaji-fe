@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { Task, TaskGroup, TaskStatus, TasksByDate } from '@/types'
-import { fetchTodos, createTodo, updateTodo, deleteTodo } from '@/api/todoApi'
+import { fetchTodos, createTodo, updateTodo, deleteTodo, toTask } from '@/api/todoApi'
+import { listSharedTodos, leaveTodo } from '@/api/todoShareApi'
 import { useAppStore } from './useAppStore'
 import { useLabelStore } from './useLabelStore'
 
@@ -33,8 +34,13 @@ export interface TaskRef {
 
 interface TodoState {
   tasksByDate: TasksByDate
-  /** GET /todos?date= 로 해당 날짜 로드 */
+  sharedByDate: Record<string, Task[]> // GET /todos/shared 캐시(날짜별). loadDate에서 내 할일과 병합
+  /** GET /todos?date= 로 해당 날짜 로드 (공유받은 일정도 병합) */
   loadDate: (dateKey: string) => Promise<void>
+  /** GET /todos/shared 로 공유받은 일정 캐시 갱신 + 로드된 날짜 재병합 */
+  loadShared: () => Promise<void>
+  /** 공유 나가기(참여자 본인) */
+  leaveShared: (id: string) => Promise<void>
   toggleTask: (id: string) => void
   deleteTask: (id: string) => void
   addPlaceTask: (input: PlaceTaskInput) => void
@@ -121,13 +127,39 @@ function queueWrite(dateKey: string, id: string) {
 
 export const useTodoStore = create<TodoState>((set, get) => ({
   tasksByDate: {},
+  sharedByDate: {},
   loadDate: async (dateKey) => {
     try {
-      const tasks = await fetchTodos(dateKey)
+      const own = await fetchTodos(dateKey)
+      const ownIds = new Set(own.map((t) => t.id))
+      const shared = (get().sharedByDate[dateKey] ?? []).filter((t) => !ownIds.has(t.id)) // 내 소유와 중복 제거
+      const tasks = [...own, ...shared]
       set((s) => ({ tasksByDate: { ...s.tasksByDate, [dateKey]: tasks } }))
       useLabelStore.getState().hydrateAssignments(tasks) // todo.labelId → 라벨 오버레이 동기화
     } catch {
       /* be 미기동/오류 — 기존 상태 유지 (조용히 무시) */
+    }
+  },
+  loadShared: async () => {
+    try {
+      const list = await listSharedTodos()
+      const byDate: Record<string, Task[]> = {}
+      for (const r of list) (byDate[r.date] ??= []).push({ ...toTask(r), shared: true })
+      set({ sharedByDate: byDate })
+      // 이미 로드된 날짜 재병합 (공유 일정이 그 날짜 목록/캘린더에 반영되도록)
+      const loaded = Object.keys(get().tasksByDate)
+      await Promise.all(loaded.map((d) => get().loadDate(d)))
+    } catch {
+      /* be 미기동/오류 무시 */
+    }
+  },
+  leaveShared: async (id) => {
+    try {
+      await leaveTodo(id)
+      await get().loadShared()
+      useAppStore.getState().toast('공유에서 나갔어요')
+    } catch (e) {
+      useAppStore.getState().toast((e as Error)?.message || '나가기에 실패했어요')
     }
   },
   toggleTask: (id) => {

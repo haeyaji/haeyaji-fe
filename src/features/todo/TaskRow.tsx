@@ -59,6 +59,9 @@ export function TaskRow({ task, variant, onOpen }: { task: Task; variant: 'home'
               {home ? 'AI 추천' : 'AI'}
             </div>
           )}
+          {task.shared && (
+            <div style={{ flexShrink: 0, fontSize: home ? 12 : 11, fontWeight: 800, color: '#3F82C2', background: '#EAF2F8', padding: home ? '3px 8px' : '3px 7px', borderRadius: 20 }}>공유</div>
+          )}
         </div>
         {!home && <div style={{ fontSize: 16, fontWeight: 600, color: metaColor, marginTop: 1 }}>{meta}</div>}
       </div>

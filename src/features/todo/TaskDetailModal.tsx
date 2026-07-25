@@ -30,7 +30,7 @@ function PinIcon({ filled, c }: { filled: boolean; c: string }) {
 
 export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string; taskId: string; onClose: () => void }) {
   const tasksByDate = useTodoStore((s) => s.tasksByDate)
-  const { updateTitle, setStatus, removeTask, patchTask, togglePin } = useTodoStore()
+  const { updateTitle, setStatus, removeTask, patchTask, togglePin, leaveShared } = useTodoStore()
   const friendItems = useFriendStore((s) => s.friends)
   const nameOf = useFriendStore((s) => s.nameOf)
   const assignments = useLabelStore((s) => s.assignments) // 라벨 변경 리렌더용
@@ -104,7 +104,7 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
           <div onClick={() => togglePin(dateKey, task.id)} className="hbtn" title={task.pinned ? '고정 해제' : '최상단 고정'} style={{ width: 32, height: 32, borderRadius: 10, background: task.pinned ? '#FDF0E3' : '#F0F2F6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <PinIcon filled={!!task.pinned} c={task.pinned ? '#C2702A' : '#A39C8E'} />
           </div>
-          <div onClick={() => { removeTask(dateKey, task.id); onClose() }} className="hbtn" title="삭제" style={{ width: 32, height: 32, borderRadius: 10, background: '#F0F2F6', color: '#C77', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <div onClick={() => { task.shared ? void leaveShared(task.id) : removeTask(dateKey, task.id); onClose() }} className="hbtn" title={task.shared ? '공유 나가기' : '삭제'} style={{ width: 32, height: 32, borderRadius: 10, background: '#F0F2F6', color: '#C77', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <TrashIcon w={16} />
           </div>
           <div onClick={onClose} style={{ width: 32, height: 32, borderRadius: 10, background: '#F0F2F6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -190,7 +190,14 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
           )}
         </div>
 
-        {/* 공유 (todo_participant: 역할 먼저 지정 → 초대 → 상대 수락) */}
+        {/* 공유받은 일정이면 참여자 안내만, 내 소유면 공유 관리 UI */}
+        {task.shared ? (
+          <div style={{ marginTop: 22, display: 'flex', alignItems: 'center', gap: 10, background: '#EAF2F8', border: '1px solid #D7E4EF', borderRadius: 14, padding: '13px 15px' }}>
+            <span style={{ fontSize: 12.5, fontWeight: 800, color: '#3F82C2', background: '#fff', padding: '3px 9px', borderRadius: 20 }}>공유</span>
+            <div style={{ flex: 1, fontSize: 13.5, fontWeight: 700, color: '#3B6EA0' }}>다른 사람이 공유한 일정이에요</div>
+            <div onClick={() => { void leaveShared(task.id); onClose() }} className="hbtn" style={{ fontSize: 12.5, fontWeight: 800, color: '#8B8579', cursor: 'pointer' }}>나가기</div>
+          </div>
+        ) : (
         <div style={{ marginTop: 22 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 9 }}>
             <div style={{ fontSize: 13, fontWeight: 800, color: '#8B8579' }}>공유</div>
@@ -271,6 +278,7 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   )
