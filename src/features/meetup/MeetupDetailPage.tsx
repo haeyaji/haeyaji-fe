@@ -18,6 +18,7 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
   const [copied, setCopied] = useState(false)
   const [inviteQ, setInviteQ] = useState('') // 닉네임 검색 초대
   const [inviteResult, setInviteResult] = useState<MemberLite | null | 'none'>(null)
+  const [bestOpen, setBestOpen] = useState(false) // 가장 많이 겹치는 시간 모달
   const cacheName = useFriendStore((s) => s.cacheName)
   const drag = useRef<'add' | 'remove' | null>(null) // 드래그 칠하기 모드 (hooks는 early return 앞에)
 
@@ -220,23 +221,43 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
           )}
         </div>
 
-        {/* 베스트 타임 + 확정 */}
+        {/* 가장 많이 겹치는 시간 — 버튼 → 모달 */}
         {!conf && !expired && bestTimes && bestTimes.windows.length > 0 && (
-          <div style={{ background: '#fff', border: '1px solid #ECE9E0', borderRadius: 18, padding: 16 }}>
-            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 10 }}>가장 많이 겹치는 시간 · 최대 {bestTimes.maxFreeCount}명</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {bestTimes.windows.slice(0, 5).map((w, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: MC.tintBg, borderRadius: 12, padding: '11px 14px' }}>
-                  <div style={{ flex: 1, minWidth: 0, fontSize: 14.5, fontWeight: 800, color: MC.tintText }}>{confirmedRange(w.startAt, w.endAt)}</div>
-                  <div style={{ fontSize: 12.5, fontWeight: 800, color: MC.primary }}>{w.freeCount}명</div>
-                  {isCreator && <div onClick={() => confirm(shareToken, w.startAt, w.endAt)} className="lift" style={{ fontSize: 13, fontWeight: 800, color: '#fff', background: MC.primary, borderRadius: 10, padding: '7px 13px', cursor: 'pointer' }}>확정</div>}
-                </div>
-              ))}
-            </div>
-            {!isCreator && <div style={{ fontSize: 12.5, fontWeight: 600, color: MC.muted, marginTop: 10 }}>확정은 약속 생성자만 할 수 있어요</div>}
+          <div onClick={() => setBestOpen(true)} className="lift" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: MC.ink, color: '#fff', fontSize: 15, fontWeight: 800, borderRadius: 14, padding: 15, cursor: 'pointer' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+            가장 많이 겹치는 시간 보기 · 최대 {bestTimes.maxFreeCount}명
           </div>
         )}
       </div>
+
+      {/* 겹치는 시간 모달 */}
+      {bestOpen && bestTimes && (
+        <div onClick={() => setBestOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(24,21,15,.42)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'rb-fade .16s ease' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: 'min(520px, 94vw)', maxHeight: '86vh', overflowY: 'auto', background: '#fff', borderRadius: 22, boxShadow: '0 40px 90px rgba(24,21,15,.4)', animation: 'rb-modal .22s ease', padding: '22px 26px 24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 800 }}>가장 많이 겹치는 시간</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: MC.muted, marginTop: 3 }}>최대 {bestTimes.maxFreeCount}명 · 참여 {status?.participantCount ?? total}명</div>
+              </div>
+              <div style={{ flex: 1 }} />
+              <div onClick={() => setBestOpen(false)} style={{ width: 34, height: 34, borderRadius: 11, background: MC.chipBg, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5A554B" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 }}>
+              {bestTimes.windows.map((w, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: MC.tintBg, borderRadius: 13, padding: '13px 15px' }}>
+                  <div style={{ width: 26, height: 26, borderRadius: 8, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: MC.tintText, flexShrink: 0 }}>{i + 1}</div>
+                  <div style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 800, color: MC.tintText }}>{confirmedRange(w.startAt, w.endAt)}</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: MC.primary }}>{w.freeCount}명</div>
+                  {isCreator && <div onClick={() => { confirm(shareToken, w.startAt, w.endAt); setBestOpen(false) }} className="lift" style={{ fontSize: 13, fontWeight: 800, color: '#fff', background: MC.primary, borderRadius: 10, padding: '8px 14px', cursor: 'pointer' }}>확정</div>}
+                </div>
+              ))}
+            </div>
+            {!isCreator && <div style={{ fontSize: 12.5, fontWeight: 600, color: MC.muted, marginTop: 12, textAlign: 'center' }}>확정은 약속 생성자만 할 수 있어요</div>}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
