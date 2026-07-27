@@ -14,6 +14,7 @@ import { Avatar } from '@/features/meetup/meetupShared'
 import { LabelPicker } from './LabelPicker'
 import { DayPicker } from '@/features/routine/DayPicker'
 import { COLUMNS, dateBadge } from './taskMeta'
+import { normalizeTime } from '@/lib/dates'
 import type { ShareRole } from '@/types'
 
 const ROLE_LABEL: Record<ShareRole, string> = { owner: '소유자', editor: '편집', viewer: '보기' }
@@ -40,6 +41,8 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
   const [inviteRole, setInviteRole] = useState<ShareRole>('editor')
   const [expand, setExpand] = useState(false)
   const [days, setDays] = useState<boolean[]>([true, true, true, true, true, false, false])
+  const [timeInput, setTimeInput] = useState(() => (useTodoStore.getState().tasksByDate[dateKey] ?? []).find((t) => t.id === taskId)?.time || '')
+  const [timeErr, setTimeErr] = useState(false)
   useOverlay(true, onClose)
 
   // 스토어 최신 상태 반영 (수정 즉시 리렌더)
@@ -49,6 +52,14 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
   const done = statusOf(task) === 'done'
   const canEdit = !task.shared || task.myRole === 'EDITOR' // 공유 VIEWER는 읽기전용
   const guardEdit = () => { if (!canEdit) toast('보기 권한이라 수정할 수 없어요'); return canEdit }
+  // 시간 편집: 자유입력 → "오전/오후 HH:MM" 정규화 후 저장(be PATCH). 형식 못 알아보면 힌트.
+  const commitTime = () => {
+    const n = normalizeTime(timeInput)
+    if (n === null) { setTimeErr(true); return }
+    setTimeErr(false)
+    if (n !== timeInput) setTimeInput(n)
+    if (n !== (task.time || '')) patchTask(dateKey, taskId, { time: n })
+  }
 
   // ── 공유 (be /todos/{id}/share) — 이 모달의 할 일은 내 소유이므로 나는 owner ──
   // be는 participants에 OWNER 행을 두지 않음 → 초대받은 사람만. 수락/거절은 초대받은 본인만 가능(여기선 상태 표시만).
@@ -144,10 +155,24 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
               </div>
             )
           })}
-          {task.time && <div style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#8B8579', background: '#F6F8FA', padding: '8px 13px', borderRadius: 20 }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
-            {task.time}
-          </div>}
+        </div>
+
+        {/* 시간 (편집) */}
+        <div style={{ marginTop: 20 }}>
+          <div style={label}>시간</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#F6F8FA', border: `1px solid ${timeErr ? '#E5A79C' : '#EAECEF'}`, borderRadius: 13, padding: '11px 14px' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8B8579" strokeWidth="2.2" strokeLinecap="round" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+            <input
+              value={timeInput}
+              readOnly={!canEdit}
+              onChange={(e) => { setTimeInput(e.target.value); setTimeErr(false) }}
+              onBlur={() => { if (canEdit) commitTime() }}
+              onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+              placeholder="예: 오후 2시 · 시간 없으면 비워두기"
+              style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontFamily: 'inherit', fontSize: 14.5, fontWeight: 700, color: '#17150F' }}
+            />
+          </div>
+          {timeErr && <div style={{ fontSize: 12.5, fontWeight: 700, color: '#C0645C', marginTop: 6, paddingLeft: 2 }}>시간을 알아보지 못했어요. "오후 2시", "14:30"처럼 입력해주세요.</div>}
         </div>
 
         {/* 분류 (사용자 라벨, be todo.label_id) */}
