@@ -1,11 +1,11 @@
 // 약속 생성 — 제목·타입·후보날짜·시간창·슬롯단위 → be POST /meetings → shareToken.
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { CloseIcon } from '@/lib/icons'
 import { useOverlay } from '@/lib/useOverlay'
-import { todayKey, addDays } from '@/lib/dates'
+import { todayKey, fmtKey } from '@/lib/dates'
 import { useMeetupStore } from '@/store/useMeetupStore'
 import type { MeetingType } from '@/api/meetingApi'
-import { MEET_TYPES, dateLabel } from './meetupShared'
+import { MEET_TYPES } from './meetupShared'
 import { MC } from './tokens'
 
 // slotUnit(30|60)에 맞춘 "HH:mm" 옵션 (08:00 ~ 24:00)
@@ -28,9 +28,23 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
   const [end, setEnd] = useState('18:00')
   const [busy, setBusy] = useState(false)
 
-  const dayOpts = useMemo(() => Array.from({ length: 21 }, (_, i) => addDays(todayKey(), i)), [])
   const times = useMemo(() => timeOptions(unit), [unit])
-  const toggleDate = (d: string) => setDates((p) => (p.includes(d) ? p.filter((x) => x !== d) : [...p, d].sort()))
+  // 달력(월 그리드) — 드래그로 기간 선택. 월=0 시작.
+  const [ym, setYm] = useState(() => { const t = new Date(); return { y: t.getFullYear(), m: t.getMonth() } })
+  const monthCells = useMemo(() => {
+    const startDow = (new Date(ym.y, ym.m, 1).getDay() + 6) % 7
+    const n = new Date(ym.y, ym.m + 1, 0).getDate()
+    const cells: (string | null)[] = Array.from({ length: startDow }, () => null)
+    for (let d = 1; d <= n; d++) cells.push(fmtKey(new Date(ym.y, ym.m, d)))
+    while (cells.length % 7) cells.push(null)
+    return cells
+  }, [ym])
+  const today = todayKey()
+  const drag = useRef<'add' | 'remove' | null>(null)
+  const applyDay = (k: string, mode: 'add' | 'remove') => setDates((p) => (mode === 'add' ? (p.includes(k) ? p : [...p, k].sort()) : p.filter((x) => x !== k)))
+  const onDown = (k: string) => { if (k < today) return; const mode = dates.includes(k) ? 'remove' : 'add'; drag.current = mode; applyDay(k, mode) }
+  const onEnter = (k: string) => { if (drag.current && k >= today) applyDay(k, drag.current) }
+  useEffect(() => { const up = () => { drag.current = null }; window.addEventListener('mouseup', up); return () => window.removeEventListener('mouseup', up) }, [])
   const valid = title.trim().length > 0 && dates.length > 0 && start < end
 
   const submit = async () => {
@@ -61,9 +75,41 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
           </div>
         </Field>
 
-        <Field label={`후보 날짜 · ${dates.length}개`}>
-          <div style={{ display: 'flex', gap: 7, overflowX: 'auto', paddingBottom: 4 }}>
-            {dayOpts.map((d) => (<div key={d} onClick={() => toggleDate(d)} style={{ ...chip(dates.includes(d)), whiteSpace: 'nowrap', flexShrink: 0, padding: '9px 12px', fontSize: 13 }}>{dateLabel(d)}</div>))}
+        <Field label={`후보 날짜 · ${dates.length}개 (드래그로 기간 선택)`}>
+          <div style={{ border: '1px solid #ECEAE3', borderRadius: 14, padding: 12, userSelect: 'none', WebkitUserSelect: 'none' }}>
+            {/* 월 네비 */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div onClick={() => setYm((p) => (p.m === 0 ? { y: p.y - 1, m: 11 } : { y: p.y, m: p.m - 1 }))} className="hbtn" style={{ width: 28, height: 28, borderRadius: 8, background: '#F4F3F0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B8579" strokeWidth="2.4" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg>
+              </div>
+              <div style={{ fontSize: 14.5, fontWeight: 800 }}>{ym.y}년 {ym.m + 1}월</div>
+              <div onClick={() => setYm((p) => (p.m === 11 ? { y: p.y + 1, m: 0 } : { y: p.y, m: p.m + 1 }))} className="hbtn" style={{ width: 28, height: 28, borderRadius: 8, background: '#F4F3F0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B8579" strokeWidth="2.4" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
+              </div>
+            </div>
+            {/* 요일 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4, marginBottom: 4 }}>
+              {['월', '화', '수', '목', '금', '토', '일'].map((w, i) => (
+                <div key={w} style={{ textAlign: 'center', fontSize: 11.5, fontWeight: 800, color: i === 5 ? '#3F82C2' : i === 6 ? '#D9614F' : MC.faint }}>{w}</div>
+              ))}
+            </div>
+            {/* 날짜 셀 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4 }}>
+              {monthCells.map((k, i) => {
+                if (!k) return <div key={`e${i}`} />
+                const past = k < today
+                const on = dates.includes(k)
+                const day = Number(k.slice(8))
+                return (
+                  <div key={k}
+                    onMouseDown={() => onDown(k)}
+                    onMouseEnter={() => onEnter(k)}
+                    style={{ height: 34, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13.5, fontWeight: 800, cursor: past ? 'default' : 'pointer', color: past ? '#CBD0D8' : on ? '#fff' : k === today ? MC.primary : '#4A463D', background: on ? MC.primary : past ? 'transparent' : '#F6F8FA', border: k === today && !on ? `1.5px solid ${MC.primary}` : '1.5px solid transparent' }}>
+                    {day}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </Field>
 
