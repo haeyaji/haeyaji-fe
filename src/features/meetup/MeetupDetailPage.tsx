@@ -19,6 +19,8 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
   const [inviteQ, setInviteQ] = useState('') // 닉네임 검색 초대
   const [inviteResult, setInviteResult] = useState<MemberLite | null | 'none'>(null)
   const [bestOpen, setBestOpen] = useState(false) // 가장 많이 겹치는 시간 모달
+  const [bestFilter, setBestFilter] = useState<'all' | 'majority'>('all') // 모달 필터: 모두/과반수
+  const [bestSel, setBestSel] = useState<{ key: string; date: string; start: string; end: string } | null>(null) // 선택+시간 자유편집
   const cacheName = useFriendStore((s) => s.cacheName)
   const drag = useRef<'add' | 'remove' | null>(null) // 드래그 칠하기 모드 (hooks는 early return 앞에)
 
@@ -244,17 +246,56 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5A554B" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 }}>
-              {bestTimes.windows.map((w, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: MC.tintBg, borderRadius: 13, padding: '13px 15px' }}>
-                  <div style={{ width: 26, height: 26, borderRadius: 8, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: MC.tintText, flexShrink: 0 }}>{i + 1}</div>
-                  <div style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 800, color: MC.tintText }}>{confirmedRange(w.startAt, w.endAt)}</div>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: MC.primary }}>{w.freeCount}명</div>
-                  {isCreator && <div onClick={() => { confirm(shareToken, w.startAt, w.endAt); setBestOpen(false) }} className="lift" style={{ fontSize: 13, fontWeight: 800, color: '#fff', background: MC.primary, borderRadius: 10, padding: '8px 14px', cursor: 'pointer' }}>확정</div>}
-                </div>
-              ))}
-            </div>
-            {!isCreator && <div style={{ fontSize: 12.5, fontWeight: 600, color: MC.muted, marginTop: 12, textAlign: 'center' }}>확정은 약속 생성자만 할 수 있어요</div>}
+            {(() => {
+              const tot = status?.participantCount ?? total
+              const majCut = Math.floor(tot / 2) + 1
+              const wins = bestTimes.windows
+              const counts = { all: wins.length, majority: wins.filter((w) => w.freeCount >= majCut).length }
+              const shown = bestFilter === 'majority' ? wins.filter((w) => w.freeCount >= majCut) : wins
+              return (
+                <>
+                  {/* 필터: 모두 / 과반수 */}
+                  <div style={{ display: 'flex', gap: 6, marginTop: 14, marginBottom: 12 }}>
+                    {([['all', '모두'], ['majority', '과반수']] as const).map(([k, l]) => (
+                      <div key={k} onClick={() => setBestFilter(k)} className="hbtn" style={{ flex: 1, textAlign: 'center', padding: '9px 4px', borderRadius: 11, fontSize: 13.5, fontWeight: 800, cursor: 'pointer', background: bestFilter === k ? MC.ink : MC.fieldBg, color: bestFilter === k ? '#fff' : MC.muted }}>{l} {counts[k]}</div>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {shown.length > 0 ? shown.map((w, i) => {
+                      const on = bestSel?.key === w.startAt
+                      return (
+                        <div key={w.startAt}>
+                          <div onClick={() => setBestSel(on ? null : { key: w.startAt, date: w.startAt.slice(0, 10), start: w.startAt.slice(11, 16), end: w.endAt.slice(11, 16) })} className="lift"
+                            style={{ display: 'flex', alignItems: 'center', gap: 10, background: on ? '#fff' : MC.tintBg, border: `1px solid ${on ? MC.primary : 'transparent'}`, borderRadius: 13, padding: '13px 15px', cursor: 'pointer' }}>
+                            <div style={{ width: 26, height: 26, borderRadius: 8, background: on ? MC.tintBg : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: MC.tintText, flexShrink: 0 }}>{i + 1}</div>
+                            <div style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 800, color: MC.tintText }}>{confirmedRange(w.startAt, w.endAt)}</div>
+                            <span style={{ fontSize: 12, fontWeight: 800, color: w.freeCount === tot ? '#fff' : MC.primary, background: w.freeCount === tot ? MC.primary : '#fff', padding: '4px 10px', borderRadius: 20, flexShrink: 0 }}>{w.freeCount}/{tot}</span>
+                          </div>
+                          {/* 시간 자유 편집 + 확정 (생성자) */}
+                          {on && bestSel && isCreator && (
+                            <div style={{ marginTop: 7, background: '#fff', border: `1px solid ${MC.border}`, borderRadius: 13, padding: '14px 15px', animation: 'rb-pop .18s ease' }}>
+                              <div style={{ fontSize: 12.5, fontWeight: 700, color: MC.muted, marginBottom: 10, textAlign: 'center' }}>실제 만날 시간 (자유롭게 수정)</div>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                                <input type="time" value={bestSel.start} onChange={(e) => setBestSel({ ...bestSel, start: e.target.value })} style={{ border: `1px solid ${MC.border}`, borderRadius: 10, padding: '10px 12px', fontFamily: 'inherit', fontSize: 15, fontWeight: 800, outline: 'none', background: MC.fieldBg }} />
+                                <span style={{ color: MC.faint, fontWeight: 800 }}>~</span>
+                                <input type="time" value={bestSel.end} onChange={(e) => setBestSel({ ...bestSel, end: e.target.value })} style={{ border: `1px solid ${MC.border}`, borderRadius: 10, padding: '10px 12px', fontFamily: 'inherit', fontSize: 15, fontWeight: 800, outline: 'none', background: MC.fieldBg }} />
+                              </div>
+                              <div onClick={() => { if (bestSel.end <= bestSel.start) return; confirm(shareToken, `${bestSel.date}T${bestSel.start}:00`, `${bestSel.date}T${bestSel.end}:00`); setBestOpen(false); setBestSel(null) }} className={bestSel.end > bestSel.start ? 'lift' : ''}
+                                style={{ marginTop: 14, textAlign: 'center', background: bestSel.end > bestSel.start ? MC.primary : '#D6D9DF', color: '#fff', fontSize: 15, fontWeight: 800, borderRadius: 12, padding: 13, cursor: bestSel.end > bestSel.start ? 'pointer' : 'default' }}>
+                                {bestSel.start}~{bestSel.end} 확정
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    }) : (
+                      <div style={{ padding: '28px 0', textAlign: 'center', color: MC.faint, fontSize: 14.5, fontWeight: 600 }}>이 조건에 맞는 시간대가 없어요</div>
+                    )}
+                  </div>
+                  {!isCreator && <div style={{ fontSize: 12.5, fontWeight: 600, color: MC.muted, marginTop: 12, textAlign: 'center' }}>확정은 약속 생성자만 할 수 있어요</div>}
+                </>
+              )
+            })()}
           </div>
         </div>
       )}
