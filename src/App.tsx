@@ -47,7 +47,7 @@ export default function App() {
     document.cookie = 'XSRF-TOKEN=; path=/api; max-age=0; SameSite=Lax'
     const isCallback = window.location.pathname === '/oauth/callback'
     const isNewMember = new URLSearchParams(window.location.search).get('isNewMember') === 'true'
-    const inviteToken = window.location.pathname.match(/^\/invite\/([^/]+)/)?.[1] ?? null // 초대 링크 진입
+    const inviteToken = window.location.pathname.match(/^\/(?:invite|meetup)\/([^/]+)/)?.[1] ?? null // 초대/약속 링크 진입 → 약속 상세 자동 열기
     if (isCallback || inviteToken) history.replaceState(null, '', '/') // 콜백/초대 쿼리 URL 정리
     ;(async () => {
       try {
