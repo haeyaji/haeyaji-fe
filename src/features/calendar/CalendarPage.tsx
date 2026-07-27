@@ -15,8 +15,9 @@ import { TaskDetailModal } from '@/features/todo/TaskDetailModal'
 import type { Task, WeatherCond } from '@/types'
 
 function evColor(t: Task): { bg: string; color: string } {
-  if (t.ai) return { bg: '#E4F2EC', color: '#15795A' }
   if (t.done) return { bg: '#ECEFF3', color: '#B3ADA0' }
+  if (t.shared) return { bg: '#EAF2F8', color: '#3F82C2' } // 공유받은 일정 = 파랑 (AI 초록과 구분)
+  if (t.ai) return { bg: '#E4F2EC', color: '#15795A' }
   return { bg: '#E9EDF3', color: '#5A554B' }
 }
 
