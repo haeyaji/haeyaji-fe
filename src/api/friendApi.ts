@@ -1,5 +1,5 @@
 // be 친구 API (/friends) + 회원 검색(/members/search). ApiResponse<T> → data.data.
-// ⚠️ be는 FriendResponse에 상대 닉네임을 안 줌(memberId만) → FE가 검색결과로 이름 캐시.
+// be가 counterpartId/counterpartNickname(상대 정보)를 직접 준다 → FE는 그걸 그대로 씀.
 import { be } from './client'
 
 interface Env<T> { data: T }
@@ -10,6 +10,8 @@ export interface FriendRow {
   id: string // Friend 행 UUID (요청/친구관계 id — memberId 아님)
   requesterId: string
   receiverId: string
+  counterpartId: string // 상대 memberId (be가 나 기준으로 계산해 줌)
+  counterpartNickname: string // 상대 닉네임
   status: FriendStatus
   createdAt: string
   acceptedAt: string | null
