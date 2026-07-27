@@ -15,6 +15,7 @@ interface LocationState {
   init: () => void
   locate: () => void
   applyRegion: (lat: number, lng: number) => void
+  setLocation: (lat: number, lng: number, label?: string) => void // 수동(지명 검색) 위치 지정
 }
 
 // 좌표 → 행정동명 (카카오 services 역지오코딩)
@@ -63,5 +64,9 @@ export const useLocationStore = create<LocationState>((set, get) => ({
   },
   applyRegion: (lat, lng) => {
     reverseGeocode(lat, lng).then((region) => set({ region }))
+  },
+  setLocation: (lat, lng, label) => {
+    set({ lat, lng, label: label ?? '지정 위치', source: 'geo', locating: false })
+    get().applyRegion(lat, lng)
   },
 }))

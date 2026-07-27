@@ -19,3 +19,13 @@ export async function searchPlaces(query: string, lat: number, lng: number, radi
   })
   return res.data.places ?? []
 }
+
+/** 주소/지명 → 좌표 (be 카카오 지오코딩). 못 찾으면 null. */
+export async function geocode(query: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const res = await be.get<{ lat: number; lng: number }>('/places/geocode', { params: { query: query.trim() } })
+    return res.data
+  } catch {
+    return null
+  }
+}
