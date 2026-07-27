@@ -31,8 +31,9 @@ export async function getPreferences(): Promise<PreferenceData> {
 /** 카테고리 선택 신호 (구 /recommend/feedback 단일 signal 폐기 → choice로 교체).
  *  1단계 카테고리 칩에서 하나 선택 시 1회 전송. be가 분배: selected +2, shown 중 나머지 각 −0.05, keywords 각 +2.
  *  shown/selected는 nlp가 준 10종 code 그대로. 인증(JWT 쿠키)+CSRF는 기존과 동일. fire-and-forget. */
-export async function sendChoice(shown: RecCategory[], selected: RecCategory, keywords: string[] = []): Promise<void> {
-  await be.post('/recommend/feedback/choice', { shown, selected, keywords })
+export async function sendChoice(shown: RecCategory[], selected: RecCategory, keywords: string[] = [], coords?: { lat: number; lng: number }): Promise<void> {
+  // lat/lng는 선택 — 보내면 be가 날씨축까지 반영(안 보내면 CLEAR로 쌓여 날씨축 무의미).
+  await be.post('/recommend/feedback/choice', { shown, selected, keywords, lat: coords?.lat, lng: coords?.lng })
 }
 
 /**

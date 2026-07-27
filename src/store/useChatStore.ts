@@ -77,7 +77,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
   chooseCategory: async (opt, shown, ctx) => {
     if (get().loading) return
-    fireSignal(sendChoice(shown, opt.code, opt.keywords ?? [])) // 개인화 신호(1회, fire-and-forget)
+    fireSignal(sendChoice(shown, opt.code, opt.keywords ?? [], { lat: ctx.lat, lng: ctx.lng })) // 개인화 신호(위치 포함 → 날씨축 반영)
     await run(set, get, recCategoryLabel(opt.code), ctx, opt.code) // 그 카테고리로 2단계(장소) 요청
   },
 }))
