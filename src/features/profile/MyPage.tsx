@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { WeatherIcon } from '@/lib/icons'
 import { last7Days, next7Days, dowLabel, todayKey } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
+import { updateNickname } from '@/api/authApi'
 import { usePrefStore } from '@/store/usePrefStore'
 import { useTodoStore } from '@/store/useTodoStore'
 import { useFriendStore } from '@/store/useFriendStore'
@@ -56,6 +57,17 @@ export function MyPage() {
   useEffect(() => { last7Days().forEach((k) => void useTodoStore.getState().loadDate(k)) }, [])
 
   const [detailUser, setDetailUser] = useState<{ id: string; nickname: string } | null>(null)
+  const [editName, setEditName] = useState<string | null>(null) // 닉네임 인라인 편집
+  const [savingName, setSavingName] = useState(false)
+  const toast = useAppStore((s) => s.toast)
+  const saveName = async () => {
+    const v = (editName ?? '').trim()
+    if (v.length < 2 || v.length > 10) { toast('닉네임은 2~10자로 입력해주세요'); return }
+    setSavingName(true)
+    try { await updateNickname(v); usePrefStore.setState({ nickname: v }); setEditName(null); toast('닉네임을 바꿨어요') }
+    catch (e) { toast((e as Error).message || '닉네임 변경에 실패했어요') }
+    setSavingName(false)
+  }
 
   const week = last7Days()
   const flat = week.flatMap((k) => tasksByDate[k] ?? [])
@@ -102,8 +114,22 @@ export function MyPage() {
             <Avatar name={nickname} size={78} font={34} />
             <div style={{ flex: 1, minWidth: 180 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-.5px' }}>{nickname}</div>
-                {pref.vibe && (
+                {editName === null ? (
+                  <>
+                    <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-.5px' }}>{nickname}</div>
+                    <div onClick={() => setEditName(nickname)} className="hbtn" title="닉네임 수정" style={{ display: 'flex', cursor: 'pointer', color: MC.faint }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <input autoFocus value={editName} maxLength={10} onChange={(e) => setEditName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) void saveName(); if (e.key === 'Escape') setEditName(null) }}
+                      style={{ fontSize: 22, fontWeight: 800, border: `1.5px solid ${MC.border}`, borderRadius: 10, padding: '4px 10px', outline: 'none', width: 160, fontFamily: 'inherit' }} />
+                    <div onClick={() => void saveName()} className="lift" style={{ fontSize: 13, fontWeight: 800, color: '#fff', background: savingName ? '#9AA7A0' : MC.primary, borderRadius: 9, padding: '8px 12px', cursor: 'pointer' }}>{savingName ? '저장 중' : '저장'}</div>
+                    <div onClick={() => setEditName(null)} className="hbtn" style={{ fontSize: 13, fontWeight: 800, color: MC.muted, background: MC.chipBg, borderRadius: 9, padding: '8px 12px', cursor: 'pointer' }}>취소</div>
+                  </div>
+                )}
+                {editName === null && pref.vibe && (
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: MC.tintBg, color: MC.tintText, fontSize: 12.5, fontWeight: 800, padding: '5px 11px', borderRadius: 20 }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill={MC.primary}><path d="M12 2l1.6 4.9 4.9 1.6-4.9 1.6L12 15l-1.6-4.9L5.5 8.5l4.9-1.6z" /></svg>
                     {pref.vibe}
