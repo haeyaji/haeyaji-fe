@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { todayKey } from '@/lib/dates'
 import { logoutApi } from '@/api/authApi'
 
@@ -54,7 +55,9 @@ interface AppState {
 
 let toastTimer: ReturnType<typeof setTimeout> | undefined
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>()(
+  persist(
+    (set) => ({
   authed: false,
   sidebarCollapsed: false,
   view: 'home',
@@ -74,7 +77,7 @@ export const useAppStore = create<AppState>((set) => ({
   showToast: false,
 
   login: (msg) => {
-    set({ authed: true, view: 'home' })
+    set({ authed: true }) // view는 persist된 값 유지(새로고침 시 현재 화면 보존). 초대 링크는 부팅에서 meetup으로 덮음.
     if (msg) useAppStore.getState().toast(msg)
   },
   logout: () => {
@@ -109,4 +112,8 @@ export const useAppStore = create<AppState>((set) => ({
     if (toastTimer) clearTimeout(toastTimer)
     toastTimer = setTimeout(() => set({ showToast: false }), 2400)
   },
-}))
+    }),
+    // 새로고침해도 현재 화면 유지 → home으로 튕기지 않음. (인증·모달 등 나머지는 매번 초기화)
+    { name: 'haeyaji-app', partialize: (s) => ({ view: s.view }) },
+  ),
+)

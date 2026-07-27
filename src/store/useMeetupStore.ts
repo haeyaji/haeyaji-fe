@@ -24,6 +24,7 @@ interface MeetupState {
   loadList: () => Promise<void>
   create: (input: CreateMeetingInput) => Promise<MeetingDetail | null>
   loadDetail: (shareToken: string) => Promise<void>
+  refreshBoard: (shareToken: string) => Promise<void> // 폴링용: 결과판(참여·투표·히트맵)만 갱신, 내 응답(myResponses)은 안 건드림
   join: (shareToken: string) => Promise<boolean>
   invite: (shareToken: string, memberIds: string[]) => Promise<void>
   submit: (shareToken: string, responses: SlotResponseItem[]) => Promise<void>
@@ -69,6 +70,19 @@ export const useMeetupStore = create<MeetupState>((set, get) => ({
       set({ loading: false })
       toast(errMsg(e))
     }
+  },
+
+  // 폴링용 — loading/myResponses는 안 건드려 UI 깜빡임·드래그 초기화 방지. 실패는 조용히(다음 회차 재시도).
+  refreshBoard: async (shareToken) => {
+    try {
+      const [detail, heatmap, bestTimes, status] = await Promise.all([
+        getMeeting(shareToken),
+        getHeatmap(shareToken).catch(() => get().heatmap),
+        getBestTimes(shareToken).catch(() => get().bestTimes),
+        getMeetingStatus(shareToken).catch(() => get().status),
+      ])
+      set({ detail, heatmap, bestTimes, status })
+    } catch { /* 무시 */ }
   },
 
   join: async (shareToken) => {

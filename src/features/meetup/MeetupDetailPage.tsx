@@ -23,11 +23,24 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
   const [bestSel, setBestSel] = useState<{ key: string; date: string; start: string; end: string } | null>(null) // 선택+시간 자유편집
   const cacheName = useFriendStore((s) => s.cacheName)
   const drag = useRef<'add' | 'remove' | null>(null) // 드래그 칠하기 모드 (hooks는 early return 앞에)
+  const mineRef = useRef(mine); mineRef.current = mine // 폴링 가드에서 최신값 참조
+  const myRespRef = useRef(myResponses); myRespRef.current = myResponses
 
   useEffect(() => { void loadDetail(shareToken); return () => clearDetail() }, [shareToken, loadDetail, clearDetail])
   useEffect(() => { void loadFriends() }, [loadFriends])
   useEffect(() => { setMine(new Set(myResponses.filter((r) => r.status === 'FREE').map((r) => r.slotId))) }, [myResponses])
   useEffect(() => { const up = () => { drag.current = null }; window.addEventListener('mouseup', up); return () => window.removeEventListener('mouseup', up) }, [])
+  // 실시간(폴링): 3초마다 결과판만 갱신 — 상대 투표·참여가 새로고침 없이 반영.
+  // ⚠️ 드래그 중이거나 미저장 변경(dirty)이면 스킵 → 내가 고르는 중인 게 안 지워짐.
+  useEffect(() => {
+    const id = setInterval(() => {
+      const saved = myRespRef.current.filter((r) => r.status === 'FREE').map((r) => r.slotId).sort()
+      const cur = [...mineRef.current].sort()
+      if (drag.current || JSON.stringify(cur) !== JSON.stringify(saved)) return // 드래그/dirty → 이번 회차 건너뜀
+      void useMeetupStore.getState().refreshBoard(shareToken)
+    }, 3000)
+    return () => clearInterval(id)
+  }, [shareToken])
   // 닉네임 검색(디바운스 350ms) → 초대 후보
   useEffect(() => {
     const q = inviteQ.trim()

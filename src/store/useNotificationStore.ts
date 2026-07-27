@@ -1,5 +1,5 @@
-// 알림 (be-56 실 피드). 로컬 샘플 폐기 → GET /notifications + unread-count + read/read-all/delete.
-// 전송은 DB 저장만(SSE 없음)이라 열 때/부팅 시 fetch. 낙관적 읽음/삭제 후 서버 반영.
+// 알림 (be-56 실 피드) + 실시간 SSE(GET /notifications/stream). 이벤트 오면 목록·뱃지 즉시 갱신.
+// be가 event.name("notification")으로 push, comment로 하트비트. EventSource가 끊기면 자동 재연결.
 import { create } from 'zustand'
 import {
   listNotifications, unreadCount, markNotiRead, markAllNotiRead, deleteNoti,
@@ -7,6 +7,8 @@ import {
 } from '@/api/notificationApi'
 
 export type { NotiItem, NotiCategory, NotiType }
+
+let es: EventSource | null = null // SSE 연결 (모듈 단일)
 
 interface NotiState {
   notifications: NotiItem[]
@@ -18,6 +20,8 @@ interface NotiState {
   load: () => Promise<void> // 첫 페이지(현재 category) + 미읽음 수(전체)
   loadMore: () => Promise<void> // 다음 커서
   setCategory: (c: NotiCategory | null) => Promise<void> // 탭 전환 → 재조회
+  connectStream: () => void // SSE 연결 (로그인 후)
+  disconnectStream: () => void
   markRead: (id: string) => Promise<void>
   markAllRead: () => Promise<void>
   remove: (id: string) => Promise<void>
@@ -54,6 +58,17 @@ export const useNotificationStore = create<NotiState>((set, get) => ({
   },
 
   setCategory: async (c) => { set({ category: c }); await get().load() },
+
+  connectStream: () => {
+    if (es) return
+    try {
+      const src = new EventSource('/api/notifications/stream') // same-origin(프록시) → accessToken 쿠키 자동 전송
+      src.addEventListener('notification', () => { void get().load() }) // 새 알림 push → 목록·뱃지 갱신
+      src.onerror = () => { /* EventSource가 자동 재연결 (be 하트비트 유지) */ }
+      es = src
+    } catch { /* SSE 미지원/실패 시 열 때 fetch로 폴백 */ }
+  },
+  disconnectStream: () => { es?.close(); es = null },
 
   markRead: async (id) => {
     const cur = get().notifications.find((n) => n.id === id)

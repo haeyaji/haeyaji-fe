@@ -28,13 +28,15 @@ function NotiIcon({ n }: { n: NotiItem }) {
 export function NotificationBell() {
   const { authed, notiOpen, openNoti, closeNoti } = useAppStore()
   useOverlay(notiOpen, closeNoti)
-  const { notifications, unread, hasNext, category, load, loadMore, setCategory, markRead, markAllRead, remove } = useNotificationStore()
+  const { notifications, unread, hasNext, category, load, loadMore, setCategory, connectStream, disconnectStream, markRead, markAllRead, remove } = useNotificationStore()
   const { pending, meetingInvites, load: loadInvites, accept, reject, rejectMeeting } = useShareInboxStore()
   const friendAccept = useFriendStore((s) => s.accept)
   const friendReject = useFriendStore((s) => s.reject)
 
   useEffect(() => { if (authed) { void load(); void loadInvites() } }, [authed, load, loadInvites])
   useEffect(() => { if (notiOpen) { void load(); void loadInvites() } }, [notiOpen, load, loadInvites])
+  // 실시간: 로그인 상태면 SSE 연결(새로고침 없이 알림 도달), 언마운트/로그아웃 시 해제
+  useEffect(() => { if (!authed) return; connectStream(); return () => disconnectStream() }, [authed, connectStream, disconnectStream])
 
   if (!authed) return null
   const badgeCount = unread + pending.length + meetingInvites.length
