@@ -259,7 +259,7 @@ function TaskItem({ row, rows, onOpen, onToggle, onPin, dragKey, setDragKey, reo
         className="hbtn"
         style={{ display: 'flex', flexShrink: 0, cursor: 'pointer', color: task.pinned ? '#C2702A' : '#CBD0D8' }}
       >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill={task.pinned ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 4h6l-1 5 3 3v2H7v-2l3-3-1-5z" /><path d="M12 14v6" /></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill={task.pinned ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 4h6l-1 5 3 3v2H7v-2l3-3-1-5z" /><path d="M12 14v6" /></svg>
       </span>
     </div>
   )
