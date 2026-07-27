@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CloseIcon } from '@/lib/icons'
 import { useOverlay } from '@/lib/useOverlay'
-import { todayKey, fmtKey } from '@/lib/dates'
+import { todayKey, fmtKey, addDays } from '@/lib/dates'
 import { useMeetupStore } from '@/store/useMeetupStore'
 import type { MeetingType } from '@/api/meetingApi'
 import { MEET_TYPES } from './meetupShared'
@@ -40,11 +40,23 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
     return cells
   }, [ym])
   const today = todayKey()
+  const [pickMode, setPickMode] = useState<'range' | 'each'>('range') // 기간 / 하나씩
+  const [anchor, setAnchor] = useState<string | null>(null) // 기간 모드: 첫 클릭 기준점
   const drag = useRef<'add' | 'remove' | null>(null)
   const applyDay = (k: string, mode: 'add' | 'remove') => setDates((p) => (mode === 'add' ? (p.includes(k) ? p : [...p, k].sort()) : p.filter((x) => x !== k)))
-  const onDown = (k: string) => { if (k < today) return; const mode = dates.includes(k) ? 'remove' : 'add'; drag.current = mode; applyDay(k, mode) }
-  const onEnter = (k: string) => { if (drag.current && k >= today) applyDay(k, drag.current) }
+  const datesBetween = (a: string, b: string) => { const [lo, hi] = a <= b ? [a, b] : [b, a]; const out: string[] = []; for (let k = lo; k <= hi; k = addDays(k, 1)) out.push(k); return out }
+  const onDown = (k: string) => {
+    if (k < today) return
+    if (pickMode === 'range') {
+      if (!anchor) { setAnchor(k); setDates((p) => (p.includes(k) ? p : [...p, k].sort())) }
+      else { const range = datesBetween(anchor, k); setDates((p) => Array.from(new Set([...p, ...range])).sort()); setAnchor(null) }
+    } else {
+      const mode = dates.includes(k) ? 'remove' : 'add'; drag.current = mode; applyDay(k, mode)
+    }
+  }
+  const onEnter = (k: string) => { if (pickMode === 'each' && drag.current && k >= today) applyDay(k, drag.current) }
   useEffect(() => { const up = () => { drag.current = null }; window.addEventListener('mouseup', up); return () => window.removeEventListener('mouseup', up) }, [])
+  useEffect(() => { setAnchor(null) }, [pickMode]) // 모드 바꾸면 기준점 리셋
   const valid = title.trim().length > 0 && dates.length > 0 && start < end
 
   const submit = async () => {
@@ -75,8 +87,15 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
           </div>
         </Field>
 
-        <Field label={`후보 날짜 · ${dates.length}개 (드래그로 기간 선택)`}>
+        <Field label={`후보 날짜 · ${dates.length}개`}>
           <div style={{ border: '1px solid #ECEAE3', borderRadius: 14, padding: 12, userSelect: 'none', WebkitUserSelect: 'none' }}>
+            {/* 선택 모드: 기간 / 하나씩 */}
+            <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+              {([['range', '기간'], ['each', '하나씩']] as const).map(([m, lbl]) => (
+                <div key={m} onClick={() => setPickMode(m)} className="hbtn" style={{ flex: 1, textAlign: 'center', fontSize: 13, fontWeight: 800, padding: '8px 0', borderRadius: 10, cursor: 'pointer', background: pickMode === m ? MC.ink : '#F4F3F0', color: pickMode === m ? '#fff' : MC.muted }}>{lbl}</div>
+              ))}
+            </div>
+            {pickMode === 'range' && <div style={{ fontSize: 11.5, fontWeight: 700, color: MC.muted, marginBottom: 8 }}>{anchor ? '끝 날짜를 눌러 기간을 선택하세요' : '시작 날짜를 누르세요'}</div>}
             {/* 월 네비 */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
               <div onClick={() => setYm((p) => (p.m === 0 ? { y: p.y - 1, m: 11 } : { y: p.y, m: p.m - 1 }))} className="hbtn" style={{ width: 28, height: 28, borderRadius: 8, background: '#F4F3F0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -104,7 +123,7 @@ export function CreateMeetupModal({ onClose, onCreated }: { onClose: () => void;
                   <div key={k}
                     onMouseDown={() => onDown(k)}
                     onMouseEnter={() => onEnter(k)}
-                    style={{ height: 34, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13.5, fontWeight: 800, cursor: past ? 'default' : 'pointer', color: past ? '#CBD0D8' : on ? '#fff' : k === today ? MC.primary : '#4A463D', background: on ? MC.primary : past ? 'transparent' : '#F6F8FA', border: k === today && !on ? `1.5px solid ${MC.primary}` : '1.5px solid transparent' }}>
+                    style={{ height: 34, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13.5, fontWeight: 800, cursor: past ? 'default' : 'pointer', color: past ? '#CBD0D8' : on ? '#fff' : k === today ? MC.primary : '#4A463D', background: on ? MC.primary : past ? 'transparent' : '#F6F8FA', border: anchor === k ? '2px solid #C2702A' : k === today && !on ? `1.5px solid ${MC.primary}` : '1.5px solid transparent' }}>
                     {day}
                   </div>
                 )
