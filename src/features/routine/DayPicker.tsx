@@ -1,5 +1,5 @@
 // 반복 요일 선택기 (월~일 토글 + 매일/평일/주말 프리셋) — 루틴 모달·할일 추가 아코디언 공용.
-import { DOW } from '@/lib/mockData'
+import { DOW } from '@/lib/dates'
 
 const PRESETS: { kind: string; label: string; days: boolean[] }[] = [
   { kind: 'every', label: '매일', days: [true, true, true, true, true, true, true] },

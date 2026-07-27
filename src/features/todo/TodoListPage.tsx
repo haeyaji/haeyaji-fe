@@ -14,7 +14,7 @@ import { AvatarStack } from '@/features/meetup/meetupShared'
 import { TaskDetailModal } from './TaskDetailModal'
 import { RoutineFormModal } from '@/features/routine/RoutineFormModal'
 import { dateBadge } from './taskMeta'
-import { DOW } from '@/lib/mockData'
+import { DOW } from '@/lib/dates'
 import type { Task, Routine } from '@/types'
 
 // 반복 요일 요약 (매일/평일/주말/요일목록)

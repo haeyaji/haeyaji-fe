@@ -1,5 +1,5 @@
 // 메인 대시보드 "추천 장소" 타일 — 개인화 추천(be /message) + 실제 장소 검색(be /places/search).
-// 하드코딩(recsFor + mockData.PLACES) 대체. 부팅/위치·날씨 확정 시 1회만 호출(캐시 key로 중복 차단).
+// 부팅/위치·날씨 확정 시 1회만 호출(캐시 key로 중복 차단). 예전 하드코딩 추천 배너를 대체.
 //   1) /message (text+weather+mood, 카테고리 없음) → 개인화 top 카테고리 + keywords (WeightService 반영)
 //   2) /places/search(keyword, lat, lng, radius) → 실제 주변 장소 → 상위 1건을 타일에 표시
 import { create } from 'zustand'

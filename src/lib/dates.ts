@@ -1,6 +1,7 @@
 // 실제 날짜 유틸 — selId는 'YYYY-MM-DD' 키를 쓴다 (mock 5/20~26 제거).
 
-export const DOW_KO = ['일', '월', '화', '수', '목', '금', '토']
+export const DOW_KO = ['일', '월', '화', '수', '목', '금', '토'] // getDay() 인덱스용(일요일 시작)
+export const DOW = ['월', '화', '수', '목', '금', '토', '일'] // 루틴 요일 UI용(월요일 시작, index 0=월)
 
 export function fmtKey(d: Date): string {
   const y = d.getFullYear()

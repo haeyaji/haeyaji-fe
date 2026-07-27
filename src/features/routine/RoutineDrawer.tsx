@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useOverlay } from '@/lib/useOverlay'
 import { CloseIcon, TrashIcon } from '@/lib/icons'
-import { DOW } from '@/lib/mockData'
+import { DOW } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
 import { useRoutineStore } from '@/store/useRoutineStore'
 import { useLabelStore } from '@/store/useLabelStore'
