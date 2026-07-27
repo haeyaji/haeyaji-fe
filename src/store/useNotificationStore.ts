@@ -1,53 +1,71 @@
-// 알림 (be notification 테이블 대응). 휘발성은 be에서 Redis Pub/Sub+SSE, 영속은 DB.
-// be 미구현이라 로컬 persist. TODO(be): GET /notifications + SSE 구독으로 대체.
+// 알림 (be-56 실 피드). 로컬 샘플 폐기 → GET /notifications + unread-count + read/read-all/delete.
+// 전송은 DB 저장만(SSE 없음)이라 열 때/부팅 시 fetch. 낙관적 읽음/삭제 후 서버 반영.
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import {
+  listNotifications, unreadCount, markNotiRead, markAllNotiRead, deleteNoti,
+  type NotiItem, type NotiCategory, type NotiType,
+} from '@/api/notificationApi'
 
-export type NotiCategory = 'INVITE' | 'TODO'
-export type NotiType = 'MEETING_INVITE' | 'SHARE_INVITE' | 'MEETING_CONFIRMED' | 'TODO_REMINDER' | 'TODO_WEATHER_ALERT' | 'TODO_SHARED_UPDATED'
-
-export interface AppNotification {
-  id: string
-  category: NotiCategory
-  type: NotiType
-  title: string
-  body?: string
-  refId?: string | null // 연관 대상(meeting/todo)
-  linkToken?: string | null // 초대류면 meeting.share_token
-  isRead: boolean
-  createdAt: string // ISO
-}
-
-// 처음 화면이 비지 않도록 샘플 알림 (be 붙으면 서버 데이터로 대체)
-// 공유 초대(SHARE_INVITE)는 실제 be #59 초대로 벨에서 렌더 → 가짜 시드는 두지 않는다.
-const SEED: AppNotification[] = [
-  { id: 'nt1', category: 'TODO', type: 'TODO_WEATHER_ALERT', title: '오후에 비 소식이 있어요', body: '야외 일정은 오전으로 옮기는 게 좋아요', isRead: false, createdAt: '2026-07-23T08:10:00Z' },
-  { id: 'nt3', category: 'TODO', type: 'TODO_REMINDER', title: '오늘 할 일 3개가 남았어요', body: '완료하고 하루를 마무리해보세요', isRead: true, createdAt: '2026-07-22T21:00:00Z' },
-]
+export type { NotiItem, NotiCategory, NotiType }
 
 interface NotiState {
-  notifications: AppNotification[]
-  add: (n: Omit<AppNotification, 'id' | 'isRead' | 'createdAt'>) => void
-  markRead: (id: string) => void
-  markAllRead: () => void
-  remove: (id: string) => void
-  clearAll: () => void
+  notifications: NotiItem[]
+  unread: number
+  nextCursor: string | null
+  hasNext: boolean
+  loading: boolean
+  load: () => Promise<void> // 첫 페이지 + 미읽음 수
+  loadMore: () => Promise<void> // 다음 커서
+  markRead: (id: string) => Promise<void>
+  markAllRead: () => Promise<void>
+  remove: (id: string) => Promise<void>
 }
 
-export const useNotificationStore = create<NotiState>()(
-  persist(
-    (set) => ({
-      notifications: SEED,
-      add: (n) =>
-        set((s) => ({ notifications: [{ ...n, id: 'nt' + Date.now(), isRead: false, createdAt: new Date().toISOString() }, ...s.notifications] })),
-      markRead: (id) => set((s) => ({ notifications: s.notifications.map((x) => (x.id === id ? { ...x, isRead: true } : x)) })),
-      markAllRead: () => set((s) => ({ notifications: s.notifications.map((x) => ({ ...x, isRead: true })) })),
-      remove: (id) => set((s) => ({ notifications: s.notifications.filter((x) => x.id !== id) })),
-      clearAll: () => set({ notifications: [] }),
-    }),
-    { name: 'haeyaji-notis' },
-  ),
-)
+export const useNotificationStore = create<NotiState>((set, get) => ({
+  notifications: [],
+  unread: 0,
+  nextCursor: null,
+  hasNext: false,
+  loading: false,
+
+  load: async () => {
+    set({ loading: true })
+    try {
+      const [page, unread] = await Promise.all([listNotifications({ size: 20 }), unreadCount().catch(() => 0)])
+      set({ notifications: page.content, nextCursor: page.nextCursor, hasNext: page.hasNext, unread, loading: false })
+    } catch {
+      set({ loading: false }) // be 미가동/미배포 무시
+    }
+  },
+
+  loadMore: async () => {
+    const { hasNext, nextCursor, loading } = get()
+    if (!hasNext || loading) return
+    set({ loading: true })
+    try {
+      const page = await listNotifications({ cursor: nextCursor, size: 20 })
+      set((s) => ({ notifications: [...s.notifications, ...page.content], nextCursor: page.nextCursor, hasNext: page.hasNext, loading: false }))
+    } catch {
+      set({ loading: false })
+    }
+  },
+
+  markRead: async (id) => {
+    const cur = get().notifications.find((n) => n.id === id)
+    if (!cur || cur.read) return
+    set((s) => ({ notifications: s.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)), unread: Math.max(0, s.unread - 1) }))
+    try { await markNotiRead(id) } catch { /* 롤백 생략(다음 load에서 정정) */ }
+  },
+  markAllRead: async () => {
+    set((s) => ({ notifications: s.notifications.map((n) => ({ ...n, read: true })), unread: 0 }))
+    try { await markAllNotiRead() } catch { /* 무시 */ }
+  },
+  remove: async (id) => {
+    const cur = get().notifications.find((n) => n.id === id)
+    set((s) => ({ notifications: s.notifications.filter((n) => n.id !== id), unread: cur && !cur.read ? Math.max(0, s.unread - 1) : s.unread }))
+    try { await deleteNoti(id) } catch { /* 무시 */ }
+  },
+}))
 
 /** 상대 시간 표기 ("방금", "3시간 전", "어제") */
 export function timeAgo(iso: string): string {
