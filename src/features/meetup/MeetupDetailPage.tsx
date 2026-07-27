@@ -15,10 +15,12 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
   const loadFriends = useFriendStore((s) => s.load)
   const [mine, setMine] = useState<Set<string>>(new Set()) // 내가 FREE로 고른 slotId
   const [copied, setCopied] = useState(false)
+  const drag = useRef<'add' | 'remove' | null>(null) // 드래그 칠하기 모드 (hooks는 early return 앞에)
 
   useEffect(() => { void loadDetail(shareToken); return () => clearDetail() }, [shareToken, loadDetail, clearDetail])
   useEffect(() => { void loadFriends() }, [loadFriends])
   useEffect(() => { setMine(new Set(myResponses.filter((r) => r.status === 'FREE').map((r) => r.slotId))) }, [myResponses])
+  useEffect(() => { const up = () => { drag.current = null }; window.addEventListener('mouseup', up); return () => window.removeEventListener('mouseup', up) }, [])
 
   const isParticipant = !!detail?.participants.some((p) => p.memberId === myMemberId())
   const isCreator = detail?.creatorId === myMemberId()
@@ -44,12 +46,10 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
 
   // 드래그로 칠하기 — 시작 셀 상태로 add/remove 모드 결정 후 지나는 셀에 일괄 적용 (when2meet식)
   const editable = isParticipant && !conf && !expired
-  const drag = useRef<'add' | 'remove' | null>(null)
   const applyCell = (id: string, mode: 'add' | 'remove') =>
     setMine((p) => { const n = new Set(p); mode === 'add' ? n.add(id) : n.delete(id); return n })
   const onCellDown = (id: string) => { if (!editable) return; const mode = mine.has(id) ? 'remove' : 'add'; drag.current = mode; applyCell(id, mode) }
   const onCellEnter = (id: string) => { if (editable && drag.current) applyCell(id, drag.current) }
-  useEffect(() => { const up = () => { drag.current = null }; window.addEventListener('mouseup', up); return () => window.removeEventListener('mouseup', up) }, [])
   const save = () => submit(shareToken, [...mine].map((slotId) => ({ slotId, status: 'FREE' as const })))
   const copy = () => { navigator.clipboard?.writeText(meetingInviteUrl(shareToken)).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500) }) }
   // 친구 초대 — 아직 참여하지 않은 친구만
