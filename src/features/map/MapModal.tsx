@@ -205,7 +205,7 @@ export function MapModal() {
     let cancelled = false
     ;(async () => {
       try {
-        const places = await searchPlaces(kw, org.lat, org.lng, 2000, 8)
+        const places = await searchPlaces(kw, org.lat, org.lng, 2000, 3) // 오늘 추천 장소 = 3개 (AI 추천과 통일)
         if (cancelled) return
         setRecResults(
           places.map((d) => ({
