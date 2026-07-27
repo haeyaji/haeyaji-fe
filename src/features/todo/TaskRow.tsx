@@ -20,21 +20,25 @@ export function TaskRow({ task, variant, onOpen }: { task: Task; variant: 'home'
   const deleteTask = useTodoStore((s) => s.deleteTask)
   const togglePin = useTodoStore((s) => s.togglePin)
   const selId = useAppStore((s) => s.selId)
+  const toast = useAppStore((s) => s.toast)
   const meta = task.meta || task.time || ''
   const titleColor = task.done ? '#AEA89B' : '#17150F'
   const metaColor = task.ai ? '#15795A' : '#A39C8E'
   const home = variant === 'home'
+  // be-61 공유 권한: 소유 or EDITOR면 완료·수정·핀 가능, VIEWER는 읽기전용. 삭제는 소유자만.
+  const owned = !task.shared
+  const canEdit = owned || task.myRole === 'EDITOR'
 
   return (
     <div onClick={() => onOpen?.(task)} className={onOpen ? 'hbtn' : undefined} style={{ display: 'flex', alignItems: 'center', gap: home ? 13 : 12, padding: '12px 0', cursor: onOpen ? 'pointer' : 'default' }}>
       <div
-        onClick={(e) => { e.stopPropagation(); toggleTask(task.id) }}
+        onClick={(e) => { e.stopPropagation(); if (canEdit) toggleTask(task.id); else toast('보기 권한이라 완료할 수 없어요') }}
         style={{
           width: 22,
           height: 22,
           borderRadius: '50%',
           flexShrink: 0,
-          cursor: 'pointer',
+          cursor: canEdit ? 'pointer' : 'not-allowed',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -68,14 +72,19 @@ export function TaskRow({ task, variant, onOpen }: { task: Task; variant: 'home'
 
       {home && <div style={{ fontSize: 18, fontWeight: 600, color: metaColor, flexShrink: 0 }}>{meta}</div>}
 
-      {/* 핀 — 할일의 pinned와 동일 상태(store), 상단 고정 */}
-      <div onClick={(e) => { e.stopPropagation(); togglePin(selId, task.id) }} className="hbtn" title={task.pinned ? '고정 해제' : '상단 고정'} style={{ display: 'flex', cursor: 'pointer', flexShrink: 0, color: task.pinned ? '#C2702A' : '#CBD0D8' }}>
-        <PinIcon filled={!!task.pinned} w={home ? 18 : 16} />
-      </div>
+      {/* 핀 — 소유·EDITOR만 (VIEWER는 읽기전용) */}
+      {canEdit && (
+        <div onClick={(e) => { e.stopPropagation(); togglePin(selId, task.id) }} className="hbtn" title={task.pinned ? '고정 해제' : '상단 고정'} style={{ display: 'flex', cursor: 'pointer', flexShrink: 0, color: task.pinned ? '#C2702A' : '#CBD0D8' }}>
+          <PinIcon filled={!!task.pinned} w={home ? 18 : 16} />
+        </div>
+      )}
 
-      <div onClick={(e) => { e.stopPropagation(); deleteTask(task.id) }} className="hbtn" style={{ display: 'flex', cursor: 'pointer', color: '#CAD0DA', flexShrink: 0 }}>
-        <TrashIcon />
-      </div>
+      {/* 삭제 — 소유자만. 공유받은 건 삭제 대신 상세에서 '공유 나가기' */}
+      {owned && (
+        <div onClick={(e) => { e.stopPropagation(); deleteTask(task.id) }} className="hbtn" style={{ display: 'flex', cursor: 'pointer', color: '#CAD0DA', flexShrink: 0 }}>
+          <TrashIcon />
+        </div>
+      )}
     </div>
   )
 }

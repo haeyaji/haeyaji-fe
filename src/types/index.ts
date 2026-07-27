@@ -87,7 +87,8 @@ export interface Task {
   labelId?: string | null // be todo.label_id (사용자 라벨) — 생성흐름 캐리어. 표시는 useLabelStore로 해석
   ai?: boolean
   participants?: TaskParticipant[] // be todo_participant (공유). 비어있으면 개인 할 일
-  shared?: boolean // 남이 나에게 공유한 할 일(GET /todos/shared) — 내 소유 아님(참여자)
+  shared?: boolean // 남이 나에게 공유한 할 일 — 내 소유 아님(참여자)
+  myRole?: 'EDITOR' | 'VIEWER' // 공유 시 내 권한. EDITOR=완료·수정 가능, VIEWER=읽기전용. 소유면 undefined
 }
 
 /** 날짜 id('20'~'26') → 할 일 목록 */

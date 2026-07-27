@@ -31,6 +31,8 @@ export interface TodoResponse {
   completed: boolean
   pinned: boolean
   sortOrder: number
+  shared?: boolean // be-61: 공유받은 할 일(내 소유 아님)
+  myRole?: string | null // be-61: 공유 시 내 권한 EDITOR/VIEWER (null=소유)
 }
 
 interface TodoListResponse {
@@ -61,6 +63,8 @@ export function toTask(r: TodoResponse): Task {
     sortOrder: r.sortOrder,
     ai: r.source === 'AI',
     labelId: r.labelId,
+    shared: r.shared ?? false,
+    myRole: r.myRole === 'EDITOR' || r.myRole === 'VIEWER' ? r.myRole : undefined,
   }
 }
 
