@@ -91,8 +91,9 @@ export function TodoListPage() {
   const secProps = { onOpen: setDetail, onToggle: setStatus, onPin: togglePin, dragKey, setDragKey, reorderWithin }
 
   return (
-    <div className="mp-pad" style={{ minHeight: 'var(--full-vh)', width: '100%', color: MC.ink, background: 'var(--canvas)' }}>
-      <div className="mp-wrap">
+    <div className="mp-pad" style={{ height: 'var(--full-vh)', display: 'flex', flexDirection: 'column', overflow: 'hidden', width: '100%', color: MC.ink, background: 'var(--canvas)' }}>
+      <div className="mp-wrap" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', width: '100%' }}>
+        <div style={{ flexShrink: 0 }}>
         {/* 헤더 — 제목 + 추가 버튼 */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
           <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-.6px' }}>할 일</div>
@@ -144,7 +145,9 @@ export function TodoListPage() {
             분류 관리
           </div>
         </div>
+        </div>{/* 헤더/필터 고정 영역 끝 */}
 
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', marginRight: -8, paddingRight: 8 }}>
         {total === 0 && routineDefs.length === 0 ? (
           <div style={{ ...cardStyle, padding: '54px 26px', textAlign: 'center' }}>
             <div style={{ width: 60, height: 60, borderRadius: 18, background: MC.tintBg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
@@ -163,6 +166,7 @@ export function TodoListPage() {
             <RoutineDefsCard routines={routineDefs} onToggle={toggleRoutineActive} onManage={openRoutine} />
           </div>
         )}
+        </div>{/* 스크롤 영역 끝 */}
       </div>
 
       {detail && <TaskDetailModal dateKey={detail.dateKey} taskId={detail.task.id} onClose={() => setDetail(null)} />}
