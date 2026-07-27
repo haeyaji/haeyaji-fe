@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMeetupStore } from '@/store/useMeetupStore'
 import { useFriendStore } from '@/store/useFriendStore'
+import { searchMember, type MemberLite } from '@/api/friendApi'
 import { meetingInviteUrl } from '@/api/meetingApi'
 import { meetTypeLabel, slotDate, slotHM, dateLabel, confirmedRange, heatColor, Avatar } from './meetupShared'
 import { MC } from './tokens'
@@ -15,12 +16,22 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
   const loadFriends = useFriendStore((s) => s.load)
   const [mine, setMine] = useState<Set<string>>(new Set()) // 내가 FREE로 고른 slotId
   const [copied, setCopied] = useState(false)
+  const [inviteQ, setInviteQ] = useState('') // 닉네임 검색 초대
+  const [inviteResult, setInviteResult] = useState<MemberLite | null | 'none'>(null)
+  const cacheName = useFriendStore((s) => s.cacheName)
   const drag = useRef<'add' | 'remove' | null>(null) // 드래그 칠하기 모드 (hooks는 early return 앞에)
 
   useEffect(() => { void loadDetail(shareToken); return () => clearDetail() }, [shareToken, loadDetail, clearDetail])
   useEffect(() => { void loadFriends() }, [loadFriends])
   useEffect(() => { setMine(new Set(myResponses.filter((r) => r.status === 'FREE').map((r) => r.slotId))) }, [myResponses])
   useEffect(() => { const up = () => { drag.current = null }; window.addEventListener('mouseup', up); return () => window.removeEventListener('mouseup', up) }, [])
+  // 닉네임 검색(디바운스 350ms) → 초대 후보
+  useEffect(() => {
+    const q = inviteQ.trim()
+    if (!q) { setInviteResult(null); return }
+    const t = setTimeout(async () => { const m = await searchMember(q); setInviteResult(m ?? 'none') }, 350)
+    return () => clearTimeout(t)
+  }, [inviteQ])
 
   const isParticipant = !!detail?.participants.some((p) => p.memberId === myMemberId())
   const isCreator = detail?.creatorId === myMemberId()
@@ -81,19 +92,51 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
           <div onClick={copy} className="lift" style={{ fontSize: 13, fontWeight: 800, color: '#fff', background: MC.ink, borderRadius: 10, padding: '8px 14px', cursor: 'pointer', flexShrink: 0 }}>{copied ? '복사됨!' : '링크 복사'}</div>
         </div>
 
-        {/* 친구 초대 (be /invitations) — 참여 중인 사람만 초대 가능, 이미 참여한 친구는 제외 */}
-        {isParticipant && !expired && !conf && invitable.length > 0 && (
-          <div style={{ background: '#fff', border: '1px solid #ECE9E0', borderRadius: 14, padding: '12px 14px', marginBottom: 16 }}>
-            <div style={{ fontSize: 12.5, fontWeight: 800, color: MC.muted, marginBottom: 10 }}>친구 초대</div>
-            <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-              {invitable.map((f) => (
-                <div key={f.rowId} onClick={() => invite(shareToken, [f.memberId])} className="lift" title={`${nameOf(f.memberId)} 초대`} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#fff', border: '1px solid #E7EAEF', color: MC.ink, fontSize: 13, fontWeight: 800, padding: '6px 12px 6px 7px', borderRadius: 20, cursor: 'pointer' }}>
-                  <Avatar name={nameOf(f.memberId)} size={22} font={11} />
-                  {nameOf(f.memberId)}
-                  <span style={{ fontSize: 15, fontWeight: 800, color: MC.primary, lineHeight: 1 }}>+</span>
+        {/* 초대 (be /invitations) — 참여 중이면 누구나 닉네임 검색·친구 클릭으로 초대. 친구 아니어도 가능. */}
+        {isParticipant && !expired && !conf && (
+          <div style={{ background: '#fff', border: '1px solid #ECE9E0', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: MC.muted, marginBottom: 10 }}>초대하기</div>
+            {/* 닉네임 검색 */}
+            <div style={{ position: 'relative', marginBottom: invitable.length ? 12 : 0 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A6A296" strokeWidth="2" style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)' }}><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+              <input value={inviteQ} onChange={(e) => setInviteQ(e.target.value)} placeholder="닉네임으로 검색해 초대 (정확히 입력)" style={{ width: '100%', border: `1px solid ${MC.border}`, outline: 'none', background: MC.fieldBg, borderRadius: 12, padding: '11px 14px 11px 38px', fontFamily: 'inherit', fontSize: 14.5, fontWeight: 600, color: MC.ink }} />
+              {inviteQ.trim() && (
+                <div style={{ marginTop: 8 }}>
+                  {inviteResult === null ? (
+                    <div style={{ fontSize: 13, fontWeight: 600, color: MC.faint, padding: '6px 2px' }}>검색 중…</div>
+                  ) : inviteResult === 'none' ? (
+                    <div style={{ fontSize: 13, fontWeight: 600, color: MC.faint, padding: '6px 2px' }}>'{inviteQ.trim()}' 님을 찾을 수 없어요</div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: MC.fieldBg, borderRadius: 12, padding: '8px 10px' }}>
+                      <Avatar name={inviteResult.nickname} size={30} font={14} />
+                      <div style={{ flex: 1, fontSize: 14.5, fontWeight: 800 }}>{inviteResult.nickname}</div>
+                      {inviteResult.id === myMemberId() ? (
+                        <span style={{ fontSize: 12.5, fontWeight: 700, color: MC.faint }}>나</span>
+                      ) : partIds.has(inviteResult.id) ? (
+                        <span style={{ fontSize: 12.5, fontWeight: 700, color: MC.primary }}>참여 중</span>
+                      ) : (
+                        <div onClick={() => { cacheName(inviteResult.id, inviteResult.nickname); invite(shareToken, [inviteResult.id]); setInviteQ(''); setInviteResult(null) }} className="lift" style={{ fontSize: 13, fontWeight: 800, color: '#fff', background: MC.primary, borderRadius: 10, padding: '8px 14px', cursor: 'pointer' }}>초대</div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              ))}
+              )}
             </div>
+            {/* 친구 빠른 초대 */}
+            {invitable.length > 0 && (
+              <>
+                <div style={{ fontSize: 12, fontWeight: 700, color: MC.faint, marginBottom: 8 }}>친구</div>
+                <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+                  {invitable.map((f) => (
+                    <div key={f.rowId} onClick={() => invite(shareToken, [f.memberId])} className="lift" title={`${nameOf(f.memberId)} 초대`} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#fff', border: '1px solid #E7EAEF', color: MC.ink, fontSize: 13, fontWeight: 800, padding: '6px 12px 6px 7px', borderRadius: 20, cursor: 'pointer' }}>
+                      <Avatar name={nameOf(f.memberId)} size={22} font={11} />
+                      {nameOf(f.memberId)}
+                      <span style={{ fontSize: 15, fontWeight: 800, color: MC.primary, lineHeight: 1 }}>+</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
 
