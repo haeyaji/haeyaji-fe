@@ -1,5 +1,5 @@
 // 약속 상세 — be 슬롯 모델. 링크 공유 → 참여 → 가용 입력(슬롯 FREE) → 히트맵/베스트타임 → 확정.
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMeetupStore } from '@/store/useMeetupStore'
 import { useFriendStore } from '@/store/useFriendStore'
 import { meetingInviteUrl } from '@/api/meetingApi'
@@ -42,10 +42,14 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
   const expired = detail.status === 'EXPIRED'
   const dirty = JSON.stringify([...mine].sort()) !== JSON.stringify(myResponses.filter((r) => r.status === 'FREE').map((r) => r.slotId).sort())
 
-  const toggle = (slotId: string) => {
-    if (!isParticipant || conf || expired) return
-    setMine((p) => { const n = new Set(p); n.has(slotId) ? n.delete(slotId) : n.add(slotId); return n })
-  }
+  // 드래그로 칠하기 — 시작 셀 상태로 add/remove 모드 결정 후 지나는 셀에 일괄 적용 (when2meet식)
+  const editable = isParticipant && !conf && !expired
+  const drag = useRef<'add' | 'remove' | null>(null)
+  const applyCell = (id: string, mode: 'add' | 'remove') =>
+    setMine((p) => { const n = new Set(p); mode === 'add' ? n.add(id) : n.delete(id); return n })
+  const onCellDown = (id: string) => { if (!editable) return; const mode = mine.has(id) ? 'remove' : 'add'; drag.current = mode; applyCell(id, mode) }
+  const onCellEnter = (id: string) => { if (editable && drag.current) applyCell(id, drag.current) }
+  useEffect(() => { const up = () => { drag.current = null }; window.addEventListener('mouseup', up); return () => window.removeEventListener('mouseup', up) }, [])
   const save = () => submit(shareToken, [...mine].map((slotId) => ({ slotId, status: 'FREE' as const })))
   const copy = () => { navigator.clipboard?.writeText(meetingInviteUrl(shareToken)).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500) }) }
   // 친구 초대 — 아직 참여하지 않은 친구만
@@ -101,11 +105,11 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
         {/* 슬롯 그리드 (히트맵 + 내 가용 입력) */}
         <div style={{ background: '#fff', border: '1px solid #ECE9E0', borderRadius: 18, padding: 14, marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <div style={{ fontSize: 15, fontWeight: 800 }}>{isParticipant && !conf && !expired ? '가능한 시간을 눌러 표시하세요' : '참여자 가능 시간'}</div>
+            <div style={{ fontSize: 15, fontWeight: 800 }}>{editable ? '가능한 시간을 드래그해서 칠하세요' : '참여자 가능 시간'}</div>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: MC.muted }}>진하게 = 많이 겹침</div>
           </div>
           <div style={{ overflowX: 'auto' }}>
-            <div style={{ display: 'inline-grid', gridTemplateColumns: `48px repeat(${grid.dates.length}, minmax(56px, 1fr))`, gap: 3 }}>
+            <div style={{ display: 'inline-grid', gridTemplateColumns: `48px repeat(${grid.dates.length}, minmax(56px, 1fr))`, gap: 3, userSelect: 'none', WebkitUserSelect: 'none' }}>
               <div />
               {grid.dates.map((d) => <div key={d} style={{ fontSize: 11.5, fontWeight: 800, textAlign: 'center', color: MC.muted, paddingBottom: 2 }}>{dateLabel(d)}</div>)}
               {grid.times.map((t) => (
@@ -118,8 +122,11 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
                     const col = heatColor(free, total)
                     const isMine = mine.has(cell.id)
                     return (
-                      <div key={cell.id} onClick={() => toggle(cell.id)} title={`${free}/${total}명`}
-                        style={{ height: 26, borderRadius: 5, background: col.bg, cursor: isParticipant && !conf && !expired ? 'pointer' : 'default', boxShadow: isMine ? `inset 0 0 0 2.5px ${MC.primary}` : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: col.txt }}>
+                      <div key={cell.id}
+                        onMouseDown={() => onCellDown(cell.id)}
+                        onMouseEnter={() => onCellEnter(cell.id)}
+                        title={`${free}/${total}명`}
+                        style={{ height: 26, borderRadius: 5, background: col.bg, cursor: editable ? 'pointer' : 'default', boxShadow: isMine ? `inset 0 0 0 2.5px ${MC.primary}` : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: col.txt }}>
                         {free > 0 ? free : ''}
                       </div>
                     )
