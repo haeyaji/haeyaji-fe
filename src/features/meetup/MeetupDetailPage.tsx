@@ -103,21 +103,21 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
         )}
 
         {/* 슬롯 그리드 (히트맵 + 내 가용 입력) */}
-        <div style={{ background: '#fff', border: '1px solid #ECE9E0', borderRadius: 18, padding: 14, marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <div style={{ fontSize: 15, fontWeight: 800 }}>{editable ? '가능한 시간을 드래그해서 칠하세요' : '참여자 가능 시간'}</div>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: MC.muted }}>진하게 = 많이 겹침</div>
+        <div style={{ background: '#fff', border: '1px solid #ECE9E0', borderRadius: 18, padding: '18px 20px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <div style={{ fontSize: 16, fontWeight: 800 }}>{editable ? '가능한 시간을 드래그해서 칠하세요' : '참여자 가능 시간'}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: MC.muted }}>진하게 = 많이 겹침</div>
           </div>
           <div style={{ overflowX: 'auto' }}>
-            <div style={{ display: 'inline-grid', gridTemplateColumns: `48px repeat(${grid.dates.length}, minmax(56px, 1fr))`, gap: 3, userSelect: 'none', WebkitUserSelect: 'none' }}>
+            <div style={{ display: 'grid', width: '100%', gridTemplateColumns: `60px repeat(${grid.dates.length}, minmax(0, 1fr))`, gap: 5, userSelect: 'none', WebkitUserSelect: 'none' }}>
               <div />
-              {grid.dates.map((d) => <div key={d} style={{ fontSize: 11.5, fontWeight: 800, textAlign: 'center', color: MC.muted, paddingBottom: 2 }}>{dateLabel(d)}</div>)}
+              {grid.dates.map((d) => <div key={d} style={{ fontSize: 14, fontWeight: 800, textAlign: 'center', color: MC.ink, paddingBottom: 4 }}>{dateLabel(d)}</div>)}
               {grid.times.map((t) => (
                 <>
-                  <div key={`h${t}`} style={{ fontSize: 11, fontWeight: 700, color: MC.muted, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 6 }}>{t}</div>
+                  <div key={`h${t}`} style={{ fontSize: 13, fontWeight: 700, color: MC.muted, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 8 }}>{t}</div>
                   {grid.dates.map((d) => {
                     const cell = grid.map[`${d} ${t}`]
-                    if (!cell) return <div key={`${d}${t}`} style={{ height: 26, background: '#FAFAF7', borderRadius: 5 }} />
+                    if (!cell) return <div key={`${d}${t}`} style={{ height: 42, background: '#FAFAF7', borderRadius: 7 }} />
                     const free = freeBySlot[cell.id] ?? 0
                     const col = heatColor(free, total)
                     const isMine = mine.has(cell.id)
@@ -126,7 +126,7 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
                         onMouseDown={() => onCellDown(cell.id)}
                         onMouseEnter={() => onCellEnter(cell.id)}
                         title={`${free}/${total}명`}
-                        style={{ height: 26, borderRadius: 5, background: col.bg, cursor: editable ? 'pointer' : 'default', boxShadow: isMine ? `inset 0 0 0 2.5px ${MC.primary}` : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: col.txt }}>
+                        style={{ height: 42, borderRadius: 7, background: col.bg, cursor: editable ? 'pointer' : 'default', boxShadow: isMine ? `inset 0 0 0 3px ${MC.primary}` : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: col.txt }}>
                         {free > 0 ? free : ''}
                       </div>
                     )
