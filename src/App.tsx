@@ -10,6 +10,7 @@ import { useLabelStore } from '@/store/useLabelStore'
 import { useRoutineStore } from '@/store/useRoutineStore'
 import { useFriendStore } from '@/store/useFriendStore'
 import { fetchMe, getMemberProfile } from '@/api/authApi'
+import { keepSessionAlive } from '@/api/client'
 import { getPreferences } from '@/api/personalizeApi'
 import { LoginScreen } from '@/features/auth/LoginScreen'
 import { ProfileSetup } from '@/features/auth/ProfileSetup'
@@ -98,6 +99,17 @@ export default function App() {
     window.addEventListener('haeyaji:auth-expired', onExpired)
     return () => window.removeEventListener('haeyaji:auth-expired', onExpired)
   }, [])
+
+  // 세션 keepalive — be access(1분)/refresh(5분) 수명이 짧아 느린 플로우(약속 등록 등) 중 세션이 죽는다.
+  // 로그인 중이고 탭이 보일 때 50초마다(access 60초보다 짧게) reissue로 토큰 회전 → 만료 예방.
+  // 탭 복귀 시에도 1회 즉시 갱신(방치 후 access만 만료됐고 refresh는 살아있는 경우 복구).
+  useEffect(() => {
+    if (!authed) return
+    const tick = () => { if (!document.hidden) void keepSessionAlive() }
+    const t = setInterval(tick, 50_000)
+    document.addEventListener('visibilitychange', tick)
+    return () => { clearInterval(t); document.removeEventListener('visibilitychange', tick) }
+  }, [authed])
 
   // 로그인 후 선택 날짜 + 오늘 할 일 로드 (be GET /todos?date=)
   useEffect(() => {

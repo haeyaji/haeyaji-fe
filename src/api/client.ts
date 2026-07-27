@@ -67,6 +67,16 @@ function toAppError(err: unknown): Error {
 // 새 쿠키를 받은 뒤 원요청을 재시도한다. reissue까지 실패하면 세션 만료로 보고 앱에 알린다.
 let reissuing: Promise<unknown> | null = null
 
+// 세션 keepalive — be 토큰 수명이 짧아(access 1분/refresh 5분) 약속 등록 등 느린 플로우 중 세션이 죽는다.
+// 탭이 열려있는 동안 주기적으로 reissue를 쳐서 access·refresh를 회전(RTR)시켜 만료를 예방한다.
+// 401 자동 재발급과 같은 reissuing 락을 공유해 회전 토큰 재사용(동시 2회 → 뒤 요청 401) 충돌을 막는다.
+export async function keepSessionAlive(): Promise<void> {
+  try {
+    reissuing = reissuing ?? be.post('/auth/reissue').finally(() => { reissuing = null })
+    await reissuing
+  } catch { /* 만료/미로그인 → 조용히. 실제 요청 시 401→로그인 유도가 처리 */ }
+}
+
 be.interceptors.response.use(
   (r) => r,
   async (err) => {
