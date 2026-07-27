@@ -39,10 +39,10 @@ function pinEl(p: MapPoint, hover: { in: (p: MapPoint) => void; out: () => void 
   const el = document.createElement('div')
   if (p.selected) {
     el.style.cssText = `display:flex;align-items:center;gap:7px;padding:7px 13px 7px 8px;border-radius:22px;cursor:pointer;white-space:nowrap;transform:translateY(-6px);font-family:'Pretendard',sans-serif;background:#17150F;box-shadow:0 6px 16px rgba(24,21,15,.28)`
-    el.innerHTML = `<div style="width:25px;height:25px;border-radius:50%;background:#15795A;display:flex;align-items:center;justify-content:center">${catSvg(p.cat, '#fff')}</div><div style="font-size:12.5px;font-weight:800;color:#fff">${escapeHtml(p.name)}</div>`
+    el.innerHTML = `<div style="width:38px;height:38px;border-radius:50%;background:#15795A;display:flex;align-items:center;justify-content:center">${catSvg(p.cat, '#fff', 20)}</div><div style="font-size:12.5px;font-weight:800;color:#fff">${escapeHtml(p.name)}</div>`
   } else {
-    el.style.cssText = `width:34px;height:34px;border-radius:50%;background:#fff;border:2px solid #15795A;display:flex;align-items:center;justify-content:center;cursor:pointer;transform:translateY(-4px);box-shadow:0 4px 12px rgba(24,21,15,.2)`
-    el.innerHTML = catSvg(p.cat, '#15795A', 16)
+    el.style.cssText = `width:51px;height:51px;border-radius:50%;background:#fff;border:2px solid #15795A;display:flex;align-items:center;justify-content:center;cursor:pointer;transform:translateY(-4px);box-shadow:0 4px 12px rgba(24,21,15,.2)`
+    el.innerHTML = catSvg(p.cat, '#15795A', 24)
     el.addEventListener('mouseenter', () => hover.in(p))
     el.addEventListener('mouseleave', () => hover.out())
   }
@@ -61,8 +61,8 @@ function hoverCardEl(p: MapPoint): HTMLElement {
 // 탐색 마커: 그린 원 + 흰 카테고리 아이콘 (추천 핀보다 작게, 밝은 지도 위 가시성 확보)
 function dotEl(p: MapPoint, hover: { in: (p: MapPoint) => void; out: () => void }): HTMLElement {
   const el = document.createElement('div')
-  el.style.cssText = `width:26px;height:26px;border-radius:50%;background:#15795A;border:2px solid #fff;box-shadow:0 3px 9px rgba(24,21,15,.3);cursor:pointer;display:flex;align-items:center;justify-content:center`
-  el.innerHTML = catSvg(p.cat, '#fff', 13)
+  el.style.cssText = `width:39px;height:39px;border-radius:50%;background:#15795A;border:2px solid #fff;box-shadow:0 3px 9px rgba(24,21,15,.3);cursor:pointer;display:flex;align-items:center;justify-content:center`
+  el.innerHTML = catSvg(p.cat, '#fff', 20)
   el.addEventListener('mouseenter', () => hover.in(p))
   el.addEventListener('mouseleave', () => hover.out())
   el.addEventListener('click', (e) => { e.stopPropagation(); p.onClick() })

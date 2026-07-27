@@ -25,7 +25,7 @@ const label = { fontSize: 14, fontWeight: 800, color: '#8B8579', marginBottom: 1
 // 핀 아이콘 (채워짐/윤곽)
 function PinIcon({ filled, c }: { filled: boolean; c: string }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? c : 'none'} stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill={filled ? c : 'none'} stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 4h6l-1 5 3 3v2H7v-2l3-3-1-5z" /><path d="M12 14v6" />
     </svg>
   )
