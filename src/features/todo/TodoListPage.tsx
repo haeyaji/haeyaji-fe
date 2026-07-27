@@ -12,6 +12,7 @@ import { useRoutineStore } from '@/store/useRoutineStore'
 import { MC, cardStyle } from '@/features/meetup/tokens'
 import { AvatarStack } from '@/features/meetup/meetupShared'
 import { TaskDetailModal } from './TaskDetailModal'
+import { RoutineFormModal } from '@/features/routine/RoutineFormModal'
 import { dateBadge } from './taskMeta'
 import { DOW } from '@/lib/mockData'
 import type { Task, Routine } from '@/types'
@@ -49,6 +50,7 @@ export function TodoListPage() {
   const routineDefs = useRoutineStore((s) => s.routines)
   const toggleRoutineActive = useRoutineStore((s) => s.toggleActive)
   const [detail, setDetail] = useState<Row | null>(null)
+  const [routineEdit, setRoutineEdit] = useState<Routine | null>(null)
   const [query, setQuery] = useState('')
   const [hideDone, setHideDone] = useState(false)
   const [filterLabel, setFilterLabel] = useState<string | null>(null)
@@ -163,13 +165,14 @@ export function TodoListPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <Section label="내 할 일" dot={MC.muted} rows={mine} empty="할 일이 없어요" {...secProps} />
             {shared.length > 0 && <Section label="공유 중" dot={MC.amber} rows={shared} empty="" {...secProps} />}
-            <RoutineDefsCard routines={routineDefs} onToggle={toggleRoutineActive} onManage={openRoutine} />
+            <RoutineDefsCard routines={routineDefs} onToggle={toggleRoutineActive} onManage={openRoutine} onEdit={setRoutineEdit} />
           </div>
         )}
         </div>{/* 스크롤 영역 끝 */}
       </div>
 
       {detail && <TaskDetailModal dateKey={detail.dateKey} taskId={detail.task.id} onClose={() => setDetail(null)} />}
+      {routineEdit && <RoutineFormModal routine={routineEdit} onClose={() => setRoutineEdit(null)} />}
     </div>
   )
 }
@@ -266,7 +269,7 @@ function TaskItem({ row, rows, onOpen, onToggle, onPin, dragKey, setDragKey, reo
 }
 
 // 루틴 "정의" 카드 — 완료 체크가 아니라 활성/비활성 토글. 실제 할 일은 be 스케줄러가 생성해 위 목록에서 체크.
-function RoutineDefsCard({ routines, onToggle, onManage }: { routines: Routine[]; onToggle: (id: string) => void; onManage: () => void }) {
+function RoutineDefsCard({ routines, onToggle, onManage, onEdit }: { routines: Routine[]; onToggle: (id: string) => void; onManage: () => void; onEdit: (r: Routine) => void }) {
   const labelsById = useLabelStore((s) => s.labels)
   return (
     <div style={cardStyle}>
@@ -287,7 +290,7 @@ function RoutineDefsCard({ routines, onToggle, onManage }: { routines: Routine[]
                 <div style={{ width: 34, height: 34, borderRadius: 11, background: accent + '1F', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 2l4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="M7 22l-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div onClick={() => onEdit(r)} className="hbtn" title="루틴 수정" style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                     <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.title}</span>
                     {lab && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: lab.color, background: lab.color + '1F', padding: '2px 8px', borderRadius: 20, flexShrink: 0 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: lab.color }} />{lab.name}</span>}
