@@ -47,6 +47,8 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
   if (!task) return null
   const badge = dateBadge(dateKey)
   const done = statusOf(task) === 'done'
+  const canEdit = !task.shared || task.myRole === 'EDITOR' // 공유 VIEWER는 읽기전용
+  const guardEdit = () => { if (!canEdit) toast('보기 권한이라 수정할 수 없어요'); return canEdit }
 
   // ── 공유 (be /todos/{id}/share) — 이 모달의 할 일은 내 소유이므로 나는 owner ──
   // be는 participants에 OWNER 행을 두지 않음 → 초대받은 사람만. 수락/거절은 초대받은 본인만 가능(여기선 상태 표시만).
@@ -101,9 +103,11 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
           <span style={{ fontSize: 12.5, fontWeight: 800, color: badge.color, background: badge.bg, padding: '4px 11px', borderRadius: 20, flexShrink: 0 }}>{badge.label}</span>
           {task.ai && <span style={{ fontSize: 11.5, fontWeight: 800, color: '#15795A', background: '#E4F2EC', padding: '4px 10px', borderRadius: 20 }}>AI 추천</span>}
           <div style={{ flex: 1 }} />
-          <div onClick={() => togglePin(dateKey, task.id)} className="hbtn" title={task.pinned ? '고정 해제' : '최상단 고정'} style={{ width: 32, height: 32, borderRadius: 10, background: task.pinned ? '#FDF0E3' : '#F0F2F6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <PinIcon filled={!!task.pinned} c={task.pinned ? '#C2702A' : '#A39C8E'} />
-          </div>
+          {canEdit && (
+            <div onClick={() => togglePin(dateKey, task.id)} className="hbtn" title={task.pinned ? '고정 해제' : '최상단 고정'} style={{ width: 32, height: 32, borderRadius: 10, background: task.pinned ? '#FDF0E3' : '#F0F2F6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <PinIcon filled={!!task.pinned} c={task.pinned ? '#C2702A' : '#A39C8E'} />
+            </div>
+          )}
           <div onClick={() => { task.shared ? void leaveShared(task.id) : removeTask(dateKey, task.id); onClose() }} className="hbtn" title={task.shared ? '공유 나가기' : '삭제'} style={{ width: 32, height: 32, borderRadius: 10, background: '#F0F2F6', color: '#C77', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <TrashIcon w={16} />
           </div>
@@ -115,14 +119,15 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
         {/* title + 완료 토글 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 14 }}>
           <div
-            onClick={() => setStatus(dateKey, task.id, done ? 'todo' : 'done')}
+            onClick={() => { if (guardEdit()) setStatus(dateKey, task.id, done ? 'todo' : 'done') }}
             title={done ? '완료 취소' : '완료'}
-            style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, border: done ? 'none' : '2px solid #CCD2DC', background: done ? '#15795A' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, border: done ? 'none' : '2px solid #CCD2DC', background: done ? '#15795A' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: canEdit ? 'pointer' : 'not-allowed' }}
           >
             {done && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
           </div>
           <input
             value={task.title}
+            readOnly={!canEdit}
             onChange={(e) => updateTitle(dateKey, task.id, e.target.value)}
             style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontFamily: 'inherit', fontSize: 24, fontWeight: 800, color: done ? '#AEA89B' : '#17150F', textDecoration: done ? 'line-through' : 'none', padding: 0 }}
           />
@@ -133,7 +138,7 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
           {COLUMNS.map((c) => {
             const on = statusOf(task) === c.key
             return (
-              <div key={c.key} onClick={() => setStatus(dateKey, task.id, c.key)} className="hbtn" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 15px', borderRadius: 20, fontSize: 13.5, fontWeight: 700, cursor: 'pointer', background: on ? '#17150F' : '#F0F2F6', color: on ? '#fff' : '#8B8579' }}>
+              <div key={c.key} onClick={() => { if (guardEdit()) setStatus(dateKey, task.id, c.key) }} className="hbtn" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 15px', borderRadius: 20, fontSize: 13.5, fontWeight: 700, cursor: canEdit ? 'pointer' : 'not-allowed', background: on ? '#17150F' : '#F0F2F6', color: on ? '#fff' : '#8B8579' }}>
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: c.dot }} />
                 {c.label}
               </div>
