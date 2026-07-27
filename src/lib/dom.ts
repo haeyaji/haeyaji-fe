@@ -23,10 +23,3 @@ export function safeUrl(raw: string | null | undefined): string | null {
     return null
   }
 }
-
-/** 추측 불가 토큰 (crypto 기반). be 발급 전 임시 초대 토큰용. */
-export function randomToken(bytes = 24): string {
-  const arr = new Uint8Array(bytes)
-  crypto.getRandomValues(arr)
-  return Array.from(arr, (b) => b.toString(16).padStart(2, '0')).join('')
-}

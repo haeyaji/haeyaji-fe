@@ -1,5 +1,5 @@
-// 날씨 → 시각 토큰 + 수치 파생, 날씨별 추천 장소 매핑, 게이지 색상.
-// 시안의 결정론적 규칙을 그대로 옮김. (추후 weatherApi/recommendApi가 대체)
+// 날씨 → 시각 토큰(하늘색·아이콘·시간대)·수치 파생·게이지 색상 등 표시 로직.
+// 실 날씨 데이터는 be(weatherApi/useWeatherStore)에서 오고, 여기선 그 조건값을 UI로 매핑만 한다.
 import type { DayWeather, PlaceCat, TimeOfDay, WeatherCond } from '@/types'
 import type { WeatherRaw } from '@/api/weatherApi'
 import { useWeatherStore } from '@/store/useWeatherStore'
@@ -200,13 +200,6 @@ function fallbackDayWeather(id: string): DayWeather {
     feels: temp + (c === 'sunny' ? 1 : c === 'rainy' ? -1 : 0),
     hourly,
   }
-}
-
-/** 날씨별 추천 장소 (id + 적합도). 시안 recsFor 그대로 */
-export function recsFor(cond: WeatherCond): { id: string; fit: number }[] {
-  if (cond === 'rainy' || cond === 'snowy') return [{ id: 'p4', fit: 96 }, { id: 'p3', fit: 90 }, { id: 'p1', fit: 78 }]
-  if (cond === 'cloudy') return [{ id: 'p1', fit: 92 }, { id: 'p3', fit: 88 }, { id: 'p2', fit: 80 }]
-  return [{ id: 'p2', fit: 94 }, { id: 'p1', fit: 92 }, { id: 'p3', fit: 86 }]
 }
 
 export function catGrad(cat: PlaceCat): string {
