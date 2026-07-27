@@ -133,7 +133,7 @@ export function MapModal() {
     const radiusM = Math.min(20000, Math.max(200, distM(c.getLat(), c.getLng(), ne.getLat(), ne.getLng())))
     setSearching(true)
     try {
-      const places = await searchPlaces(activeKeyword, c.getLat(), c.getLng(), radiusM, 15)
+      const places = await searchPlaces(activeKeyword, c.getLat(), c.getLng(), radiusM) // size 생략 = 반경 내 전부(상한 45)
       const pinIds = new Set(nlpPins.map((p) => p.id))
       // 거리는 출발지 기준으로 직접 계산 — be의 distanceM은 검색 중심(지도 중심) 기준이라
       // 지도를 옮겨 검색하면 출발→도착 UI·자동차 소요시간과 어긋난다.

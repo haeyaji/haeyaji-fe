@@ -13,7 +13,8 @@ export interface PlaceRaw {
   y: number // 위도
 }
 
-export async function searchPlaces(query: string, lat: number, lng: number, radiusM: number, size = 15): Promise<PlaceRaw[]> {
+/** size 생략 시 be가 반경 내 전부 반환(카카오 상한 45). 명시하면 그만큼만. */
+export async function searchPlaces(query: string, lat: number, lng: number, radiusM: number, size?: number): Promise<PlaceRaw[]> {
   const res = await be.get<{ places?: PlaceRaw[] }>('/places/search', {
     params: { query, lat, lng, radiusM: Math.round(radiusM), size },
   })
