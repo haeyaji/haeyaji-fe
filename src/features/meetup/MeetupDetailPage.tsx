@@ -207,7 +207,11 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
                         onMouseDown={() => onCellDown(cell.id)}
                         onMouseEnter={() => onCellEnter(cell.id)}
                         title={`${free}/${total}명`}
-                        style={{ height: 42, borderRadius: 7, background: col.bg, cursor: editable ? 'pointer' : 'default', boxShadow: isMine ? `inset 0 0 0 3px ${MC.primary}` : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: col.txt }}>
+                        style={{ height: 42, borderRadius: 7, cursor: editable ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800,
+                          // 편집 중: 내가 되는 칸=초록 채움 / 뺀 칸=회색(제외 명확). 보기: 히트맵 + 내 선택 테두리
+                          background: editable ? (isMine ? MC.primary : '#EDEEF1') : col.bg,
+                          color: editable ? (isMine ? '#fff' : '#C0C4CC') : col.txt,
+                          boxShadow: !editable && isMine ? `inset 0 0 0 3px ${MC.primary}` : 'none' }}>
                         {free > 0 ? free : ''}
                       </div>
                     )
