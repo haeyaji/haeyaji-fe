@@ -66,7 +66,9 @@ export const useLocationStore = create<LocationState>((set, get) => ({
     reverseGeocode(lat, lng).then((region) => set({ region }))
   },
   setLocation: (lat, lng, label) => {
-    set({ lat, lng, label: label ?? '지정 위치', source: 'geo', locating: false })
-    get().applyRegion(lat, lng)
+    // 검색으로 지정한 경우 입력값을 그대로 지역명으로 표시(역지오코딩 행정동 대신 — "선릉역"→"삼성2동" 혼란 방지).
+    // 라벨이 없으면(폴백) 좌표의 행정동으로 채운다.
+    set({ lat, lng, label: label ?? '지정 위치', source: 'geo', locating: false, region: label ?? get().region })
+    if (!label) get().applyRegion(lat, lng)
   },
 }))
