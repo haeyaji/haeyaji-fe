@@ -37,9 +37,9 @@ export async function getMemberProfile(): Promise<MemberProfile> {
   return res.data.data
 }
 
-/** 닉네임 설정/변경 (PATCH /members/me/nickname). 2~10자·unique. 중복이면 be가 DUPLICATE_NICKNAME 에러. */
-export async function updateNickname(nickname: string): Promise<void> {
-  await be.patch('/members/me/nickname', { nickname })
+/** 온보딩 프로필 (PATCH /members/me/nickname). 닉네임 2~10자·unique. email 선택(알림 메일용, 없으면 소셜 값 유지). */
+export async function updateNickname(nickname: string, email?: string): Promise<void> {
+  await be.patch('/members/me/nickname', { nickname, email: email?.trim() || undefined })
 }
 
 /** 로그아웃 — refresh 삭제 + 쿠키 만료. 실패해도 클라 상태는 정리한다(best-effort). */

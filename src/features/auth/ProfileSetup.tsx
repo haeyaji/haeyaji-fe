@@ -13,17 +13,20 @@ export function ProfileSetup() {
   const setNickname = usePrefStore((s) => s.setNickname)
   const toast = useAppStore((s) => s.toast)
   const [value, setValue] = useState('')
+  const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const name = value.trim()
-  const valid = name.length >= MIN && name.length <= MAX
+  const emailTrim = email.trim()
+  const emailOk = !emailTrim || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim) // 선택 — 있으면 형식 검사
+  const valid = name.length >= MIN && name.length <= MAX && emailOk
 
   const submit = async () => {
     if (!valid || busy) return
     setBusy(true)
     setErr('')
     try {
-      await updateNickname(name) // be 저장(unique 검증). 실패 시 중복/검증 메시지 표시
+      await updateNickname(name, emailTrim || undefined) // be 저장(unique 검증). email은 선택(알림 메일용)
       setNickname(name) // 성공 → 로컬 반영 (게이트 통과로 언마운트)
       toast(`반가워요, ${name}님`)
     } catch (e) {
@@ -62,6 +65,21 @@ export function ProfileSetup() {
             <div style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: '#E5484D' }}>{err}</div>
             <div style={{ fontSize: 12.5, fontWeight: 600, color: '#B6BCC7' }}>{name.length}/{MAX}</div>
           </div>
+
+          {/* 이메일 (선택) — 알림 메일 수신 주소. 소셜에서 못 받았으면 여기서 채움 */}
+          <div style={{ fontSize: 13.5, fontWeight: 700, color: '#8B8579', margin: '14px 0 9px' }}>알림 이메일 <span style={{ fontWeight: 600, color: '#B6BCC7' }}>· 선택</span></div>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); setErr('') }}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) submit() }}
+            placeholder="알림 받을 이메일 (예: me@example.com)"
+            style={{ width: '100%', border: `1.5px solid ${emailTrim && !emailOk ? '#E5484D' : '#E7EAEF'}`, borderRadius: 14, outline: 'none', background: '#F9FAFB', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, padding: '13px 16px' }}
+            onFocus={(e) => (e.target.style.border = '1.5px solid #15795A')}
+            onBlur={(e) => (e.target.style.border = `1.5px solid ${emailTrim && !emailOk ? '#E5484D' : '#E7EAEF'}`)}
+          />
+          <div style={{ minHeight: 16, marginTop: 6, fontSize: 12, fontWeight: 700, color: '#E5484D' }}>{emailTrim && !emailOk ? '이메일 형식이 올바르지 않아요' : ''}</div>
+
           <div
             onClick={submit}
             className={valid && !busy ? 'lift' : ''}

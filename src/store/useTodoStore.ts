@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { Task, TaskGroup, TaskStatus, TasksByDate } from '@/types'
-import { fetchTodos, createTodo, updateTodo, deleteTodo, toTask } from '@/api/todoApi'
+import { fetchTodos, createTodo, updateTodo, updateTodoDate, deleteTodo, toTask } from '@/api/todoApi'
 import { listSharedTodos, leaveTodo } from '@/api/todoShareApi'
 import { todayKey } from '@/lib/dates'
 import { useAppStore } from './useAppStore'
@@ -174,11 +174,9 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     if (cur.shared) { toast('공유받은 할 일은 옮길 수 없어요'); return }
     if (cur.group === 'routine') { toast('루틴 할 일은 날짜 이동을 지원하지 않아요'); return }
     if (newDateKey < todayKey()) { toast('지난 날짜로는 옮길 수 없어요'); return }
-    const labelId = useLabelStore.getState().labelOf(id)?.id ?? cur.labelId ?? null
     try {
-      // 새 날짜에 먼저 생성(라벨 포함) → 성공하면 기존 삭제 (실패 시 원본 보존)
-      await createTodo(newDateKey, { ...cur, labelId }, cur.ai ? 'AI' : 'MANUAL')
-      await deleteTodo(id)
+      // be-61: PATCH date 지원 → 같은 행을 옮김(id·공유·라벨 보존). be가 과거·중복키 검증.
+      await updateTodoDate(id, newDateKey)
       await Promise.all([get().loadDate(dateKey), get().loadDate(newDateKey)])
       toast('날짜를 옮겼어요')
     } catch (e) {
