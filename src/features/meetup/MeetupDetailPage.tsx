@@ -97,9 +97,11 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
           <div style={{ background: '#fff', border: '1px solid #ECE9E0', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
             <div style={{ fontSize: 13, fontWeight: 800, color: MC.muted, marginBottom: 10 }}>초대하기</div>
             {/* 닉네임 검색 */}
-            <div style={{ position: 'relative', marginBottom: invitable.length ? 12 : 0 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A6A296" strokeWidth="2" style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)' }}><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
-              <input value={inviteQ} onChange={(e) => setInviteQ(e.target.value)} placeholder="닉네임으로 검색해 초대 (정확히 입력)" style={{ width: '100%', border: `1px solid ${MC.border}`, outline: 'none', background: MC.fieldBg, borderRadius: 12, padding: '11px 14px 11px 38px', fontFamily: 'inherit', fontSize: 14.5, fontWeight: 600, color: MC.ink }} />
+            <div style={{ marginBottom: invitable.length ? 12 : 0 }}>
+              <div style={{ position: 'relative' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A6A296" strokeWidth="2" style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+                <input value={inviteQ} onChange={(e) => setInviteQ(e.target.value)} placeholder="닉네임으로 검색해 초대 (정확히 입력)" style={{ width: '100%', border: `1px solid ${MC.border}`, outline: 'none', background: MC.fieldBg, borderRadius: 12, padding: '11px 14px 11px 38px', fontFamily: 'inherit', fontSize: 14.5, fontWeight: 600, color: MC.ink }} />
+              </div>
               {inviteQ.trim() && (
                 <div style={{ marginTop: 8 }}>
                   {inviteResult === null ? (
