@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Task, TaskGroup, TaskStatus, TasksByDate } from '@/types'
 import { fetchTodos, createTodo, updateTodo, deleteTodo, toTask } from '@/api/todoApi'
 import { listSharedTodos, leaveTodo } from '@/api/todoShareApi'
+import { todayKey } from '@/lib/dates'
 import { useAppStore } from './useAppStore'
 import { useLabelStore } from './useLabelStore'
 
@@ -42,6 +43,8 @@ interface TodoState {
   loadShared: () => Promise<void>
   /** 공유 나가기(참여자 본인) */
   leaveShared: (id: string) => Promise<void>
+  /** 다른 날짜로 이동 (be는 PATCH로 date 변경 불가 → 새로 만들고 기존 삭제). 소유·MANUAL/AI만. */
+  moveTask: (dateKey: string, id: string, newDateKey: string) => Promise<void>
   toggleTask: (id: string) => void
   deleteTask: (id: string) => void
   addPlaceTask: (input: PlaceTaskInput) => void
@@ -161,6 +164,25 @@ export const useTodoStore = create<TodoState>((set, get) => ({
       useAppStore.getState().toast('공유에서 나갔어요')
     } catch (e) {
       useAppStore.getState().toast((e as Error)?.message || '나가기에 실패했어요')
+    }
+  },
+  moveTask: async (dateKey, id, newDateKey) => {
+    if (dateKey === newDateKey) return
+    const cur = find(dateKey, id)
+    const toast = useAppStore.getState().toast
+    if (!cur || isTemp(id)) return
+    if (cur.shared) { toast('공유받은 할 일은 옮길 수 없어요'); return }
+    if (cur.group === 'routine') { toast('루틴 할 일은 날짜 이동을 지원하지 않아요'); return }
+    if (newDateKey < todayKey()) { toast('지난 날짜로는 옮길 수 없어요'); return }
+    const labelId = useLabelStore.getState().labelOf(id)?.id ?? cur.labelId ?? null
+    try {
+      // 새 날짜에 먼저 생성(라벨 포함) → 성공하면 기존 삭제 (실패 시 원본 보존)
+      await createTodo(newDateKey, { ...cur, labelId }, cur.ai ? 'AI' : 'MANUAL')
+      await deleteTodo(id)
+      await Promise.all([get().loadDate(dateKey), get().loadDate(newDateKey)])
+      toast('날짜를 옮겼어요')
+    } catch (e) {
+      toast((e as Error)?.message || '날짜 이동에 실패했어요')
     }
   },
   toggleTask: (id) => {
