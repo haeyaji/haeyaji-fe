@@ -13,7 +13,11 @@ import { FriendSearchModal } from './FriendSearchModal'
 import { FriendDetailModal } from './FriendDetailModal'
 import { MC } from '@/features/meetup/tokens'
 import { Avatar, AvatarStack } from '@/features/meetup/meetupShared'
-import type { WeatherCond } from '@/types'
+import { REC_CATEGORY_LABEL } from '@/features/recommend/recCategories'
+import type { RecCategory, WeatherCond } from '@/types'
+
+// 표시 방어 — 과거 저장된 영어 10-코드(CAFE_DESSERT 등)가 오면 한글 라벨로 변환. 6종 설문 한글은 그대로.
+const catDisplay = (v: string): string => (v in REC_CATEGORY_LABEL ? REC_CATEGORY_LABEL[v as RecCategory] : v)
 
 function Ring({ rate, size = 104, sw = 10 }: { rate: number; size?: number; sw?: number }) {
   const R = (size - sw) / 2
@@ -164,7 +168,7 @@ export function MyPage() {
           </div>
           {hasPrefs ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {pref.preferredCategories.length > 0 && <PrefRow label="좋아하는 활동" items={pref.preferredCategories} />}
+              {pref.preferredCategories.length > 0 && <PrefRow label="좋아하는 활동" items={pref.preferredCategories.map(catDisplay)} />}
               {pref.vibe && <PrefRow label="분위기" items={[pref.vibe]} />}
               {pref.intensity && <PrefRow label="강도" items={[pref.intensity]} />}
               {pref.avoid.length > 0 && <PrefRow label="피하고 싶은 것" items={pref.avoid} muted />}
