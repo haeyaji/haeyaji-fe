@@ -66,7 +66,7 @@ export function HomeDashboard() {
       {/* 스케일은 index.css .home-wrap zoom 미디어쿼리에서 (데탑 .8 / 노트북 .77) */}
       <div className="home-wrap">
         {/* header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, gap: 16, flexWrap: 'wrap' }}>
           <div>
             <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-.7px' }}>{greeting()}, {nickname}</div>
             <div style={{ fontSize: 18, fontWeight: 600, color: '#8B8579', marginTop: 2 }}>{dateFullLabel(selId)} · {region}</div>
@@ -116,8 +116,8 @@ export function HomeDashboard() {
           </div>
 
           {/* TASKS 2x3 */}
-          {/* 높이 = 왼쪽 컬럼(날씨340+지표150+주간예보154+gap32=676) 고정 default. 할일 많으면 내부 스크롤(안 늘어남) */}
-          <div className="tile" style={{ gridColumn: '3 / 5', gridRow: '1 / 4', height: 676, minHeight: 0, padding: '22px 24px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {/* 높이 = 왼쪽 컬럼(날씨+지표+주간예보)에 정확히 자동 정합 → gap 균일. overflow+내부스크롤로 할일 많아도 안 늘어남 */}
+          <div className="tile" style={{ gridColumn: '3 / 5', gridRow: '1 / 4', minHeight: 0, padding: '22px 24px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div onClick={() => setSelId(addDays(selId, -1))} className="hbtn" title="전날" style={{ width: 30, height: 30, borderRadius: 9, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
