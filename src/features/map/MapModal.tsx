@@ -240,6 +240,11 @@ export function MapModal() {
   const shown: MapPlace[] = activeKeyword ? results : recPins
   const selP = [...recPins, ...results].find((p) => p.id === mapSelId) ?? null
   const listTitle = activeKeyword ? (searching ? '검색 중…' : `'${activeKeyword}' · 이 지역 결과`) : '오늘 추천 장소'
+  // 추천 장소 = 초록(AI 톤) / 검색 결과 = 파랑 으로 블럭 구분
+  const isRec = !activeKeyword
+  const listTheme = isRec
+    ? { iconBg: '#E4F2EC', icon: '#15795A', accent: '#15795A', tint: '#F4FAF7' }
+    : { iconBg: '#EAF2F8', icon: '#3F82C2', accent: '#3F82C2', tint: '#F5F9FC' }
   const isCustomOrigin = !!origin
 
   // 출발지로 지정 / 도착지로 지정 (상세 모달에서 호출)
@@ -330,15 +335,18 @@ export function MapModal() {
                 )}
               </div>
 
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#A39C8E', padding: '6px 20px 8px' }}>{listTitle}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: listTheme.accent, padding: '6px 20px 8px' }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: listTheme.accent, flexShrink: 0 }} />
+                {listTitle}
+              </div>
               <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {shown.map((p) => {
                   const active = mapSelId === p.id
                   return (
-                    <div key={p.id} onClick={() => setMapDetail(p)} className="hbtn" style={{ border: `1px solid ${active ? '#17150F' : '#E1E5EC'}`, background: active ? '#F7F8FB' : '#fff', borderRadius: 14, padding: '12px 13px', cursor: 'pointer' }}>
+                    <div key={p.id} onClick={() => setMapDetail(p)} className="hbtn" style={{ border: `1px solid ${active ? '#17150F' : '#E1E5EC'}`, borderLeft: `3px solid ${listTheme.accent}`, background: active ? '#F7F8FB' : listTheme.tint, borderRadius: 14, padding: '12px 13px', cursor: 'pointer' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-                        <div style={{ width: 38, height: 38, borderRadius: 11, background: '#E4F2EC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <span style={{ width: 18, height: 18, display: 'inline-flex' }}><CategoryIcon cat={p.cat} c="#15795A" /></span>
+                        <div style={{ width: 38, height: 38, borderRadius: 11, background: listTheme.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <span style={{ width: 18, height: 18, display: 'inline-flex' }}><CategoryIcon cat={p.cat} c={listTheme.icon} /></span>
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 14, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
