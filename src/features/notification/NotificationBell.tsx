@@ -28,7 +28,7 @@ function NotiIcon({ n }: { n: NotiItem }) {
 export function NotificationBell() {
   const { authed, notiOpen, openNoti, closeNoti } = useAppStore()
   useOverlay(notiOpen, closeNoti)
-  const { notifications, unread, hasNext, load, loadMore, markRead, markAllRead, remove } = useNotificationStore()
+  const { notifications, unread, hasNext, category, load, loadMore, setCategory, markRead, markAllRead, remove } = useNotificationStore()
   const { pending, meetingInvites, load: loadInvites, accept, reject, rejectMeeting } = useShareInboxStore()
   const friendAccept = useFriendStore((s) => s.accept)
   const friendReject = useFriendStore((s) => s.reject)
@@ -90,9 +90,16 @@ export function NotificationBell() {
               {unread > 0 && <div onClick={() => void markAllRead()} className="hbtn" style={{ fontSize: 12.5, fontWeight: 700, color: '#8B8579', cursor: 'pointer' }}>모두 읽음</div>}
             </div>
 
+            {/* 카테고리 탭 — be category 파라미터로 조회(전체/초대/할일/친구) */}
+            <div style={{ display: 'flex', gap: 6, padding: '10px 14px 4px', borderBottom: '1px solid #F3F1EA' }}>
+              {([[null, '전체'], ['INVITE', '초대'], ['TODO', '할일'], ['FRIEND', '친구']] as const).map(([c, l]) => (
+                <div key={l} onClick={() => void setCategory(c)} className="hbtn" style={{ flex: 1, textAlign: 'center', fontSize: 12.5, fontWeight: 800, padding: '7px 0', borderRadius: 9, cursor: 'pointer', background: category === c ? '#17150F' : '#F4F3F0', color: category === c ? '#fff' : '#8B8579' }}>{l}</div>
+              ))}
+            </div>
+
             <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 7 }}>
-              {/* 받은 공유 초대 (be-59) — 수락/거절 */}
-              {pending.map((t) => (
+              {/* 받은 공유 초대 (be-59) — 수락/거절. 전체·초대 탭에서만 */}
+              {(category === null || category === 'INVITE') && pending.map((t) => (
                 <div key={t.id} style={{ display: 'flex', gap: 11, padding: '12px', borderRadius: 13, background: '#F4F8FB', border: '1px solid #D7E4EF' }}>
                   <div style={{ width: 36, height: 36, borderRadius: 10, background: '#EAF2F8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3F82C2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>
@@ -109,8 +116,8 @@ export function NotificationBell() {
                 </div>
               ))}
 
-              {/* 받은 약속 초대 (be-61) — 참여(join)/거절 */}
-              {meetingInvites.map((m) => (
+              {/* 받은 약속 초대 (be-61) — 참여(join)/거절. 전체·초대 탭에서만 */}
+              {(category === null || category === 'INVITE') && meetingInvites.map((m) => (
                 <div key={m.shareToken} style={{ display: 'flex', gap: 11, padding: '12px', borderRadius: 13, background: '#F4F8FB', border: '1px solid #D7E4EF' }}>
                   <div style={{ width: 36, height: 36, borderRadius: 10, background: '#EAF2F8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3F82C2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3" /><path d="M8 2.5v4M16 2.5v4M3 9h18" /></svg>
@@ -126,7 +133,7 @@ export function NotificationBell() {
                 </div>
               ))}
 
-              {pending.length === 0 && meetingInvites.length === 0 && feed.length === 0 ? (
+              {(category !== null && category !== 'INVITE' ? true : pending.length === 0 && meetingInvites.length === 0) && feed.length === 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#B6BCC7', gap: 10, padding: '40px 20px' }}>
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CAD0DA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
                   <div style={{ fontSize: 14.5, fontWeight: 600 }}>새 알림이 없어요</div>
