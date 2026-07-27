@@ -75,7 +75,7 @@ export function TaskRow({ task, variant, onOpen }: { task: Task; variant: 'home'
       {/* 핀 — 소유·EDITOR만 (VIEWER는 읽기전용) */}
       {canEdit && (
         <div onClick={(e) => { e.stopPropagation(); togglePin(selId, task.id) }} className="hbtn" title={task.pinned ? '고정 해제' : '상단 고정'} style={{ display: 'flex', cursor: 'pointer', flexShrink: 0, color: task.pinned ? '#C2702A' : '#CBD0D8' }}>
-          <PinIcon filled={!!task.pinned} w={home ? 18 : 16} />
+          <PinIcon filled={!!task.pinned} w={home ? 27 : 24} />
         </div>
       )}
 
