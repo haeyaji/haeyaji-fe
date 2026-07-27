@@ -25,10 +25,10 @@ export interface NotiItem {
 interface Env<T> { data: T }
 interface CursorPage<T> { content: T[]; nextCursor: string | null; hasNext: boolean }
 
-/** 목록 (커서 페이지네이션, type 필터). */
-export async function listNotifications(params?: { cursor?: string | null; size?: number; type?: NotiType }): Promise<CursorPage<NotiItem>> {
+/** 목록 (커서 페이지네이션, category·type 필터 — be가 AND로 좁힘). */
+export async function listNotifications(params?: { cursor?: string | null; size?: number; category?: NotiCategory; type?: NotiType }): Promise<CursorPage<NotiItem>> {
   const res = await be.get<Env<CursorPage<NotiItem>>>('/notifications', {
-    params: { cursor: params?.cursor ?? undefined, size: params?.size ?? 20, type: params?.type },
+    params: { cursor: params?.cursor ?? undefined, size: params?.size ?? 20, category: params?.category, type: params?.type },
   })
   return res.data.data ?? { content: [], nextCursor: null, hasNext: false }
 }
