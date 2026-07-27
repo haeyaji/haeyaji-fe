@@ -14,7 +14,9 @@ import { Avatar } from '@/features/meetup/meetupShared'
 import { LabelPicker } from './LabelPicker'
 import { DayPicker } from '@/features/routine/DayPicker'
 import { COLUMNS, dateBadge } from './taskMeta'
-import { normalizeTime } from '@/lib/dates'
+import { normalizeTime, todayKey, dateFullLabel } from '@/lib/dates'
+import { searchPlaces, type PlaceRaw } from '@/api/placeApi'
+import { useLocationStore } from '@/store/useLocationStore'
 import type { ShareRole } from '@/types'
 
 const ROLE_LABEL: Record<ShareRole, string> = { owner: '소유자', editor: '편집', viewer: '보기' }
@@ -31,7 +33,8 @@ function PinIcon({ filled, c }: { filled: boolean; c: string }) {
 
 export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string; taskId: string; onClose: () => void }) {
   const tasksByDate = useTodoStore((s) => s.tasksByDate)
-  const { updateTitle, setStatus, removeTask, patchTask, togglePin, leaveShared } = useTodoStore()
+  const { updateTitle, setStatus, removeTask, patchTask, togglePin, leaveShared, moveTask } = useTodoStore()
+  const loc = useLocationStore()
   const friendItems = useFriendStore((s) => s.friends)
   const nameOf = useFriendStore((s) => s.nameOf)
   const assignments = useLabelStore((s) => s.assignments) // 라벨 변경 리렌더용
@@ -43,7 +46,24 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
   const [days, setDays] = useState<boolean[]>([true, true, true, true, true, false, false])
   const [timeInput, setTimeInput] = useState(() => (useTodoStore.getState().tasksByDate[dateKey] ?? []).find((t) => t.id === taskId)?.time || '')
   const [timeErr, setTimeErr] = useState(false)
+  const [placeOpen, setPlaceOpen] = useState(false) // 장소 검색 열림
+  const [placeQ, setPlaceQ] = useState('')
+  const [placeResults, setPlaceResults] = useState<PlaceRaw[]>([])
+  const [placeSearching, setPlaceSearching] = useState(false)
   useOverlay(true, onClose)
+
+  // 장소 검색 (카카오, 현위치 기준 5km, 디바운스 350ms)
+  useEffect(() => {
+    if (!placeOpen) return
+    const q = placeQ.trim()
+    if (!q) { setPlaceResults([]); setPlaceSearching(false); return }
+    setPlaceSearching(true)
+    const t = setTimeout(async () => {
+      try { setPlaceResults(await searchPlaces(q, loc.lat, loc.lng, 5000, 8)) } catch { setPlaceResults([]) }
+      setPlaceSearching(false)
+    }, 350)
+    return () => clearTimeout(t)
+  }, [placeQ, placeOpen, loc.lat, loc.lng])
 
   // 스토어 최신 상태 반영 (수정 즉시 리렌더)
   const task = (tasksByDate[dateKey] ?? []).find((t) => t.id === taskId)
@@ -175,16 +195,37 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
           {timeErr && <div style={{ fontSize: 12.5, fontWeight: 700, color: '#C0645C', marginTop: 6, paddingLeft: 2 }}>시간을 알아보지 못했어요. "오후 2시", "14:30"처럼 입력해주세요.</div>}
         </div>
 
+        {/* 날짜 (소유·비루틴만 다른 날로 이동 — be는 삭제+재생성) */}
+        <div style={{ marginTop: 20 }}>
+          <div style={label}>날짜</div>
+          {canEdit && !task.shared && task.group !== 'routine' ? (
+            <input
+              type="date"
+              value={dateKey}
+              min={todayKey()}
+              onChange={(e) => { const nd = e.target.value; if (nd && nd !== dateKey) { void moveTask(dateKey, taskId, nd); onClose() } }}
+              style={{ width: '100%', border: '1px solid #EAECEF', outline: 'none', background: '#F6F8FA', borderRadius: 13, padding: '11px 14px', fontFamily: 'inherit', fontSize: 14.5, fontWeight: 700, color: '#17150F' }}
+            />
+          ) : (
+            <div style={{ background: '#F6F8FA', border: '1px solid #EAECEF', borderRadius: 13, padding: '11px 14px', fontSize: 14.5, fontWeight: 700, color: '#8B8579' }}>{dateFullLabel(dateKey)}</div>
+          )}
+        </div>
+
         {/* 분류 (사용자 라벨, be todo.label_id) */}
         <div style={{ marginTop: 20 }}>
           <div style={label}>분류</div>
           <LabelPicker value={labelId} onChange={(lid) => setTodoLabel(taskId, lid)} />
         </div>
 
-        {/* 장소 (추천에서 온 경우만) */}
-        {task.placeName && (
-          <div style={{ marginTop: 20 }}>
+        {/* 장소 (지도 검색으로 추가·변경) */}
+        <div style={{ marginTop: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={label}>장소</div>
+            {canEdit && task.placeName && (
+              <div onClick={() => setPlaceOpen((v) => !v)} className="hbtn" style={{ fontSize: 12.5, fontWeight: 800, color: '#8B8579', cursor: 'pointer' }}>{placeOpen ? '닫기' : '변경'}</div>
+            )}
+          </div>
+          {task.placeName ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 11, background: '#F6F8FA', border: '1px solid #EAECEF', borderRadius: 13, padding: '12px 14px' }}>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: '#E4F2EC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#15795A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-7-5.2-7-11a7 7 0 0 1 14 0c0 5.8-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></svg>
@@ -194,8 +235,43 @@ export function TaskDetailModal({ dateKey, taskId, onClose }: { dateKey: string;
                 <div onClick={() => { const u = safeUrl(task.placeUrl); if (u) window.open(u, '_blank', 'noopener') }} className="hbtn" style={{ fontSize: 12.5, fontWeight: 800, color: '#15795A', background: '#E4F2EC', padding: '7px 12px', borderRadius: 20, cursor: 'pointer', flexShrink: 0 }}>지도</div>
               )}
             </div>
-          </div>
-        )}
+          ) : canEdit ? (
+            <div onClick={() => setPlaceOpen(true)} className="hbtn" style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#F6F8FA', border: '1px dashed #D6D9DE', borderRadius: 13, padding: '12px 14px', cursor: 'pointer', color: '#8B8579' }}>
+              <PlusIcon c="#8B8579" w={15} /> <span style={{ fontSize: 14, fontWeight: 700 }}>장소 추가</span>
+            </div>
+          ) : (
+            <div style={{ background: '#F6F8FA', border: '1px solid #EAECEF', borderRadius: 13, padding: '12px 14px', fontSize: 14, fontWeight: 600, color: '#B6BCC7' }}>장소 없음</div>
+          )}
+
+          {/* 지도 검색 (카카오) */}
+          {placeOpen && canEdit && (
+            <div style={{ marginTop: 8, background: '#F9FAFB', border: '1px solid #EEF0F4', borderRadius: 13, padding: 12 }}>
+              <div style={{ position: 'relative' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A6A296" strokeWidth="2" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+                <input autoFocus value={placeQ} onChange={(e) => setPlaceQ(e.target.value)} placeholder="장소 검색 (예: 스타벅스 강남)" style={{ width: '100%', border: '1px solid #E7EAEF', outline: 'none', background: '#fff', borderRadius: 11, padding: '10px 12px 10px 34px', fontFamily: 'inherit', fontSize: 14, fontWeight: 600 }} />
+              </div>
+              <div style={{ maxHeight: 220, overflowY: 'auto', marginTop: placeQ.trim() ? 8 : 0 }}>
+                {placeSearching ? (
+                  <div style={{ padding: 14, textAlign: 'center', fontSize: 13, fontWeight: 600, color: '#B6BCC7' }}>검색 중…</div>
+                ) : placeQ.trim() && placeResults.length === 0 ? (
+                  <div style={{ padding: 14, textAlign: 'center', fontSize: 13, fontWeight: 600, color: '#B6BCC7' }}>결과가 없어요</div>
+                ) : (
+                  placeResults.map((p, i) => (
+                    <div key={i} onClick={() => { patchTask(dateKey, taskId, { placeName: p.name, placeUrl: p.url, lat: p.y, lng: p.x }); setPlaceOpen(false); setPlaceQ(''); setPlaceResults([]) }} className="hbtn" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 8px', borderRadius: 10, cursor: 'pointer' }}>
+                      <div style={{ width: 30, height: 30, borderRadius: 9, background: '#E4F2EC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#15795A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-7-5.2-7-11a7 7 0 0 1 14 0c0 5.8-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></svg>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#A39C8E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{[p.category, p.address].filter(Boolean).join(' · ')}</div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* 반복 — 루틴 (루틴 todo면 ON·끄면 개별로 / 개별이면 켜서 루틴 등록) */}
         <div style={{ marginTop: 22 }}>
