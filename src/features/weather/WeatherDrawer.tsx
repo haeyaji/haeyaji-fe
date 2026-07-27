@@ -1,15 +1,18 @@
+import { useState } from 'react'
 import { CloseIcon, DetailIcon, WeatherIcon, type DetailKey } from '@/lib/icons'
 import { useOverlay } from '@/lib/useOverlay'
 import { useDayWeather } from '@/lib/weather'
 import { dateShortLabel } from '@/lib/dates'
 import { useAppStore } from '@/store/useAppStore'
 import { useLocationStore } from '@/store/useLocationStore'
+import { LocationModal } from '@/features/home/LocationModal'
 import { WeatherScene } from './WeatherScene'
 
 export function WeatherDrawer() {
   const { weatherOpen, closeWeather, weatherSelId: selId } = useAppStore()
   const region = useLocationStore((s) => s.region) || '현재 위치'
   const w = useDayWeather(selId) // 훅은 early return보다 먼저
+  const [locOpen, setLocOpen] = useState(false)
 
   useOverlay(weatherOpen, closeWeather)
   if (!weatherOpen) return null
@@ -49,7 +52,13 @@ export function WeatherDrawer() {
         <div style={{ padding: '24px 24px 30px', background: w.sky, color: w.ink, position: 'relative', overflow: 'hidden' }}>
           <WeatherScene cond={w.cond} tod={w.tod} ink={w.ink} />
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ fontSize: 16, fontWeight: 800 }}>{dateShort} · {region}</div>
+            <div style={{ fontSize: 16, fontWeight: 800 }}>
+              {dateShort} ·{' '}
+              <span onClick={() => setLocOpen(true)} title="위치 변경" style={{ cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 3, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-7-5.2-7-11a7 7 0 0 1 14 0c0 5.8-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></svg>
+                {region}
+              </span>
+            </div>
             <div onClick={closeWeather} style={{ width: 30, height: 30, borderRadius: 10, background: 'rgba(255,255,255,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
               <CloseIcon c="currentColor" />
             </div>
@@ -94,6 +103,7 @@ export function WeatherDrawer() {
           </div>
         </div>
       </div>
+      {locOpen && <LocationModal onClose={() => setLocOpen(false)} />}
     </>
   )
 }

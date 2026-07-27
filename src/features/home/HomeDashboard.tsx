@@ -15,14 +15,12 @@ import { WeatherScene } from '@/features/weather/WeatherScene'
 import { WeatherStatsStrip } from './WeatherStatsStrip'
 import { MonthCalendarCard } from './MonthCalendarCard'
 import { AdherenceCard } from './AdherenceCard'
-import { LocationModal } from './LocationModal'
 
 export function HomeDashboard() {
   const { selId, setSelId, weatherSelId, setWeatherSelId, openWeather, openAdd, openAi, openMap } = useAppStore()
   const nickname = usePrefStore((s) => s.nickname)
   const { tasks, done, total, progPct, frac } = useDayTasks()
   const [detail, setDetail] = useState<Task | null>(null)
-  const [locOpen, setLocOpen] = useState(false)
 
   const region = useLocationStore((s) => s.region) || '현재 위치'
   const w = useDayWeather(weatherSelId)
@@ -71,10 +69,7 @@ export function HomeDashboard() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, gap: 16, flexWrap: 'wrap' }}>
           <div>
             <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-.7px' }}>{greeting()}, {nickname}</div>
-            <div style={{ fontSize: 18, fontWeight: 600, color: '#8B8579', marginTop: 2 }}>
-              {dateFullLabel(selId)} ·{' '}
-              <span onClick={() => setLocOpen(true)} className="hbtn" title="위치 변경" style={{ cursor: 'pointer', color: '#15795A', fontWeight: 700, textDecoration: 'underline', textUnderlineOffset: 2 }}>📍 {region}</span>
-            </div>
+            <div style={{ fontSize: 18, fontWeight: 600, color: '#8B8579', marginTop: 2 }}>{dateFullLabel(selId)} · {region}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff', borderRadius: 14, padding: '10px 16px', fontSize: 18, fontWeight: 700, boxShadow: '0 1px 2px rgba(22,26,32,.04), 0 8px 22px rgba(22,26,32,.045)' }}>
@@ -208,7 +203,6 @@ export function HomeDashboard() {
       </div>
 
       {detail && <TaskDetailModal dateKey={selId} taskId={detail.id} onClose={() => setDetail(null)} />}
-      {locOpen && <LocationModal onClose={() => setLocOpen(false)} />}
     </div>
   )
 }
