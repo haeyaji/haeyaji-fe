@@ -119,6 +119,12 @@ export async function updateTodo(task: Task): Promise<Task> {
   return toTask(data.data)
 }
 
+/** PATCH /todos/{id} — 날짜만 이동 (be가 과거·루틴/약속 중복키 검증). be-61 date PATCH 지원. */
+export async function updateTodoDate(id: string, date: string): Promise<Task> {
+  const { data } = await be.patch<ApiResponse<TodoResponse>>(`/todos/${id}`, { date })
+  return toTask(data.data)
+}
+
 /** DELETE /todos/{id} */
 export async function deleteTodo(id: string): Promise<void> {
   await be.delete(`/todos/${id}`)
