@@ -29,7 +29,7 @@ export function NotificationBell() {
   const { authed, notiOpen, openNoti, closeNoti } = useAppStore()
   useOverlay(notiOpen, closeNoti)
   const { notifications, unread, hasNext, load, loadMore, markRead, markAllRead, remove } = useNotificationStore()
-  const { pending, load: loadInvites, accept, reject } = useShareInboxStore()
+  const { pending, meetingInvites, load: loadInvites, accept, reject, rejectMeeting } = useShareInboxStore()
   const friendAccept = useFriendStore((s) => s.accept)
   const friendReject = useFriendStore((s) => s.reject)
 
@@ -37,9 +37,9 @@ export function NotificationBell() {
   useEffect(() => { if (notiOpen) { void load(); void loadInvites() } }, [notiOpen, load, loadInvites])
 
   if (!authed) return null
-  const badgeCount = unread + pending.length
-  // 공유 초대(SHARE_INVITE)는 아래 전용 섹션(/todos/invitations)에서 다루므로 피드에선 제외해 중복 방지
-  const feed = notifications.filter((n) => n.type !== 'SHARE_INVITE')
+  const badgeCount = unread + pending.length + meetingInvites.length
+  // 공유·약속 초대는 아래 전용 섹션(/todos·/meetings invitations)에서 다루므로 피드에선 제외(중복 방지)
+  const feed = notifications.filter((n) => n.type !== 'SHARE_INVITE' && n.type !== 'MEETING_INVITE')
 
   // 미팅 알림 → 약속 화면에서 해당 토큰 자동 열기
   const openMeeting = (token: string | null) => {
@@ -109,7 +109,24 @@ export function NotificationBell() {
                 </div>
               ))}
 
-              {pending.length === 0 && feed.length === 0 ? (
+              {/* 받은 약속 초대 (be-61) — 참여(join)/거절 */}
+              {meetingInvites.map((m) => (
+                <div key={m.shareToken} style={{ display: 'flex', gap: 11, padding: '12px', borderRadius: 13, background: '#F4F8FB', border: '1px solid #D7E4EF' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: '#EAF2F8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3F82C2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3" /><path d="M8 2.5v4M16 2.5v4M3 9h18" /></svg>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#17150F' }}>약속 초대</div>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: '#3B372E', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.title}</div>
+                    <div style={{ display: 'flex', gap: 6, marginTop: 9 }}>
+                      <Pill onClick={() => openMeeting(m.shareToken)} primary>참여하기</Pill>
+                      <Pill onClick={() => void rejectMeeting(m.shareToken)}>거절</Pill>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {pending.length === 0 && meetingInvites.length === 0 && feed.length === 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#B6BCC7', gap: 10, padding: '40px 20px' }}>
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CAD0DA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
                   <div style={{ fontSize: 14.5, fontWeight: 600 }}>새 알림이 없어요</div>

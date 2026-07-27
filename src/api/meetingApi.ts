@@ -93,6 +93,19 @@ export async function inviteMembers(shareToken: string, memberIds: string[]): Pr
   return res.data.data
 }
 
+// ── 받은 약속 초대 (be-61) — 알림 유실 대비 조회 + join(수락)/reject ──
+export interface MeetingInvitation { meetingId: string; title: string; type: MeetingType | string; shareToken: string; deadline: string | null; createdAt: string }
+
+/** 내가 받은 대기(PENDING) 약속 초대 목록. */
+export async function listMeetingInvitations(): Promise<MeetingInvitation[]> {
+  const res = await be.get<Env<MeetingInvitation[]>>('/meetings/invitations')
+  return res.data.data ?? []
+}
+/** 받은 약속 초대 거절. (수락은 joinMeeting = participants API가 겸함) */
+export async function rejectMeetingInvitation(shareToken: string): Promise<void> {
+  await be.post(`/meetings/${shareToken}/reject`, {})
+}
+
 // ── MeetingResponseController ──
 export async function submitAvailability(shareToken: string, responses: SlotResponseItem[]): Promise<SlotResponseItem[]> {
   const res = await be.put<Env<SlotResponseItem[]>>(`/meetings/${shareToken}/responses`, { responses })
