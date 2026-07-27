@@ -49,9 +49,9 @@ export default function App() {
     const isNewMember = new URLSearchParams(window.location.search).get('isNewMember') === 'true'
     const inviteToken = window.location.pathname.match(/^\/(?:invite|meetup)\/([^/]+)/)?.[1] ?? null // 초대/약속 링크 진입 → 약속 상세 자동 열기
     if (isCallback || inviteToken) history.replaceState(null, '', '/') // 콜백/초대 쿼리 URL 정리
-    // 로그인 필요 상태로 초대/약속 링크 진입 시, OAuth 리다이렉트·계정 wipe 리로드를 넘어서도 토큰이 살아남게 저장.
-    // (계정 wipe 목록에 없는 키라 로그인 후에도 유지 → 세션 확립 뒤 소비)
-    if (inviteToken) localStorage.setItem('haeyaji-pending-invite', inviteToken)
+    // 로그인 필요 상태로 초대/약속 링크 진입 시, OAuth 리다이렉트를 넘어서도 토큰이 살아남게 저장(시각 포함).
+    // ⚠️ 신선도 가드: 오래 남은 스테일 토큰이 다음 로그인에서 엉뚱한(삭제된) 약속을 열어 404 나는 걸 방지.
+    if (inviteToken) localStorage.setItem('haeyaji-pending-invite', JSON.stringify({ t: inviteToken, at: Date.now() }))
     ;(async () => {
       try {
         const me = await fetchMe() // 쿠키로 세션 확인 (401이면 client 인터셉터가 reissue 시도)
@@ -77,9 +77,12 @@ export default function App() {
         if (cancelled) return
         useAppStore.getState().login(isCallback ? '로그인했어요' : undefined)
         if (isCallback && isNewMember) usePrefStore.setState({ surveyDone: false }) // 신규 → 온보딩
-        // 초대/약속 링크 → 세션 확립 후 약속 화면 자동 열기 (URL 또는 로그인 넘어 저장해둔 토큰). 소비 후 제거.
-        const pendingTok = inviteToken ?? localStorage.getItem('haeyaji-pending-invite')
-        if (pendingTok) { useAppStore.setState({ pendingInvite: pendingTok, view: 'meetup' }); localStorage.removeItem('haeyaji-pending-invite') }
+        // 초대/약속 링크 → 세션 확립 후 약속 화면 자동 열기. 저장 토큰은 항상 소비(제거)하고, 10분 이내 것만 인정(스테일 무시).
+        let pendingTok = inviteToken
+        const raw = localStorage.getItem('haeyaji-pending-invite')
+        localStorage.removeItem('haeyaji-pending-invite') // 읽는 즉시 제거 → 다음 로그인에 안 남음
+        if (!pendingTok && raw) { try { const p = JSON.parse(raw); if (p?.t && Date.now() - (p.at ?? 0) < 600000) pendingTok = p.t } catch { /* 구형식 무시 */ } }
+        if (pendingTok) useAppStore.setState({ pendingInvite: pendingTok, view: 'meetup' })
       } catch {
         /* 미인증 → 로그인 화면 */
       } finally {
