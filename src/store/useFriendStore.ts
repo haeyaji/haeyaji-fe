@@ -6,7 +6,6 @@ import { persist } from 'zustand/middleware'
 import { listFriends, listRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, deleteFriend, type MemberLite } from '@/api/friendApi'
 import { useAppStore } from './useAppStore'
 
-const myId = () => localStorage.getItem('haeyaji-account') ?? ''
 const toast = (m: string) => useAppStore.getState().toast(m)
 
 export interface FriendItem { rowId: string; memberId: string } // rowId=Friend 행 UUID, memberId=상대
@@ -30,7 +29,6 @@ interface FriendState {
 export const useFriendStore = create<FriendState>()(
   persist(
     (set, get) => {
-      const other = (r: { requesterId: string; receiverId: string }) => (r.requesterId === myId() ? r.receiverId : r.requesterId)
       return {
         friends: [],
         incoming: [],
@@ -40,10 +38,14 @@ export const useFriendStore = create<FriendState>()(
         load: async () => {
           try {
             const [fr, inc, out] = await Promise.all([listFriends(), listRequests('received'), listRequests('sent')])
+            // be가 counterpartId/Nickname을 직접 줌 → 이름 캐시(names)도 그걸로 채워 nameOf가 실이름 반환
+            const names: Record<string, string> = { ...get().names }
+            for (const r of [...fr, ...inc, ...out]) if (r.counterpartId) names[r.counterpartId] = r.counterpartNickname
             set({
-              friends: fr.map((r) => ({ rowId: r.id, memberId: other(r) })),
-              incoming: inc.map((r) => ({ rowId: r.id, memberId: r.requesterId })),
-              outgoing: out.map((r) => ({ rowId: r.id, memberId: r.receiverId })),
+              names,
+              friends: fr.map((r) => ({ rowId: r.id, memberId: r.counterpartId })),
+              incoming: inc.map((r) => ({ rowId: r.id, memberId: r.counterpartId })),
+              outgoing: out.map((r) => ({ rowId: r.id, memberId: r.counterpartId })),
             })
           } catch {
             /* be 미가동 시 무시 */
