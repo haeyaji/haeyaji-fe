@@ -18,11 +18,6 @@ export function MeetupPage() {
 
   useEffect(() => { void loadList() }, [loadList])
   useEffect(() => { if (pendingInvite) { setOpenToken(pendingInvite); useAppStore.setState({ pendingInvite: null }) } }, [pendingInvite]) // 초대 링크 자동 열기
-  // 상세 열면 주소를 공유 가능한 /meetup/{token}으로 동기화(딥링크와 정합). 목록/이탈 시 '/' 복귀.
-  useEffect(() => {
-    window.history.replaceState(null, '', openToken ? `/meetup/${openToken}` : '/')
-    return () => { window.history.replaceState(null, '', '/') }
-  }, [openToken])
 
   if (openToken) return <MeetupDetailPage shareToken={openToken} onBack={() => { setOpenToken(null); void loadList() }} />
 
