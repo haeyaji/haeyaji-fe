@@ -116,7 +116,7 @@ export function HomeDashboard() {
           </div>
 
           {/* TASKS 2x3 */}
-          <div className="tile" style={{ gridColumn: '3 / 5', gridRow: '1 / 4', height: 560, minHeight: 0, padding: '22px 24px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div className="tile" style={{ gridColumn: '3 / 5', gridRow: '1 / 4', minHeight: 0, padding: '22px 24px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div onClick={() => setSelId(addDays(selId, -1))} className="hbtn" title="전날" style={{ width: 30, height: 30, borderRadius: 9, background: '#F4F3F0', color: '#8B8579', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
