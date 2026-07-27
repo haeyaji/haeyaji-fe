@@ -10,7 +10,7 @@ import { MC } from './tokens'
 const myMemberId = () => localStorage.getItem('haeyaji-account')
 
 export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; onBack: () => void }) {
-  const { detail, heatmap, bestTimes, myResponses, loading, loadDetail, join, invite, submit, confirm, clearDetail } = useMeetupStore()
+  const { detail, heatmap, bestTimes, status, myResponses, loading, loadDetail, join, invite, submit, confirm, clearDetail } = useMeetupStore()
   const friendItems = useFriendStore((s) => s.friends)
   const nameOf = useFriendStore((s) => s.nameOf)
   const loadFriends = useFriendStore((s) => s.load)
@@ -186,6 +186,39 @@ export function MeetupDetailPage({ shareToken, onBack }: { shareToken: string; o
             </div>
           )}
         </div>
+
+        {/* 참여자 현황 — 누가 투표했는지 / 대기 중인지 */}
+        {status && status.participants.length > 0 && (
+          <div style={{ background: '#fff', border: '1px solid #ECE9E0', borderRadius: 18, padding: '16px 18px', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ fontSize: 16, fontWeight: 800 }}>참여자 {status.participantCount}명</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: MC.primary }}>{status.respondedCount}명 투표 완료</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {status.participants.map((p) => {
+                const nm = nameOf(p.memberId)
+                const me = p.memberId === myMemberId()
+                const creator = detail.creatorId === p.memberId
+                return (
+                  <div key={p.memberId} style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+                    <Avatar name={nm} size={34} font={15} />
+                    <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 7 }}>
+                      <span style={{ fontSize: 14.5, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{me ? '나' : nm}</span>
+                      {creator && <span style={{ fontSize: 11, fontWeight: 800, color: MC.tintText, background: MC.tintBg, padding: '2px 8px', borderRadius: 20 }}>주최</span>}
+                    </div>
+                    {p.responded ? (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 800, color: '#0F5A42', background: '#EAF5EF', padding: '5px 11px', borderRadius: 20 }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>투표함
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 12.5, fontWeight: 800, color: '#C2702A', background: '#FBF0E1', padding: '5px 11px', borderRadius: 20 }}>미투표</span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* 베스트 타임 + 확정 */}
         {!conf && !expired && bestTimes && bestTimes.windows.length > 0 && (
